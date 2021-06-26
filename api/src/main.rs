@@ -93,24 +93,16 @@ impl<'r> FromRequest<'r> for User {
 }
 
 #[derive(Serialize)]
-struct RspOk<T> {
-    status: &'static str,
-    #[serde(flatten)]
-    value: T,
-}
-
-#[derive(Serialize)]
 struct RspErr {
-    status: &'static str,
     code: usize,
-    reason: String,
+    description: String,
 }
 
 macro_rules! define_error {
     (
     pub enum Error {
         $(
-            $variant:ident = { reason: $reason:literal, code: $code:literal $(,)?}
+            $variant:ident = { description: $description:literal, code: $code:literal $(,)?}
         ),*
         $(,)?
     }
@@ -123,18 +115,18 @@ macro_rules! define_error {
         }
 
         impl Error {
-            fn reason(self, reason: Option<String>) -> RspErr {
+            fn description(self, description: Option<String>) -> RspErr {
                 match self {
                 $(
                     Self::$variant => {
-                        let reason = reason.unwrap_or_else(|| $reason.into());
-                        RspErr {status: "err", reason, code: $code}
+                        let description = description.unwrap_or_else(|| $description.into());
+                        RspErr {description, code: $code}
                     }
                 )*
                 }
             }
             fn default_err(self) -> RspErr {
-                self.reason(None)
+                self.description(None)
             }
         }
     };
@@ -142,59 +134,62 @@ macro_rules! define_error {
 
 define_error! {
     pub enum Error {
-        ListAlreadyExists = {
-            reason: "list already exists",
+        Internal = {
+            description: "internal error",
             code: 0,
         },
-        UnknownAccount = {
-            reason: "unkown account",
+        ListAlreadyExists = {
+            description: "list already exists",
             code: 1,
         },
-        NoSuchList = {
-            reason: "no such list",
+        UnknownAccount = {
+            description: "unkown account",
             code: 2,
         },
-        NotWritable = {
-            reason: "list is not writable",
+        NoSuchList = {
+            description: "no such list",
             code: 3,
+        },
+        NotWritable = {
+            description: "list is not writable",
+            code: 4,
         },
     }
 }
 
 #[derive(Responder)]
 #[response(bound = "T: Serialize")]
-enum Rsp<T> {
-    #[response(status = 500)]
-    Sqlx(rocket::response::Debug<sqlx::Error>),
-    #[response(status = 500)]
-    Internal(rocket::response::Debug<String>),
-    Ok(Json<RspOk<T>>),
-    #[response(status = 400)]
-    Err(Json<RspErr>),
+struct Rsp<T>(Json<RspData<T>>);
+
+#[derive(Serialize)]
+#[serde(rename_all = "lowercase")]
+enum RspData<T> {
+    Ok(T),
+    Err(RspErr),
 }
 
 impl<T: Serialize> From<sqlx::Error> for Rsp<T> {
     fn from(err: sqlx::Error) -> Self {
-        Rsp::Sqlx(err.into())
+        error!("SQLX error: {:?}", err);
+        Rsp(RspData::Err(Error::Internal.default_err()).into())
     }
 }
 
 impl<T: Serialize> Rsp<T> {
     fn ok(value: T) -> Self {
-        Rsp::Ok(Json(RspOk {
-            status: "ok",
-            value,
-        }))
+        Rsp(Json(RspData::Ok(value)))
     }
 
-    fn internal_err<R: Into<String>>(reason: R) -> Self {
-        Rsp::Internal(reason.into().into())
+    fn _internal_err<R: Into<String>>(reason: R) -> Self {
+        let r = reason.into();
+        error!("Internal error: {}", r);
+        Rsp(RspData::Err(Error::Internal.default_err()).into())
     }
 }
 
 impl<T: Serialize> From<RspErr> for Rsp<T> {
     fn from(e: RspErr) -> Self {
-        Self::Err(e.into())
+        Self(RspData::Err(e).into())
     }
 }
 
@@ -486,6 +481,23 @@ async fn add_list(
     Rsp::ok(AddListResponse { id: id.id })
 }
 
+#[delete("/list/<list>/<item>")]
+async fn delete_item(db: &State<Db>, user: User, list: Uuid, item: i32) -> Rsp<()> {
+    try_check_list!(check_list(db, &user.id, &list, true).await);
+
+    try_rsp!(
+        sqlx::query!(
+            "DELETE FROM lists_content WHERE list = $1 AND id = $2",
+            list,
+            item
+        )
+        .execute(&**db)
+        .await
+    );
+
+    Rsp::ok(())
+}
+
 #[derive(Deserialize)]
 pub struct ShareRequest {
     share_with: Uuid,
@@ -612,6 +624,7 @@ fn rocket() -> _ {
                 share_list,
                 search_account,
                 delete_share,
+                delete_item,
             ],
         )
 }

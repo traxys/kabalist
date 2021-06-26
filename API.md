@@ -101,6 +101,20 @@ Add an item to the list `id`
 }
 ```
 
+## `list/<list:uuid>/<item:i32>`
+
+### `[AUTH]` DELETE
+
+Delete the `item` from the `list`
+
+#### Request
+
+Empty Body
+
+#### Reply
+
+Empty Body
+
 ## `/share/<list_id:uuid>`
 
 ### `[AUTH]` PUT

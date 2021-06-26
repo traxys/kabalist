@@ -4,6 +4,18 @@ use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
 use yansi::Paint;
 
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum Rsp<T> {
+    Ok(T),
+    Err(RspErr),
+}
+
+#[derive(Deserialize)]
+struct RspErr {
+    description: String,
+}
+
 #[derive(StructOpt, Debug)]
 pub enum Commands {
     Login {
@@ -45,6 +57,12 @@ pub enum Commands {
         token: String,
         name: String,
     },
+    Tick {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        list: String,
+        item: String,
+    },
 }
 
 #[derive(StructOpt, Debug)]
@@ -53,6 +71,15 @@ pub struct Args {
     url: String,
     #[structopt(subcommand)]
     command: Commands,
+}
+
+macro_rules! try_rsp {
+    ($e:expr) => {
+        match $e {
+            Rsp::Ok(v) => v,
+            Rsp::Err(e) => color_eyre::eyre::bail!("List error: {}", e.description),
+        }
+    };
 }
 
 async fn login(url: &str, username: &str, password: &str) -> color_eyre::Result<String> {
@@ -68,13 +95,15 @@ async fn login(url: &str, username: &str, password: &str) -> color_eyre::Result<
     }
 
     let client = reqwest::Client::new();
-    let token: LoginResponse = client
-        .post(format!("{}/login", url))
-        .json(&LoginRequest { username, password })
-        .send()
-        .await?
-        .json()
-        .await?;
+    let token: LoginResponse = try_rsp!(
+        client
+            .post(format!("{}/login", url))
+            .json(&LoginRequest { username, password })
+            .send()
+            .await?
+            .json()
+            .await?
+    );
 
     Ok(token.token)
 }
@@ -87,6 +116,7 @@ struct Client {
 
 #[derive(Deserialize, Debug)]
 struct Item {
+    id: i32,
     amount: Option<String>,
     name: String,
 }
@@ -112,14 +142,15 @@ impl Client {
             results: HashMap<String, String>,
         }
 
-        let lists: List = self
-            .client
-            .get(&format!("{}/list", self.url))
-            .bearer_auth(&self.token)
-            .send()
-            .await?
-            .json()
-            .await?;
+        let lists: List = try_rsp!(
+            self.client
+                .get(&format!("{}/list", self.url))
+                .bearer_auth(&self.token)
+                .send()
+                .await?
+                .json()
+                .await?
+        );
 
         let mut res: Vec<_> = lists.results.into_iter().map(|(v, _)| v).collect();
         res.sort_unstable();
@@ -132,14 +163,15 @@ impl Client {
             results: HashMap<String, String>,
         }
 
-        let lists: List = self
-            .client
-            .get(&format!("{}/search/list/{}", self.url, name))
-            .bearer_auth(&self.token)
-            .send()
-            .await?
-            .json()
-            .await?;
+        let lists: List = try_rsp!(
+            self.client
+                .get(&format!("{}/search/list/{}", self.url, name))
+                .bearer_auth(&self.token)
+                .send()
+                .await?
+                .json()
+                .await?
+        );
 
         Ok(lists.results)
     }
@@ -151,14 +183,15 @@ impl Client {
             readonly: bool,
         }
 
-        let rsp: Response = self
-            .client
-            .get(&format!("{}/list/{}", self.url, id))
-            .bearer_auth(&self.token)
-            .send()
-            .await?
-            .json()
-            .await?;
+        let rsp: Response = try_rsp!(
+            self.client
+                .get(&format!("{}/list/{}", self.url, id))
+                .bearer_auth(&self.token)
+                .send()
+                .await?
+                .json()
+                .await?
+        );
 
         Ok(Read {
             items: rsp.items,
@@ -173,13 +206,16 @@ impl Client {
             amount: Option<&'a str>,
         }
 
-        self.client
-            .post(&format!("{}/list/{}", self.url, list_id))
-            .bearer_auth(&self.token)
-            .json(&Request { name, amount })
-            .send()
-            .await?
-            .error_for_status()?;
+        try_rsp!(
+            self.client
+                .post(&format!("{}/list/{}", self.url, list_id))
+                .bearer_auth(&self.token)
+                .json(&Request { name, amount })
+                .send()
+                .await?
+                .json()
+                .await?
+        );
 
         Ok(())
     }
@@ -190,14 +226,15 @@ impl Client {
             id: String,
         }
 
-        let rsp: Response = self
-            .client
-            .get(&format!("{}/search/account/{}", self.url, name))
-            .bearer_auth(&self.token)
-            .send()
-            .await?
-            .json()
-            .await?;
+        let rsp: Response = try_rsp!(
+            self.client
+                .get(&format!("{}/search/account/{}", self.url, name))
+                .bearer_auth(&self.token)
+                .send()
+                .await?
+                .json()
+                .await?
+        );
 
         Ok(rsp.id)
     }
@@ -209,27 +246,33 @@ impl Client {
             readonly: bool,
         }
 
-        self.client
-            .put(&format!("{}/share/{}", self.url, list))
-            .bearer_auth(&self.token)
-            .json(&Request {
-                share_with,
-                readonly,
-            })
-            .send()
-            .await?
-            .error_for_status()?;
+        try_rsp!(
+            self.client
+                .put(&format!("{}/share/{}", self.url, list))
+                .bearer_auth(&self.token)
+                .json(&Request {
+                    share_with,
+                    readonly,
+                })
+                .send()
+                .await?
+                .json()
+                .await?
+        );
 
         Ok(())
     }
 
     async fn unshare(&self, list: &str) -> color_eyre::Result<()> {
-        self.client
-            .delete(&format!("{}/share/{}", self.url, list))
-            .bearer_auth(&self.token)
-            .send()
-            .await?
-            .error_for_status()?;
+        try_rsp!(
+            self.client
+                .delete(&format!("{}/share/{}", self.url, list))
+                .bearer_auth(&self.token)
+                .send()
+                .await?
+                .json()
+                .await?
+        );
 
         Ok(())
     }
@@ -240,14 +283,30 @@ impl Client {
             name: &'a str,
         }
 
-        self.client
-            .post(&format!("{}/list", self.url))
-            .bearer_auth(&self.token)
-            .json(&Request { name: list_name })
-            .send()
-            .await?
-            .error_for_status()?;
+        try_rsp!(
+            self.client
+                .post(&format!("{}/list", self.url))
+                .bearer_auth(&self.token)
+                .json(&Request { name: list_name })
+                .send()
+                .await?
+                .json()
+                .await?
+        );
 
+        Ok(())
+    }
+
+    async fn delete_item(&self, list: &str, item: i32) -> color_eyre::Result<()> {
+        try_rsp!(
+            self.client
+                .delete(&format!("{}/list/{}/{}", self.url, list, item))
+                .bearer_auth(&self.token)
+                .send()
+                .await?
+                .json()
+                .await?
+        );
         Ok(())
     }
 }
@@ -348,6 +407,38 @@ async fn main() -> color_eyre::Result<()> {
                 ),
                 Some(list) => {
                     client.unshare(list).await?;
+                }
+            }
+        }
+        Commands::Tick { token, list, item } => {
+            let client = Client::new(args.url, token);
+            let searched = client.search(&list).await?;
+            match searched.get(&list) {
+                None => println!(
+                    "Could not unshare list: {}",
+                    yansi::Paint::red("No such list")
+                ),
+                Some(id) => {
+                    let items = client.read(id).await?;
+                    let pat = item.to_lowercase();
+                    let items: Vec<_> = items
+                        .items
+                        .iter()
+                        .filter(|item| item.name.to_lowercase().contains(&pat))
+                        .collect();
+                    let to_delete: i32 = if items.len() == 1 {
+                        items[0].id
+                    } else if items.len() > 1 {
+                        println!("Choose item to delete:");
+                        for (id, item) in items.iter().enumerate() {
+                            println!("  {}) {}", id, item.name)
+                        }
+                        let idx: usize = promptly::prompt("Item to delete")?;
+                        items[idx].id
+                    } else {
+                        return Ok(());
+                    };
+                    client.delete_item(&id, to_delete).await?;
                 }
             }
         }

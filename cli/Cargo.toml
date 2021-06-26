@@ -7,6 +7,7 @@ edition = "2018"
 
 [dependencies]
 color-eyre = "0.5.11"
+promptly = "0.3.0"
 reqwest = { version = "0.11.3", default_features = false , features = ["json", "rustls-tls"]}
 rpassword = "5.0.1"
 serde = { version = "1.0.126", features = ["derive"] }
