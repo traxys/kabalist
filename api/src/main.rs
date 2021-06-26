@@ -92,17 +92,6 @@ impl<'r> FromRequest<'r> for User {
     }
 }
 
-#[derive(Deserialize, Debug)]
-struct LoginRequest {
-    password: String,
-    username: String,
-}
-
-#[derive(Serialize, Debug)]
-struct LoginResponse {
-    token: String,
-}
-
 #[derive(Serialize)]
 struct RspOk<T> {
     status: &'static str,
@@ -216,6 +205,17 @@ macro_rules! try_rsp {
             Err(e) => return e.into(),
         }
     };
+}
+
+#[derive(Deserialize, Debug)]
+struct LoginRequest {
+    password: String,
+    username: String,
+}
+
+#[derive(Serialize, Debug)]
+struct LoginResponse {
+    token: String,
 }
 
 #[post("/login", data = "<request>")]
@@ -512,6 +512,19 @@ async fn share_list(db: &State<Db>, user: User, id: Uuid, request: Json<ShareReq
     Rsp::ok(())
 }
 
+#[delete("/share/<id>")]
+async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
+    try_check_list!(is_owner(db, &user.id, &id).await);
+
+    try_rsp!(
+        sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
+            .execute(&**db)
+            .await
+    );
+
+    Rsp::ok(())
+}
+
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {
     use rocket_sync_db_pools::Config;
 
@@ -598,6 +611,7 @@ fn rocket() -> _ {
                 add_list,
                 share_list,
                 search_account,
+                delete_share,
             ],
         )
 }

@@ -40,6 +40,11 @@ pub enum Commands {
         token: String,
         name: String,
     },
+    Unshare {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        name: String,
+    },
 }
 
 #[derive(StructOpt, Debug)]
@@ -218,6 +223,17 @@ impl Client {
         Ok(())
     }
 
+    async fn unshare(&self, list: &str) -> color_eyre::Result<()> {
+        self.client
+            .delete(&format!("{}/share/{}", self.url, list))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .error_for_status()?;
+
+        Ok(())
+    }
+
     async fn create_list(&self, list_name: &str) -> color_eyre::Result<()> {
         #[derive(Serialize)]
         struct Request<'a> {
@@ -321,6 +337,19 @@ async fn main() -> color_eyre::Result<()> {
         Commands::Create { token, name } => {
             let client = Client::new(args.url, token);
             client.create_list(&name).await?;
+        }
+        Commands::Unshare { token, name } => {
+            let client = Client::new(args.url, token);
+            let searched = client.search(&name).await?;
+            match searched.get(&name) {
+                None => println!(
+                    "Could not unshare list: {}",
+                    yansi::Paint::red("No such list")
+                ),
+                Some(list) => {
+                    client.unshare(list).await?;
+                }
+            }
         }
     }
     Ok(())
