@@ -77,7 +77,7 @@ Empty Body
 	"items": [{
 		"id": 123,
 		"name": "...",
-		amount: "string or null"
+		"amount": "string or null"
 	}]
 }
 ```
