@@ -5,6 +5,9 @@ use structopt::StructOpt;
 use yansi::Paint;
 
 #[derive(Deserialize)]
+struct Empty {}
+
+#[derive(Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum Rsp<T> {
     Ok(T),
@@ -206,7 +209,7 @@ impl Client {
             amount: Option<&'a str>,
         }
 
-        try_rsp!(
+        let _: Empty = try_rsp!(
             self.client
                 .post(&format!("{}/list/{}", self.url, list_id))
                 .bearer_auth(&self.token)
@@ -246,7 +249,7 @@ impl Client {
             readonly: bool,
         }
 
-        try_rsp!(
+        let _: Empty = try_rsp!(
             self.client
                 .put(&format!("{}/share/{}", self.url, list))
                 .bearer_auth(&self.token)
@@ -264,7 +267,7 @@ impl Client {
     }
 
     async fn unshare(&self, list: &str) -> color_eyre::Result<()> {
-        try_rsp!(
+        let _: Empty = try_rsp!(
             self.client
                 .delete(&format!("{}/share/{}", self.url, list))
                 .bearer_auth(&self.token)
@@ -283,7 +286,7 @@ impl Client {
             name: &'a str,
         }
 
-        try_rsp!(
+        let _: Empty = try_rsp!(
             self.client
                 .post(&format!("{}/list", self.url))
                 .bearer_auth(&self.token)
@@ -298,7 +301,7 @@ impl Client {
     }
 
     async fn delete_item(&self, list: &str, item: i32) -> color_eyre::Result<()> {
-        try_rsp!(
+        let _: Empty = try_rsp!(
             self.client
                 .delete(&format!("{}/list/{}/{}", self.url, list, item))
                 .bearer_auth(&self.token)
