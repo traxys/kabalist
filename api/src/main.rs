@@ -6,6 +6,7 @@ use jsonwebtoken::DecodingKey;
 use rocket::{
     fairing::{self, AdHoc},
     futures::StreamExt,
+    http::Header,
     outcome::try_outcome,
     request::{self, FromRequest},
     serde::{json::Json, Deserialize, Deserializer, Serialize},
@@ -607,11 +608,76 @@ struct Config {
     exp: usize,
 }
 
+struct CORS;
+
+#[rocket::async_trait]
+impl fairing::Fairing for CORS {
+    fn info(&self) -> fairing::Info {
+        fairing::Info {
+            name: "CORS headers",
+            kind: fairing::Kind::Response,
+        }
+    }
+
+    async fn on_response<'r>(&self, _req: &'r rocket::Request<'_>, res: &mut rocket::Response<'r>) {
+        res.adjoin_header(Header::new("Access-Control-Allow-Origin", "*"));
+        res.adjoin_header(Header::new(
+            "Access-Control-Allow-Methods",
+            "POST, GET, DELETE, PUT, OPTIONS",
+        ));
+        res.adjoin_header(Header::new("Access-Control-Allow-Headers", "*"));
+        res.adjoin_header(Header::new("Access-Control-Allow-Credentials", "true"));
+    }
+}
+
+struct Options;
+
+#[derive(Clone, Copy)]
+struct OptionsHandler;
+
+#[rocket::async_trait]
+impl rocket::route::Handler for OptionsHandler {
+    async fn handle<'r>(
+        &self,
+        request: &'r rocket::Request<'_>,
+        _data: rocket::Data<'r>,
+    ) -> rocket::route::Outcome<'r> {
+        rocket::route::Outcome::from(request, "")
+    }
+}
+
+#[rocket::async_trait]
+impl fairing::Fairing for Options {
+    fn info(&self) -> fairing::Info {
+        fairing::Info {
+            name: "OPTIONS routes",
+            kind: fairing::Kind::Ignite,
+        }
+    }
+
+    async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
+        let mut routes = HashMap::new();
+        for route in rocket.routes() {
+            if !routes.contains_key(route.uri.as_str()) {
+                let key = route.uri.as_str().to_owned();
+                let mut value = route.clone();
+                value.method = rocket::http::Method::Options;
+                value.handler = Box::new(OptionsHandler);
+                routes.insert(key, value);
+            }
+        }
+
+        Ok(rocket.mount("/", routes.into_iter().map(|(_, v)| v).collect::<Vec<_>>()))
+    }
+}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
         .attach(AdHoc::try_on_ignite("SQLx", init_db))
         .attach(AdHoc::config::<Config>())
+        .attach(CORS)
+        .attach(Options)
         .mount(
             "/",
             routes![
