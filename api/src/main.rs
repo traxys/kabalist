@@ -508,7 +508,7 @@ pub struct ShareRequest {
 
 #[put("/share/<id>", data = "<request>")]
 async fn share_list(db: &State<Db>, user: User, id: Uuid, request: Json<ShareRequest>) -> Rsp<()> {
-    try_check_list!(is_owner(db, &user.id, &id).await);
+    try_check_list!(check_list(db, &user.id, &id, true).await);
 
     try_rsp!(
         sqlx::query!(
