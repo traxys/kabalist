@@ -539,6 +539,28 @@ async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
     Rsp::ok(())
 }
 
+#[delete("/list/<id>")]
+async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
+    try_check_list!(is_owner(db, &user.id, &id).await);
+    let mut tx = try_rsp!(db.begin().await);
+
+    try_rsp!(
+        sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
+            .execute(&mut tx)
+            .await
+    );
+    try_rsp!(
+        sqlx::query!("DELETE FROM lists WHERE id = $1", id)
+            .execute(&mut tx)
+            .await
+    );
+
+    try_rsp!(tx.commit().await);
+
+    Rsp::ok(())
+
+}
+
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {
     use rocket_sync_db_pools::Config;
 
@@ -692,6 +714,7 @@ fn rocket() -> _ {
                 search_account,
                 delete_share,
                 delete_item,
+                delete_list,
             ],
         )
 }

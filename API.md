@@ -101,6 +101,18 @@ Add an item to the list `id`
 }
 ```
 
+### `[AUTH]` DELETE
+
+Delete a list
+
+#### Request
+
+Empty body
+
+#### Reply
+
+Empty request
+
 ## `list/<list:uuid>/<item:i32>`
 
 ### `[AUTH]` DELETE
