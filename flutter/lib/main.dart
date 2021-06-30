@@ -683,6 +683,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   late Future<OptionalContents> contents;
   bool render = false;
   Set<int> strickedItems = {};
+  Set<int> deletedItems = {};
   Timer? timer;
 
   Future<OptionalContents> fetchContents() async {
@@ -708,6 +709,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
 
     setState(() {
       strickedItems.retainAll(contents.items.map((item) => item.id));
+      deletedItems.clear();
     });
 
     return OptionalContents(contents: contents);
@@ -733,6 +735,9 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       });
 
       parseAPIResponse(response, (m) => null);
+      setState(() {
+        deletedItems.add(itemId);
+      });
     });
 
     setState(() {
@@ -801,18 +806,20 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
             List<Widget> inList = [];
             List<Widget> striked = [];
             snapshot.data!.contents!.items.forEach((item) {
-              if (strickedItems.contains(item.id)) {
-                striked.add(ListTile(
-                    title: item.render(true),
-                    onTap: () {
-                      setState(() => strickedItems.remove(item.id));
-                    }));
-              } else {
-                inList.add(ListTile(
-                    title: item.render(false),
-                    onTap: () {
-                      setState(() => strickedItems.add(item.id));
-                    }));
+              if (!deletedItems.contains(item.id)) {
+                if (strickedItems.contains(item.id)) {
+                  striked.add(ListTile(
+                      title: item.render(true),
+                      onTap: () {
+                        setState(() => strickedItems.remove(item.id));
+                      }));
+                } else {
+                  inList.add(ListTile(
+                      title: item.render(false),
+                      onTap: () {
+                        setState(() => strickedItems.add(item.id));
+                      }));
+                }
               }
             });
             final List<Widget> items;
