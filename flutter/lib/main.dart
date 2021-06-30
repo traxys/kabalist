@@ -317,6 +317,7 @@ class _ListDrawerState extends State<ListDrawer> {
                 title: Text(entry.key),
                 onTap: () {
                   widget.selectList(entry.key, entry.value);
+                  Navigator.pop(context);
                 },
                 onLongPress: () async {
                   switch (await showDialog<ListAction>(
