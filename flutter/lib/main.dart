@@ -108,18 +108,19 @@ class ApiError implements Exception {
   final int code;
 
   String errMsg() {
-  	switch(code) {
-	case 2:
-		return "Account is unknown";
-	default:
-    	return "unkown error: $code";
-	}
+    switch (code) {
+      case 2:
+        return "Account is unknown";
+      default:
+        return "unkown error: $code";
+    }
   }
 }
 
 T parseAPIResponse<T>(
     http.Response response, T Function(Map<String, dynamic>?) parser) {
-  Map<String, dynamic> rsp = jsonDecode(response.body);
+  String rspStr = utf8.decode(response.bodyBytes);
+  Map<String, dynamic> rsp = jsonDecode(rspStr);
   if (rsp.containsKey("ok")) {
     return parser(rsp["ok"]);
   } else {
@@ -232,10 +233,13 @@ class _ListDrawerState extends State<ListDrawer> {
   late Future<Map<String, String>> lists;
 
   Future<Map<String, String>> fetchLists() async {
-    final response = await http.get(Uri.parse(URL + "/list"), headers: {
-      HttpHeaders.contentTypeHeader: "application/json",
-      HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-    });
+    final response = await http.get(
+      Uri.parse(URL + "/list"),
+      headers: {
+        HttpHeaders.contentTypeHeader: "application/json",
+        HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
+      },
+    );
 
     return parseAPIResponse(
         response, (m) => m!["results"].cast<String, String>());
