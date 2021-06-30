@@ -229,7 +229,10 @@ class ListDrawer extends StatefulWidget {
 
 class _ListDrawerState extends State<ListDrawer> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String? shareError;
 
+  late String shareName;
+  bool shareReadonly = false;
   late Future<Map<String, String>> lists;
 
   Future<Map<String, String>> fetchLists() async {
@@ -272,6 +275,31 @@ class _ListDrawerState extends State<ListDrawer> {
     widget.listDeleted(id);
   }
 
+  void shareList(String listId, String shareWith, bool readonly) async {
+    final accountRsp =
+        await http.get(Uri.parse(URL + "/search/account/$shareWith"), headers: {
+      HttpHeaders.contentTypeHeader: "application/json",
+      HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
+    });
+
+    try {
+      final accountId = parseAPIResponse(accountRsp, (m) => m!["id"] as String);
+
+      final response = await http.put(Uri.parse(URL + "/share/$listId"),
+          headers: {
+            HttpHeaders.contentTypeHeader: "application/json",
+            HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
+          },
+          body: '{"share_with": "$accountId", "readonly": $readonly}');
+
+      parseAPIResponse(response, (m) => null);
+    } on ApiError catch (e) {
+      setState(() {
+        shareError = e.errMsg();
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -302,11 +330,87 @@ class _ListDrawerState extends State<ListDrawer> {
                                   Navigator.pop(ctx, ListAction.Delete);
                                 },
                                 child: Text("Delete List"),
+                              ),
+                              SimpleDialogOption(
+                                onPressed: () {
+                                  Navigator.pop(ctx, ListAction.Share);
+                                },
+                                child: Text("Share List"),
                               )
                             ]);
                       })) {
                     case ListAction.Delete:
                       deleteList(entry.value);
+                      break;
+                    case ListAction.Share:
+                      print("todo share");
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext ctx) {
+                            final errorTxt;
+                            if (shareError == null) {
+                              errorTxt = <Widget>[];
+                            } else {
+                              errorTxt = <Widget>[
+                                Text(shareError!,
+                                    style: TextStyle(color: Colors.red))
+                              ];
+                            }
+                            return AlertDialog(
+                                title: Text("Share List"),
+                                content: StatefulBuilder(builder:
+                                    (BuildContext stCtx, StateSetter setState) {
+                                  return Form(
+                                      key: _formKey,
+                                      child: Container(
+                                          margin: EdgeInsets.all(10.0),
+                                          child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: <Widget>[
+                                                ...errorTxt,
+                                                TextFormField(
+                                                  decoration:
+                                                      const InputDecoration(
+                                                          hintText:
+                                                              "Share with"),
+                                                  validator: (String? value) {
+                                                    if (value == null ||
+                                                        value.isEmpty) {
+                                                      return "Name can't be empty";
+                                                    }
+                                                    return null;
+                                                  },
+                                                  onSaved:
+                                                      (String? name) async {
+                                                    shareName = name!;
+                                                  },
+                                                ),
+                                                CheckboxListTile(
+                                                    title: Text('Readonly'),
+                                                    onChanged: (bool? value) {
+                                                      setState(() {
+                                                        shareReadonly = value!;
+                                                      });
+                                                    },
+                                                    value: shareReadonly),
+                                                ElevatedButton(
+                                                    onPressed: () async {
+                                                      if (_formKey.currentState!
+                                                          .validate()) {
+                                                        _formKey.currentState!
+                                                            .save();
+                                                        shareList(
+                                                            entry.value,
+                                                            shareName,
+                                                            shareReadonly);
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      }
+                                                    },
+                                                    child: const Text('Share'))
+                                              ])));
+                                }));
+                          });
                       break;
                     case null:
                       // Nothing
@@ -405,7 +509,7 @@ class AuthLists extends StatefulWidget {
   State<AuthLists> createState() => _AuthListsState();
 }
 
-enum ListAction { Delete }
+enum ListAction { Delete, Share }
 
 class ListInfo {
   ListInfo({required this.id, required this.name});
