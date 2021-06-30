@@ -550,6 +550,9 @@ async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
             .await
     );
     try_rsp!(
+        sqlx::query!("DELETE FROM lists_content WHERE list = $1", id).execute(&mut tx).await
+    );
+    try_rsp!(
         sqlx::query!("DELETE FROM lists WHERE id = $1", id)
             .execute(&mut tx)
             .await
