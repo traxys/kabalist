@@ -428,7 +428,7 @@ async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<ReadListResponse
     );
     let readonly = try_rsp!(
         sqlx::query!(
-            " SELECT COALESCE((SELECT readonly FROM list_sharing WHERE list = $1 AND $2 != (SELECT owner FROM lists WHERE id = $1)), false)",
+            " SELECT COALESCE((SELECT readonly FROM list_sharing WHERE list = $1 AND shared = $2 AND $2 != (SELECT owner FROM lists WHERE id = $1)), false)",
             id, 
             user.id,
         )

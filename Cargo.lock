@@ -257,20 +257,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cli"
-version = "0.1.0"
-dependencies = [
- "color-eyre",
- "promptly",
- "reqwest",
- "rpassword",
- "serde",
- "structopt",
- "tokio",
- "yansi",
-]
-
-[[package]]
 name = "color-eyre"
 version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -951,6 +937,20 @@ dependencies = [
  "serde",
  "sqlx",
  "uuid",
+]
+
+[[package]]
+name = "lists_cli"
+version = "0.1.0"
+dependencies = [
+ "color-eyre",
+ "promptly",
+ "reqwest",
+ "rpassword",
+ "serde",
+ "structopt",
+ "tokio",
+ "yansi",
 ]
 
 [[package]]
