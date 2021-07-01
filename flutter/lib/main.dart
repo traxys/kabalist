@@ -829,30 +829,31 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
               items = [...inList, Divider(), ...striked];
             }
             bool readOnly = snapshot.data!.contents!.readonly;
-            var columnChildren = <Widget>[
-              ListView(
-                padding: const EdgeInsets.all(8),
-                shrinkWrap: true,
+            if (!readOnly && strickedItems.isNotEmpty) {
+              items.add(ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      primary: Colors.red, onPrimary: Colors.white),
+                  onPressed: strikeItems,
+                  child: const Text('Delete Striked Items')));
+            }
+            return ListView(padding: const EdgeInsets.all(8),
                 children: [
                   ListTile(
                       title: Text(
                           "List: ${widget.list.value!.name}${readOnly ? " (readonly)" : ""}")),
                   Divider(),
                   ...items
-                ],
-              )
-            ];
-            if (!readOnly && strickedItems.isNotEmpty) {
-              columnChildren.add(ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.red, onPrimary: Colors.white),
-                  onPressed: strikeItems,
-                  child: const Text('Delete Striked Items')));
-            }
-            return Column(children: columnChildren);
+                ]);
           } else if (snapshot.hasError) {
             print("Err: ${snapshot.error}");
-            return Text("TODO ERR");
+            if (snapshot.error is ApiError?) {
+              return Text(
+                  "An error occured while fetching the contents: ${(snapshot.error! as ApiError).errMsg()}",
+                  style: TextStyle(color: Colors.red));
+            } else {
+              return Text("An unexpected error occured: ${snapshot.error}",
+                  style: TextStyle(color: Colors.red));
+            }
           } else {
             return CircularProgressIndicator();
           }
