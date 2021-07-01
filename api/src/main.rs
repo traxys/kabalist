@@ -426,15 +426,18 @@ async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<ReadListResponse
         .fetch_all(&**db)
         .await
     );
-    let readonly = try_rsp!(
-        sqlx::query!(
-            " SELECT COALESCE((SELECT readonly FROM list_sharing WHERE list = $1 AND shared = $2 AND $2 != (SELECT owner FROM lists WHERE id = $1)), false)",
-            id, 
-            user.id,
-        )
-        .fetch_one(&**db)
-        .await
-    );
+    let mut readonly_result = sqlx::query!(
+        "SELECT readonly FROM list_sharing WHERE list = $1 AND shared = $2",
+        id,
+        user.id,
+    )
+    .fetch(&**db);
+
+    let readonly = match readonly_result.next().await {
+        Some(Ok(v)) => v.readonly,
+        Some(Err(e)) => return e.into(),
+        None => true,
+    };
 
     Rsp::ok(ReadListResponse {
         items: items
@@ -445,7 +448,7 @@ async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<ReadListResponse
                 amount: row.amount,
             })
             .collect(),
-        readonly: readonly.coalesce.unwrap_or(false),
+        readonly,
     })
 }
 
@@ -550,7 +553,9 @@ async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
             .await
     );
     try_rsp!(
-        sqlx::query!("DELETE FROM lists_content WHERE list = $1", id).execute(&mut tx).await
+        sqlx::query!("DELETE FROM lists_content WHERE list = $1", id)
+            .execute(&mut tx)
+            .await
     );
     try_rsp!(
         sqlx::query!("DELETE FROM lists WHERE id = $1", id)
@@ -561,7 +566,6 @@ async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
     try_rsp!(tx.commit().await);
 
     Rsp::ok(())
-
 }
 
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {
