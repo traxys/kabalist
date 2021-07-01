@@ -295,15 +295,42 @@ async fn create_list(
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+enum ListStatus {
+    Owned,
+    SharedWrite,
+    SharedRead,
+}
+
+#[derive(Serialize)]
+struct ListInfo {
+    id: Uuid,
+    status: ListStatus,
+}
+
+#[derive(Serialize)]
 struct ListofLists {
-    results: HashMap<String, Uuid>,
+    results: HashMap<String, ListInfo>,
 }
 
 #[get("/search/list/<name>")]
 async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<ListofLists> {
-    let results = try_rsp!(
+    let results_owned = try_rsp!(
         sqlx::query!(
-            "SELECT name, id FROM lists WHERE (owner = $1 OR id IN (SELECT list FROM list_sharing WHERE shared = $1)) AND name ILIKE '%' || $2 || '%'",
+            "SELECT name, id FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
+            user.id,
+            name
+        )
+        .fetch_all(&**db)
+        .await
+    );
+    let results_shared = try_rsp!(
+        sqlx::query!(
+            r#"SELECT name, id, readonly 
+               FROM lists, list_sharing
+               WHERE (lists.id = list_sharing.list) 
+                   AND shared = $1 
+                   AND name ILIKE '%' || $2 || '%'"#,
             user.id,
             name
         )
@@ -312,7 +339,31 @@ async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<ListofList
     );
 
     Rsp::ok(ListofLists {
-        results: results.into_iter().map(|row| (row.name, row.id)).collect(),
+        results: results_owned
+            .into_iter()
+            .map(|row| {
+                (
+                    row.name,
+                    ListInfo {
+                        id: row.id,
+                        status: ListStatus::Owned,
+                    },
+                )
+            })
+            .chain(results_shared.into_iter().map(|row| {
+                (
+                    row.name,
+                    ListInfo {
+                        id: row.id,
+                        status: if row.readonly {
+                            ListStatus::SharedRead
+                        } else {
+                            ListStatus::SharedWrite
+                        },
+                    },
+                )
+            }))
+            .collect(),
     })
 }
 
@@ -334,14 +385,54 @@ async fn search_account(db: &State<Db>, _user: User, name: String) -> Rsp<Accoun
 
 #[get("/list")]
 async fn list_lists(db: &State<Db>, user: User) -> Rsp<ListofLists> {
-    let results = try_rsp!(
-        sqlx::query!("SELECT name, id FROM lists WHERE owner = $1 OR id IN (SELECT list FROM list_sharing WHERE shared = $1)", user.id)
-            .fetch_all(&**db)
-            .await
+    let results_owned = try_rsp!(
+        sqlx::query!(
+            r#"
+        SELECT name, id 
+        FROM lists WHERE owner = $1"#,
+            user.id
+        )
+        .fetch_all(&**db)
+        .await
+    );
+    let results_shared = try_rsp!(
+        sqlx::query!(
+            r#"SELECT name, id, readonly 
+               FROM lists, list_sharing
+               WHERE (lists.id = list_sharing.list) 
+                   AND shared = $1 "#,
+            user.id
+        )
+        .fetch_all(&**db)
+        .await
     );
 
     Rsp::ok(ListofLists {
-        results: results.into_iter().map(|row| (row.name, row.id)).collect(),
+        results: results_owned
+            .into_iter()
+            .map(|row| {
+                (
+                    row.name,
+                    ListInfo {
+                        id: row.id,
+                        status: ListStatus::Owned,
+                    },
+                )
+            })
+            .chain(results_shared.into_iter().map(|row| {
+                (
+                    row.name,
+                    ListInfo {
+                        id: row.id,
+                        status: if row.readonly {
+                            ListStatus::SharedRead
+                        } else {
+                            ListStatus::SharedWrite
+                        },
+                    },
+                )
+            }))
+            .collect(),
     })
 }
 
@@ -436,7 +527,7 @@ async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<ReadListResponse
     let readonly = match readonly_result.next().await {
         Some(Ok(v)) => v.readonly,
         Some(Err(e)) => return e.into(),
-        None => true,
+        None => false,
     };
 
     Rsp::ok(ReadListResponse {

@@ -130,6 +130,12 @@ struct Read {
     readonly: bool,
 }
 
+#[derive(Deserialize)]
+struct ListInfo {
+    id: String,
+    status: String,
+}
+
 impl Client {
     fn new(url: String, token: String) -> Self {
         Self {
@@ -139,10 +145,10 @@ impl Client {
         }
     }
 
-    async fn lists(&self) -> color_eyre::Result<Vec<String>> {
+    async fn lists(&self) -> color_eyre::Result<Vec<(String, ListInfo)>> {
         #[derive(Deserialize)]
         struct List {
-            results: HashMap<String, String>,
+            results: HashMap<String, ListInfo>,
         }
 
         let lists: List = try_rsp!(
@@ -155,15 +161,15 @@ impl Client {
                 .await?
         );
 
-        let mut res: Vec<_> = lists.results.into_iter().map(|(v, _)| v).collect();
-        res.sort_unstable();
+        let mut res: Vec<_> = lists.results.into_iter().collect();
+        res.sort_unstable_by(|a, b| a.0.cmp(&b.0));
         Ok(res)
     }
 
-    async fn search(&self, name: &str) -> color_eyre::Result<HashMap<String, String>> {
+    async fn search(&self, name: &str) -> color_eyre::Result<HashMap<String, ListInfo>> {
         #[derive(Deserialize)]
         struct List {
-            results: HashMap<String, String>,
+            results: HashMap<String, ListInfo>,
         }
 
         let lists: List = try_rsp!(
@@ -331,8 +337,8 @@ async fn main() -> color_eyre::Result<()> {
             let client = Client::new(args.url, token);
             let lists = client.lists().await?;
             println!("Lists: ");
-            for list in lists {
-                println!("  - {}", yansi::Paint::new(list).italic());
+            for (list, info) in lists {
+                println!("  - {} ({})", yansi::Paint::new(list).italic(), info.status);
             }
         }
         Commands::Read { token, name } => {
@@ -340,8 +346,8 @@ async fn main() -> color_eyre::Result<()> {
             let searched = client.search(&name).await?;
             match searched.get(&name) {
                 None => println!("Could not read list: {}", yansi::Paint::red("No such list")),
-                Some(id) => {
-                    let rsp = client.read(id).await?;
+                Some(info) => {
+                    let rsp = client.read(&info.id).await?;
                     println!(
                         "Items{}:",
                         if rsp.readonly {
@@ -370,9 +376,9 @@ async fn main() -> color_eyre::Result<()> {
             let searched = client.search(&list).await?;
             match searched.get(&list) {
                 None => println!("Could add to list: {}", yansi::Paint::red("No such list")),
-                Some(id) => {
+                Some(info) => {
                     client
-                        .add(id, &name, amount.as_ref().map(|s| -> &str { s }))
+                        .add(&info.id, &name, amount.as_ref().map(|s| -> &str { s }))
                         .await?;
                 }
             }
@@ -391,8 +397,8 @@ async fn main() -> color_eyre::Result<()> {
                     "Could not share list: {}",
                     yansi::Paint::red("No such list")
                 ),
-                Some(id) => {
-                    client.share(id, &account, readonly).await?;
+                Some(info) => {
+                    client.share(&info.id, &account, readonly).await?;
                 }
             }
         }
@@ -408,8 +414,8 @@ async fn main() -> color_eyre::Result<()> {
                     "Could not unshare list: {}",
                     yansi::Paint::red("No such list")
                 ),
-                Some(list) => {
-                    client.unshare(list).await?;
+                Some(info) => {
+                    client.unshare(&info.id).await?;
                 }
             }
         }
@@ -421,8 +427,8 @@ async fn main() -> color_eyre::Result<()> {
                     "Could not unshare list: {}",
                     yansi::Paint::red("No such list")
                 ),
-                Some(id) => {
-                    let items = client.read(id).await?;
+                Some(info) => {
+                    let items = client.read(&info.id).await?;
                     let pat = item.to_lowercase();
                     let items: Vec<_> = items
                         .items
@@ -441,7 +447,7 @@ async fn main() -> color_eyre::Result<()> {
                     } else {
                         return Ok(());
                     };
-                    client.delete_item(&id, to_delete).await?;
+                    client.delete_item(&info.id, to_delete).await?;
                 }
             }
         }
