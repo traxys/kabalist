@@ -30,7 +30,7 @@
           :key="'list'+ i"
         >
           <v-list-item-content>
-            <v-list-item-title v-text="item[0]"></v-list-item-title>
+            <v-list-item-title v-text="formatTitle(item)"></v-list-item-title>
             <v-spacer></v-spacer>
           </v-list-item-content>
         </v-list-item>
@@ -213,7 +213,10 @@ export default {
       return this.content?.items
     },
     selectedId: function() {
-      return this.lists[this.selectedList][1]
+      return this.lists[this.selectedList][1].id
+    },
+    selectedStatus: function () {
+      return this.lists[this.selectedList][1].status
     },
     selectedName: function() {
       return this.lists[this.selectedList][0]
@@ -327,6 +330,9 @@ export default {
     },
     formatItem(item) {
       return item.name + (item.amount == null ? "" : ` (${item.amount})`)
+    },
+    formatTitle(item) {
+      return `${item[0]} (${item[1].status})`
     },
     deleteItem: async function(item) {
       const resp = await fetch(ENDPOINT + "/list/" + this.selectedId + "/" + item.id, {
