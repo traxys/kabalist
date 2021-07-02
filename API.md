@@ -55,7 +55,10 @@ Empty Body
 ```json
 {
 	"results": {
-		"<complete_name>": "<list_id>"
+		"<complete_name>": {
+			"id": "<list_id>",
+			"status": "owned/shared_write/shared_read"
+		}
 	}
 }
 ```
@@ -171,7 +174,10 @@ Empty Body
 ```json
 {
 	"results": {
-		"<complete_name>": "<list_id>"
+		"<complete_name>": {
+			"id": "<list_id>",
+			"status": "owned/shared_write/shared_read"
+		}
 	}
 }
 ```
