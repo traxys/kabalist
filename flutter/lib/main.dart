@@ -144,6 +144,7 @@ class _LoginFormState extends State<LoginForm> {
   String? username;
   String? password;
   String? error;
+  bool showPassword = false;
 
   @override
   Widget build(BuildContext context) {
@@ -156,56 +157,63 @@ class _LoginFormState extends State<LoginForm> {
 
     return Form(
         key: _formKey,
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              ...errorTxt,
-              TextFormField(
-                decoration: const InputDecoration(hintText: "Username"),
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return "Username can't be empty";
+        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: <
+            Widget>[
+          ...errorTxt,
+          TextFormField(
+            decoration: const InputDecoration(hintText: "Username"),
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return "Username can't be empty";
+              }
+              return null;
+            },
+            onSaved: (String? nm) => setState(() => username = nm),
+          ),
+          TextFormField(
+            decoration: InputDecoration(
+                hintText: "Password",
+                suffixIcon: IconButton(
+                    icon: Icon(
+                        showPassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () {
+                      setState(() {
+                        showPassword = !showPassword;
+                      });
+                    })),
+            obscureText: !showPassword,
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return "Password can't be empty";
+              }
+              return null;
+            },
+            onSaved: (String? pass) => setState(() => password = pass),
+          ),
+          ElevatedButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  _formKey.currentState!.save();
+                  final response = await http.post(
+                    Uri.parse(URL + "/login"),
+                    headers: {
+                      HttpHeaders.contentTypeHeader: "application/json"
+                    },
+                    body: '{"username": "$username", "password": "$password"}',
+                  );
+                  try {
+                    final token = parseAPIResponse(
+                        response, (fields) => fields!["token"]);
+                    widget.getToken(token);
+                  } on ApiError catch (err) {
+                    setState(() {
+                      error = err.errMsg();
+                    });
                   }
-                  return null;
-                },
-                onSaved: (String? nm) => setState(() => username = nm),
-              ),
-              TextFormField(
-                decoration: const InputDecoration(hintText: "Password"),
-                obscureText: true,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return "Password can't be empty";
-                  }
-                  return null;
-                },
-                onSaved: (String? pass) => setState(() => password = pass),
-              ),
-              ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-                      final response = await http.post(
-                        Uri.parse(URL + "/login"),
-                        headers: {
-                          HttpHeaders.contentTypeHeader: "application/json"
-                        },
-                        body:
-                            '{"username": "$username", "password": "$password"}',
-                      );
-                      try {
-                        final token = parseAPIResponse(
-                            response, (fields) => fields!["token"]);
-                        widget.getToken(token);
-                      } on ApiError catch (err) {
-                        setState(() {
-                          error = err.errMsg();
-                        });
-                      }
-                    }
-                  },
-                  child: const Text('Login'))
-            ]));
+                }
+              },
+              child: const Text('Login'))
+        ]));
   }
 }
 
@@ -591,6 +599,42 @@ class _AuthListsState extends State<AuthLists> {
   late String addItemName;
   late String? addItemAmount;
 
+  @override
+  void initState() {
+    super.initState();
+    loadLastUsed();
+  }
+
+  Future<ListInfo> getLastUsedList() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final Map<String, String> lastUsed =
+        json.decode(prefs.getString("lastUsed")!).cast<String, String>();
+    final status = lastUsed["status"]!;
+    return ListInfo(
+        name: lastUsed["name"]!,
+        status: ListStatus.values
+            .firstWhere((e) => e.toString() == status),
+        id: lastUsed["id"]!);
+  }
+
+  void setLastUsed(ListInfo info) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("lastUsed",
+        '{"id":"${info.id}","status":"${info.status.toString()}","name":"${info.name}"}');
+  }
+
+  void clearLastUsed() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove("lastUsed");
+  }
+
+  void loadLastUsed() async {
+    final lastUsed = await getLastUsedList();
+    setState(() {
+      selectedList.value = lastUsed;
+    });
+  }
+
   void doAddItem(String name, String? amount) async {
     final amt;
     if (amount == null || amount.isEmpty) {
@@ -686,11 +730,20 @@ class _AuthListsState extends State<AuthLists> {
       drawer: ListDrawer(
           logout: widget.logout,
           token: widget.token,
-          listDeleted: (id) => {
-                if (selectedList.value?.id == id) {setList(null)}
-              },
-          selectList: (name, data) =>
-              setList(ListInfo(id: data.id, name: name, status: data.status))),
+          listDeleted: (id) async {
+            if (selectedList.value?.id == id) {
+              setList(null);
+            }
+            final lastUsed = await getLastUsedList();
+            if (lastUsed.id == id) {
+              clearLastUsed();
+            }
+          },
+          selectList: (name, data) async {
+            final info = ListInfo(id: data.id, name: name, status: data.status);
+            setList(info);
+            setLastUsed(info);
+          }),
       body: Center(
         child: ListContent(
             list: selectedList, token: widget.token, addedItem: addedItem),
