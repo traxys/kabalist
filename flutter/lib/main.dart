@@ -220,11 +220,35 @@ class ListDrawer extends StatefulWidget {
 
   final void Function() logout;
   final String token;
-  final void Function(String, String) selectList;
+  final void Function(String, ListData) selectList;
   final void Function(String) listDeleted;
 
   @override
   State<ListDrawer> createState() => _ListDrawerState();
+}
+
+enum ListStatus {
+  Owned,
+  SharedReadonly,
+  SharedWritable,
+}
+
+class ListData {
+  ListData({required this.id, required this.status});
+
+  String id;
+  ListStatus status;
+
+  String fmtStatus() {
+    switch (status) {
+      case ListStatus.Owned:
+        return "";
+      case ListStatus.SharedReadonly:
+        return " (readonly)";
+      case ListStatus.SharedWritable:
+        return " (shared)";
+    }
+  }
 }
 
 class _ListDrawerState extends State<ListDrawer> {
@@ -233,9 +257,9 @@ class _ListDrawerState extends State<ListDrawer> {
 
   late String shareName;
   bool shareReadonly = false;
-  late Future<Map<String, String>> lists;
+  late Future<Map<String, ListData>> lists;
 
-  Future<Map<String, String>> fetchLists() async {
+  Future<Map<String, ListData>> fetchLists() async {
     final response = await http.get(
       Uri.parse(URL + "/list"),
       headers: {
@@ -244,8 +268,29 @@ class _ListDrawerState extends State<ListDrawer> {
       },
     );
 
-    return parseAPIResponse(
-        response, (m) => m!["results"].cast<String, String>());
+    final rsp = parseAPIResponse(
+        response,
+        (m) => m!["results"]
+                .cast<String, Map<String, dynamic>>()
+                .map((key, value) {
+              final status;
+              switch (value["status"]) {
+                case "owned":
+                  status = ListStatus.Owned;
+                  break;
+                case "shared_write":
+                  status = ListStatus.SharedWritable;
+                  break;
+                case "shared_read":
+                  status = ListStatus.SharedReadonly;
+                  break;
+                default:
+                  throw "Unknown status: ${value["status"]}";
+              }
+              return MapEntry(key, ListData(id: value["id"], status: status));
+            }).cast<String, ListData>());
+
+    return rsp;
   }
 
   void addList(String name) async {
@@ -308,13 +353,13 @@ class _ListDrawerState extends State<ListDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, String>>(
+    return FutureBuilder<Map<String, ListData>>(
         future: lists,
         builder: (context, snapshots) {
           final data;
           if (snapshots.hasData) {
             data = List.from(snapshots.data!.entries.map((entry) => ListTile(
-                title: Text(entry.key),
+                title: Text("${entry.key}${entry.value.fmtStatus()}"),
                 onTap: () {
                   widget.selectList(entry.key, entry.value);
                   Navigator.pop(context);
@@ -323,25 +368,27 @@ class _ListDrawerState extends State<ListDrawer> {
                   switch (await showDialog<ListAction>(
                       context: context,
                       builder: (BuildContext ctx) {
+                        var actions = <Widget>[
+                          SimpleDialogOption(
+                            onPressed: () {
+                              Navigator.pop(ctx, ListAction.Delete);
+                            },
+                            child: Text("Delete List"),
+                          )
+                        ];
+                        if (entry.value.status != ListStatus.SharedReadonly) {
+                          actions.add(SimpleDialogOption(
+                            onPressed: () {
+                              Navigator.pop(ctx, ListAction.Share);
+                            },
+                            child: Text("Share List"),
+                          ));
+                        }
                         return SimpleDialog(
-                            title: Text("List Actions"),
-                            children: <Widget>[
-                              SimpleDialogOption(
-                                onPressed: () {
-                                  Navigator.pop(ctx, ListAction.Delete);
-                                },
-                                child: Text("Delete List"),
-                              ),
-                              SimpleDialogOption(
-                                onPressed: () {
-                                  Navigator.pop(ctx, ListAction.Share);
-                                },
-                                child: Text("Share List"),
-                              )
-                            ]);
+                            title: Text("List Actions"), children: actions);
                       })) {
                     case ListAction.Delete:
-                      deleteList(entry.value);
+                      deleteList(entry.value.id);
                       break;
                     case ListAction.Share:
                       print("todo share");
@@ -401,7 +448,7 @@ class _ListDrawerState extends State<ListDrawer> {
                                                         _formKey.currentState!
                                                             .save();
                                                         shareList(
-                                                            entry.value,
+                                                            entry.value.id,
                                                             shareName,
                                                             shareReadonly);
                                                         Navigator.of(context)
@@ -420,8 +467,16 @@ class _ListDrawerState extends State<ListDrawer> {
                 })));
             data.sort((a, b) => a.title.data!.compareTo(b.title.data!) as int);
           } else if (snapshots.hasError) {
+            final error;
+            if (snapshots.error is ApiError) {
+              error =
+                  "An error occured: ${(snapshots.error as ApiError).errMsg()}";
+            } else {
+              print((snapshots.error as TypeError).stackTrace);
+              error = "An unexpected error occured: ${snapshots.error}";
+            }
             data = <Widget>[
-              ListTile(title: Text("TODO ERROR")),
+              ListTile(title: Text(error)),
             ];
           } else {
             data = <Widget>[
@@ -513,9 +568,11 @@ class AuthLists extends StatefulWidget {
 enum ListAction { Delete, Share }
 
 class ListInfo {
-  ListInfo({required this.id, required this.name});
+  ListInfo({required this.id, required this.name, required this.status});
+
   final String id;
   final String name;
+  final ListStatus status;
 }
 
 class AddedItemNotifier extends ChangeNotifier {
@@ -560,9 +617,11 @@ class _AuthListsState extends State<AuthLists> {
         addItem = null;
       });
     } else {
-      setState(() {
-        selectedList.value = list;
-        addItem = () {
+      final addItemFn;
+      if (list.status == ListStatus.SharedReadonly) {
+        addItemFn = null;
+      } else {
+        addItemFn = () {
           showDialog(
               context: context,
               builder: (BuildContext context) => AlertDialog(
@@ -605,6 +664,10 @@ class _AuthListsState extends State<AuthLists> {
                                     child: const Text('Add'))
                               ])))));
         };
+      }
+      setState(() {
+        selectedList.value = list;
+        addItem = addItemFn;
       });
     }
   }
@@ -626,7 +689,8 @@ class _AuthListsState extends State<AuthLists> {
           listDeleted: (id) => {
                 if (selectedList.value?.id == id) {setList(null)}
               },
-          selectList: (name, id) => setList(ListInfo(id: id, name: name))),
+          selectList: (name, data) =>
+              setList(ListInfo(id: data.id, name: name, status: data.status))),
       body: Center(
         child: ListContent(
             list: selectedList, token: widget.token, addedItem: addedItem),
@@ -836,14 +900,13 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
                   onPressed: strikeItems,
                   child: const Text('Delete Striked Items')));
             }
-            return ListView(padding: const EdgeInsets.all(8),
-                children: [
-                  ListTile(
-                      title: Text(
-                          "List: ${widget.list.value!.name}${readOnly ? " (readonly)" : ""}")),
-                  Divider(),
-                  ...items
-                ]);
+            return ListView(padding: const EdgeInsets.all(8), children: [
+              ListTile(
+                  title: Text(
+                      "List: ${widget.list.value!.name}${readOnly ? " (readonly)" : ""}")),
+              Divider(),
+              ...items
+            ]);
           } else if (snapshot.hasError) {
             print("Err: ${snapshot.error}");
             if (snapshot.error is ApiError?) {
