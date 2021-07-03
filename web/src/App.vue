@@ -81,6 +81,48 @@
   </v-dialog>
 
   <v-dialog
+      v-model="register"
+      persistent
+      max-width="600px"
+  >
+    <v-card>
+      <v-card-title>Register</v-card-title>
+      <v-card-text>
+         <v-container>
+          <v-row v-if="registererror" class="red--text">
+            <p>
+              {{this.registererror}}
+            </p>
+          </v-row>
+          <v-row>
+            <v-text-field v-model="username" label="Username" required></v-text-field>
+          </v-row>
+          <v-row>
+            <v-text-field
+              v-model="password"
+              label="Password"
+              required
+              :append-icon="showpass ? 'mdi-eye' : 'mdi-eye-off'"
+              :type="showpass ? 'text' : 'password'"
+              @click:append="showpass = !showpass"
+            ></v-text-field>
+          </v-row>
+         </v-container>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="blue darken-1"
+          text
+          @click="doRegister()"
+        >
+          Register
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
       v-model="itemDialog"
       max-width="600px"
   >
@@ -187,6 +229,7 @@ const ENDPOINT = "http://localhost:8000";
 
 export default {
 	data: () => ({
+    register: false,
 		drawer: false,
     login: true,
     showpass: false,
@@ -195,6 +238,7 @@ export default {
     password: "",
     username: "",
     loginerror: null,
+    registererror: null,
     lists: [],
     selectedList: null,
     content: null,
@@ -203,6 +247,7 @@ export default {
     itemName: "",
     shareWith: "",
     shareReadonly: false,
+    registration: null,
 	}),
   computed: {
     readonly: function() {
@@ -226,7 +271,10 @@ export default {
 		this.$vuetify.theme.dark = true
 	},
   async mounted() {
-		if(localStorage.token) {
+    this.registration = new URL(location.href).searchParams.get('registration');
+    if(this.registration != null) {
+      this.register = true;
+    } else if(localStorage.token) {
 			this.token = localStorage.token;
       this.username = localStorage.username;
       this.login = false;
@@ -264,6 +312,48 @@ export default {
           await this.fetchLists();
         } else {
           this.loginerror = this.errorDesc(resp_body.err);
+        }
+      }
+    },
+    doRegister: async function() {
+      this.registererror = null;
+      const regRsp = await fetch(ENDPOINT + "/register/" + this.registration, {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({password: this.password, username: this.username})
+      });
+
+      if(!regRsp.ok) {
+        console.log(regRsp);
+        this.registererror = "An unexpected error occured";
+      } else {
+        const regResp_body = await regRsp.json();
+        if("ok" in regResp_body) {
+          const resp = await fetch(ENDPOINT + "/login", {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({password: this.password, username: this.username})
+          })
+
+          if(!resp.ok) {
+            console.log(resp);
+            this.registererror = "An unexpected error occured";
+          } else {
+            const resp_body = await resp.json();
+            if("ok" in resp_body) {
+              this.token = resp_body.ok.token;
+              localStorage.token = this.token;
+              localStorage.username = this.username;
+              this.register = false;
+              this.login = false;
+              this.password = "";
+              await this.fetchLists();
+            } else {
+              this.registererror = this.errorDesc(resp_body.err);
+            }
+          }
+        } else {
+          this.registererror = this.errorDesc(regResp_body.err);
         }
       }
     },
