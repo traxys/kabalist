@@ -155,6 +155,10 @@ define_error! {
             description: "list is not writable",
             code: 4,
         },
+        RegistrationDoesNotExist = {
+            description: "registration does not exist",
+            code: 5,
+        },
     }
 }
 
@@ -221,7 +225,7 @@ async fn login(
     request: Json<LoginRequest>,
 ) -> Result<Rsp<LoginResponse>, rocket::response::Debug<jsonwebtoken::errors::Error>> {
     let mut rsp = sqlx::query!(
-        "SELECT id FROM accounts WHERE name = $1 AND password = crypt($2, password)",
+        "SELECT id FROM accounts WHERE name = $1::text::citext AND password = crypt($2, password)",
         request.username,
         request.password
     )
@@ -375,9 +379,12 @@ struct AccountSearch {
 #[get("/search/account/<name>")]
 async fn search_account(db: &State<Db>, _user: User, name: String) -> Rsp<AccountSearch> {
     let result = try_rsp!(
-        sqlx::query!("SELECT id FROM accounts WHERE name ILIKE $1", name)
-            .fetch_one(&**db)
-            .await
+        sqlx::query!(
+            "SELECT id FROM accounts WHERE name ILIKE $1::text::citext",
+            name
+        )
+        .fetch_one(&**db)
+        .await
     );
 
     Rsp::ok(AccountSearch { id: result.id })
@@ -659,6 +666,47 @@ async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
     Rsp::ok(())
 }
 
+#[derive(Deserialize)]
+pub struct RegisterRequest {
+    username: String,
+    password: String,
+}
+
+#[post("/register/<id>", data = "<req>")]
+async fn register(db: &State<Db>, id: Uuid, req: Json<RegisterRequest>) -> Rsp<()> {
+    let mut tx = try_rsp!(db.begin().await);
+
+    let mut is_registered =
+        sqlx::query!("SELECT id FROM registrations WHERE id = $1", id).fetch(&mut tx);
+    match is_registered.next().await {
+        None => return Error::RegistrationDoesNotExist.default_err().into(),
+        Some(Err(e)) => return e.into(),
+        Some(Ok(_)) => (),
+    }
+    drop(is_registered);
+
+    try_rsp!(
+        sqlx::query!(
+            r#"INSERT INTO accounts (id, name, password) 
+               VALUES (uuid_generate_v4(), $1::text::citext, crypt($2, gen_salt('bf')))"#,
+            req.username,
+            req.password
+        )
+        .execute(&mut tx)
+        .await
+    );
+
+    try_rsp!(
+        sqlx::query!("DELETE FROM registrations WHERE id = $1", id)
+            .execute(&mut tx)
+            .await
+    );
+
+    try_rsp!(tx.commit().await);
+
+    Rsp::ok(())
+}
+
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {
     use rocket_sync_db_pools::Config;
 
@@ -813,6 +861,7 @@ fn rocket() -> _ {
                 delete_share,
                 delete_item,
                 delete_list,
+                register,
             ],
         )
 }

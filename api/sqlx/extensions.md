@@ -1,0 +1,3 @@
+pgcrypto
+citext
+uuid-ossp
