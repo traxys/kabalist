@@ -932,6 +932,7 @@ dependencies = [
  "base64 0.13.0",
  "chrono",
  "jsonwebtoken",
+ "lists_types",
  "rocket",
  "rocket_sync_db_pools",
  "serde",
@@ -944,13 +945,31 @@ name = "lists_cli"
 version = "0.1.0"
 dependencies = [
  "color-eyre",
+ "lists_client",
  "promptly",
- "reqwest",
  "rpassword",
- "serde",
  "structopt",
  "tokio",
  "yansi",
+]
+
+[[package]]
+name = "lists_client"
+version = "0.1.0"
+dependencies = [
+ "lists_types",
+ "reqwest",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "lists_types"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror",
+ "uuid",
 ]
 
 [[package]]

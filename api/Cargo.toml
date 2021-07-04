@@ -13,4 +13,5 @@ rocket = {version = "0.5.0-rc.1", features = ["json", "uuid"]}
 rocket_sync_db_pools = "0.1.0-rc.1"
 serde = "1.0.126"
 sqlx = { version = "0.5.5", features = ["postgres", "migrate", "runtime-tokio-rustls", "macros", "uuid"] }
+lists_types = { path = "../types" }
 uuid = { version = "0.8.2", features = ["serde"] }

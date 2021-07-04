@@ -13,7 +13,7 @@ use rocket::{
     Build, Rocket, State,
 };
 use sqlx::ConnectOptions;
-use uuid::Uuid;
+use lists_types::{uuid::Uuid, RspData, RspErr};
 
 type Db = sqlx::PgPool;
 
@@ -93,12 +93,6 @@ impl<'r> FromRequest<'r> for User {
     }
 }
 
-#[derive(Serialize)]
-struct RspErr {
-    code: usize,
-    description: String,
-}
-
 macro_rules! define_error {
     (
     pub enum Error {
@@ -166,13 +160,6 @@ define_error! {
 #[response(bound = "T: Serialize")]
 struct Rsp<T>(Json<RspData<T>>);
 
-#[derive(Serialize)]
-#[serde(rename_all = "lowercase")]
-enum RspData<T> {
-    Ok(T),
-    Err(RspErr),
-}
-
 impl<T: Serialize> From<sqlx::Error> for Rsp<T> {
     fn from(err: sqlx::Error) -> Self {
         error!("SQLX error: {:?}", err);
@@ -207,23 +194,12 @@ macro_rules! try_rsp {
     };
 }
 
-#[derive(Deserialize, Debug)]
-struct LoginRequest {
-    password: String,
-    username: String,
-}
-
-#[derive(Serialize, Debug)]
-struct LoginResponse {
-    token: String,
-}
-
 #[post("/login", data = "<request>")]
 async fn login(
     cfg: &State<Config>,
     db: &State<Db>,
-    request: Json<LoginRequest>,
-) -> Result<Rsp<LoginResponse>, rocket::response::Debug<jsonwebtoken::errors::Error>> {
+    request: Json<lists_types::login::Request>,
+) -> Result<Rsp<lists_types::login::Response>, rocket::response::Debug<jsonwebtoken::errors::Error>> {
     let mut rsp = sqlx::query!(
         "SELECT id FROM accounts WHERE name = $1::text::citext AND password = crypt($2, password)",
         request.username,
@@ -251,25 +227,15 @@ async fn login(
         Ok(t) => t,
     };
 
-    Ok(Rsp::ok(LoginResponse { token }))
-}
-
-#[derive(Deserialize)]
-struct CreateListRequest {
-    name: String,
-}
-
-#[derive(Serialize)]
-struct CreateListResponse {
-    id: Uuid,
+    Ok(Rsp::ok(lists_types::login::Response { token }))
 }
 
 #[post("/list", data = "<list>")]
 async fn create_list(
     db: &State<Db>,
     user: User,
-    list: Json<CreateListRequest>,
-) -> Rsp<CreateListResponse> {
+    list: Json<lists_types::create_list::Request>,
+) -> Rsp<lists_types::create_list::Response> {
     let fetch_lists = try_rsp!(
         sqlx::query!(
             "SELECT COUNT(*) FROM lists WHERE owner = $1 AND name = $2",
@@ -295,30 +261,11 @@ async fn create_list(
         .await
     );
 
-    Rsp::ok(CreateListResponse { id: list_id.id })
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-enum ListStatus {
-    Owned,
-    SharedWrite,
-    SharedRead,
-}
-
-#[derive(Serialize)]
-struct ListInfo {
-    id: Uuid,
-    status: ListStatus,
-}
-
-#[derive(Serialize)]
-struct ListofLists {
-    results: HashMap<String, ListInfo>,
+    Rsp::ok(lists_types::create_list::Response { id: list_id.id })
 }
 
 #[get("/search/list/<name>")]
-async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<ListofLists> {
+async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<lists_types::get_lists::Response> {
     let results_owned = try_rsp!(
         sqlx::query!(
             "SELECT name, id FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
@@ -342,27 +289,27 @@ async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<ListofList
         .await
     );
 
-    Rsp::ok(ListofLists {
+    Rsp::ok(lists_types::get_lists::Response {
         results: results_owned
             .into_iter()
             .map(|row| {
                 (
                     row.name,
-                    ListInfo {
+                    lists_types::get_lists::ListInfo {
                         id: row.id,
-                        status: ListStatus::Owned,
+                        status: lists_types::get_lists::ListStatus::Owned,
                     },
                 )
             })
             .chain(results_shared.into_iter().map(|row| {
                 (
                     row.name,
-                    ListInfo {
+                    lists_types::get_lists::ListInfo {
                         id: row.id,
                         status: if row.readonly {
-                            ListStatus::SharedRead
+                            lists_types::get_lists::ListStatus::SharedRead
                         } else {
-                            ListStatus::SharedWrite
+                            lists_types::get_lists::ListStatus::SharedWrite
                         },
                     },
                 )
@@ -371,13 +318,12 @@ async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<ListofList
     })
 }
 
-#[derive(Serialize)]
-struct AccountSearch {
-    id: Uuid,
-}
-
 #[get("/search/account/<name>")]
-async fn search_account(db: &State<Db>, _user: User, name: String) -> Rsp<AccountSearch> {
+async fn search_account(
+    db: &State<Db>,
+    _user: User,
+    name: String,
+) -> Rsp<lists_types::search_account::Response> {
     let result = try_rsp!(
         sqlx::query!(
             "SELECT id FROM accounts WHERE name ILIKE $1::text::citext",
@@ -387,11 +333,11 @@ async fn search_account(db: &State<Db>, _user: User, name: String) -> Rsp<Accoun
         .await
     );
 
-    Rsp::ok(AccountSearch { id: result.id })
+    Rsp::ok(lists_types::search_account::Response { id: result.id })
 }
 
 #[get("/list")]
-async fn list_lists(db: &State<Db>, user: User) -> Rsp<ListofLists> {
+async fn list_lists(db: &State<Db>, user: User) -> Rsp<lists_types::get_lists::Response> {
     let results_owned = try_rsp!(
         sqlx::query!(
             r#"
@@ -414,27 +360,27 @@ async fn list_lists(db: &State<Db>, user: User) -> Rsp<ListofLists> {
         .await
     );
 
-    Rsp::ok(ListofLists {
+    Rsp::ok(lists_types::get_lists::Response {
         results: results_owned
             .into_iter()
             .map(|row| {
                 (
                     row.name,
-                    ListInfo {
+                    lists_types::get_lists::ListInfo {
                         id: row.id,
-                        status: ListStatus::Owned,
+                        status: lists_types::get_lists::ListStatus::Owned,
                     },
                 )
             })
             .chain(results_shared.into_iter().map(|row| {
                 (
                     row.name,
-                    ListInfo {
+                    lists_types::get_lists::ListInfo {
                         id: row.id,
                         status: if row.readonly {
-                            ListStatus::SharedRead
+                            lists_types::get_lists::ListStatus::SharedRead
                         } else {
-                            ListStatus::SharedWrite
+                            lists_types::get_lists::ListStatus::SharedWrite
                         },
                     },
                 )
@@ -499,21 +445,8 @@ macro_rules! try_check_list {
     };
 }
 
-#[derive(Serialize, Deserialize)]
-struct Item {
-    id: i32,
-    name: String,
-    amount: Option<String>,
-}
-
-#[derive(Serialize)]
-struct ReadListResponse {
-    items: Vec<Item>,
-    readonly: bool,
-}
-
 #[get("/list/<id>")]
-async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<ReadListResponse> {
+async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<lists_types::read_list::Response> {
     try_check_list!(check_list(db, &user.id, &id, false).await);
 
     let items = try_rsp!(
@@ -537,10 +470,10 @@ async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<ReadListResponse
         None => false,
     };
 
-    Rsp::ok(ReadListResponse {
+    Rsp::ok(lists_types::read_list::Response {
         items: items
             .into_iter()
-            .map(|row| Item {
+            .map(|row| lists_types::read_list::Item {
                 id: row.id,
                 name: row.name,
                 amount: row.amount,
@@ -550,24 +483,13 @@ async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<ReadListResponse
     })
 }
 
-#[derive(Deserialize)]
-struct AddListRequest {
-    name: String,
-    amount: Option<String>,
-}
-
-#[derive(Serialize)]
-struct AddListResponse {
-    id: i32,
-}
-
 #[post("/list/<id>", data = "<item>")]
 async fn add_list(
     db: &State<Db>,
     user: User,
     id: Uuid,
-    item: Json<AddListRequest>,
-) -> Rsp<AddListResponse> {
+    item: Json<lists_types::add_to_list::Request>,
+) -> Rsp<lists_types::add_to_list::Response> {
     try_check_list!(check_list(db, &user.id, &id, true).await);
 
     let id = try_rsp!(
@@ -581,11 +503,16 @@ async fn add_list(
         .await
     );
 
-    Rsp::ok(AddListResponse { id: id.id })
+    Rsp::ok(lists_types::add_to_list::Response { id: id.id })
 }
 
 #[delete("/list/<list>/<item>")]
-async fn delete_item(db: &State<Db>, user: User, list: Uuid, item: i32) -> Rsp<()> {
+async fn delete_item(
+    db: &State<Db>,
+    user: User,
+    list: Uuid,
+    item: i32,
+) -> Rsp<lists_types::delete_item::Response> {
     try_check_list!(check_list(db, &user.id, &list, true).await);
 
     try_rsp!(
@@ -598,17 +525,16 @@ async fn delete_item(db: &State<Db>, user: User, list: Uuid, item: i32) -> Rsp<(
         .await
     );
 
-    Rsp::ok(())
-}
-
-#[derive(Deserialize)]
-pub struct ShareRequest {
-    share_with: Uuid,
-    readonly: bool,
+    Rsp::ok(lists_types::delete_item::Response {})
 }
 
 #[put("/share/<id>", data = "<request>")]
-async fn share_list(db: &State<Db>, user: User, id: Uuid, request: Json<ShareRequest>) -> Rsp<()> {
+async fn share_list(
+    db: &State<Db>,
+    user: User,
+    id: Uuid,
+    request: Json<lists_types::share_list::Request>,
+) -> Rsp<lists_types::share_list::Response> {
     try_check_list!(check_list(db, &user.id, &id, true).await);
 
     try_rsp!(
@@ -624,11 +550,11 @@ async fn share_list(db: &State<Db>, user: User, id: Uuid, request: Json<ShareReq
         .await
     );
 
-    Rsp::ok(())
+    Rsp::ok(lists_types::share_list::Response {})
 }
 
 #[delete("/share/<id>")]
-async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
+async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<lists_types::delete_share::Response> {
     try_check_list!(is_owner(db, &user.id, &id).await);
 
     try_rsp!(
@@ -637,11 +563,11 @@ async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
             .await
     );
 
-    Rsp::ok(())
+    Rsp::ok(lists_types::delete_share::Response {})
 }
 
 #[delete("/list/<id>")]
-async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
+async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<lists_types::delete_list::Response> {
     try_check_list!(is_owner(db, &user.id, &id).await);
     let mut tx = try_rsp!(db.begin().await);
 
@@ -663,17 +589,15 @@ async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<()> {
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(())
-}
-
-#[derive(Deserialize)]
-pub struct RegisterRequest {
-    username: String,
-    password: String,
+    Rsp::ok(lists_types::delete_list::Response {})
 }
 
 #[post("/register/<id>", data = "<req>")]
-async fn register(db: &State<Db>, id: Uuid, req: Json<RegisterRequest>) -> Rsp<()> {
+async fn register(
+    db: &State<Db>,
+    id: Uuid,
+    req: Json<lists_types::register::Request>,
+) -> Rsp<lists_types::register::Response> {
     let mut tx = try_rsp!(db.begin().await);
 
     let mut is_registered =
@@ -704,7 +628,7 @@ async fn register(db: &State<Db>, id: Uuid, req: Json<RegisterRequest>) -> Rsp<(
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(())
+    Rsp::ok(lists_types::register::Response {})
 }
 
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {

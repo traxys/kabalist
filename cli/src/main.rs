@@ -1,23 +1,6 @@
-use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
+use lists_client::Client;
 use structopt::StructOpt;
 use yansi::Paint;
-
-#[derive(Deserialize)]
-struct Empty {}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum Rsp<T> {
-    Ok(T),
-    Err(RspErr),
-}
-
-#[derive(Deserialize)]
-struct RspErr {
-    description: String,
-}
 
 #[derive(StructOpt, Debug)]
 pub enum Commands {
@@ -76,250 +59,6 @@ pub struct Args {
     command: Commands,
 }
 
-macro_rules! try_rsp {
-    ($e:expr) => {
-        match $e {
-            Rsp::Ok(v) => v,
-            Rsp::Err(e) => color_eyre::eyre::bail!("List error: {}", e.description),
-        }
-    };
-}
-
-async fn login(url: &str, username: &str, password: &str) -> color_eyre::Result<String> {
-    #[derive(Serialize)]
-    struct LoginRequest<'a> {
-        username: &'a str,
-        password: &'a str,
-    }
-
-    #[derive(Deserialize)]
-    struct LoginResponse {
-        token: String,
-    }
-
-    let client = reqwest::Client::new();
-    let token: LoginResponse = try_rsp!(
-        client
-            .post(format!("{}/login", url))
-            .json(&LoginRequest { username, password })
-            .send()
-            .await?
-            .json()
-            .await?
-    );
-
-    Ok(token.token)
-}
-
-struct Client {
-    client: reqwest::Client,
-    token: String,
-    url: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct Item {
-    id: i32,
-    amount: Option<String>,
-    name: String,
-}
-
-#[derive(Debug)]
-struct Read {
-    items: Vec<Item>,
-    readonly: bool,
-}
-
-#[derive(Deserialize)]
-struct ListInfo {
-    id: String,
-    status: String,
-}
-
-impl Client {
-    fn new(url: String, token: String) -> Self {
-        Self {
-            client: reqwest::Client::new(),
-            token,
-            url,
-        }
-    }
-
-    async fn lists(&self) -> color_eyre::Result<Vec<(String, ListInfo)>> {
-        #[derive(Deserialize)]
-        struct List {
-            results: HashMap<String, ListInfo>,
-        }
-
-        let lists: List = try_rsp!(
-            self.client
-                .get(&format!("{}/list", self.url))
-                .bearer_auth(&self.token)
-                .send()
-                .await?
-                .json()
-                .await?
-        );
-
-        let mut res: Vec<_> = lists.results.into_iter().collect();
-        res.sort_unstable_by(|a, b| a.0.cmp(&b.0));
-        Ok(res)
-    }
-
-    async fn search(&self, name: &str) -> color_eyre::Result<HashMap<String, ListInfo>> {
-        #[derive(Deserialize)]
-        struct List {
-            results: HashMap<String, ListInfo>,
-        }
-
-        let lists: List = try_rsp!(
-            self.client
-                .get(&format!("{}/search/list/{}", self.url, name))
-                .bearer_auth(&self.token)
-                .send()
-                .await?
-                .json()
-                .await?
-        );
-
-        Ok(lists.results)
-    }
-
-    async fn read(&self, id: &str) -> color_eyre::Result<Read> {
-        #[derive(Deserialize)]
-        struct Response {
-            items: Vec<Item>,
-            readonly: bool,
-        }
-
-        let rsp: Response = try_rsp!(
-            self.client
-                .get(&format!("{}/list/{}", self.url, id))
-                .bearer_auth(&self.token)
-                .send()
-                .await?
-                .json()
-                .await?
-        );
-
-        Ok(Read {
-            items: rsp.items,
-            readonly: rsp.readonly,
-        })
-    }
-
-    async fn add(&self, list_id: &str, name: &str, amount: Option<&str>) -> color_eyre::Result<()> {
-        #[derive(Serialize)]
-        struct Request<'a> {
-            name: &'a str,
-            amount: Option<&'a str>,
-        }
-
-        let _: Empty = try_rsp!(
-            self.client
-                .post(&format!("{}/list/{}", self.url, list_id))
-                .bearer_auth(&self.token)
-                .json(&Request { name, amount })
-                .send()
-                .await?
-                .json()
-                .await?
-        );
-
-        Ok(())
-    }
-
-    async fn search_account(&self, name: &str) -> color_eyre::Result<String> {
-        #[derive(Deserialize)]
-        struct Response {
-            id: String,
-        }
-
-        let rsp: Response = try_rsp!(
-            self.client
-                .get(&format!("{}/search/account/{}", self.url, name))
-                .bearer_auth(&self.token)
-                .send()
-                .await?
-                .json()
-                .await?
-        );
-
-        Ok(rsp.id)
-    }
-
-    async fn share(&self, list: &str, share_with: &str, readonly: bool) -> color_eyre::Result<()> {
-        #[derive(Serialize)]
-        struct Request<'a> {
-            share_with: &'a str,
-            readonly: bool,
-        }
-
-        let _: Empty = try_rsp!(
-            self.client
-                .put(&format!("{}/share/{}", self.url, list))
-                .bearer_auth(&self.token)
-                .json(&Request {
-                    share_with,
-                    readonly,
-                })
-                .send()
-                .await?
-                .json()
-                .await?
-        );
-
-        Ok(())
-    }
-
-    async fn unshare(&self, list: &str) -> color_eyre::Result<()> {
-        let _: Empty = try_rsp!(
-            self.client
-                .delete(&format!("{}/share/{}", self.url, list))
-                .bearer_auth(&self.token)
-                .send()
-                .await?
-                .json()
-                .await?
-        );
-
-        Ok(())
-    }
-
-    async fn create_list(&self, list_name: &str) -> color_eyre::Result<()> {
-        #[derive(Serialize)]
-        struct Request<'a> {
-            name: &'a str,
-        }
-
-        let _: Empty = try_rsp!(
-            self.client
-                .post(&format!("{}/list", self.url))
-                .bearer_auth(&self.token)
-                .json(&Request { name: list_name })
-                .send()
-                .await?
-                .json()
-                .await?
-        );
-
-        Ok(())
-    }
-
-    async fn delete_item(&self, list: &str, item: i32) -> color_eyre::Result<()> {
-        let _: Empty = try_rsp!(
-            self.client
-                .delete(&format!("{}/list/{}/{}", self.url, list, item))
-                .bearer_auth(&self.token)
-                .send()
-                .await?
-                .json()
-                .await?
-        );
-        Ok(())
-    }
-}
-
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
@@ -329,21 +68,28 @@ async fn main() -> color_eyre::Result<()> {
             let password = password
                 .map(Ok)
                 .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
-            let token = login(&args.url, &name, &password).await?;
-            println!("Token: {}", token);
+            let token = lists_client::login(&args.url, &name, &password).await?;
+            println!("Token: {}", token.token);
             println!("You can export in as LIST_TOKEN or pass it as parameters");
         }
         Commands::Lists { token } => {
             let client = Client::new(args.url, token);
             let lists = client.lists().await?;
             println!("Lists: ");
+            let mut lists = lists.results.into_iter().collect::<Vec<_>>();
+            lists.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
             for (list, info) in lists {
-                println!("  - {} ({})", yansi::Paint::new(list).italic(), info.status);
+                let status = match info.status {
+                    lists_client::ListStatus::Owned => "owned",
+                    lists_client::ListStatus::SharedWrite => "readonly",
+                    lists_client::ListStatus::SharedRead => "shared",
+                };
+                println!("  - {} ({})", yansi::Paint::new(list).italic(), status);
             }
         }
         Commands::Read { token, name } => {
             let client = Client::new(args.url, token);
-            let searched = client.search(&name).await?;
+            let searched = client.search(&name).await?.results;
             match searched.get(&name) {
                 None => println!("Could not read list: {}", yansi::Paint::red("No such list")),
                 Some(info) => {
@@ -373,7 +119,7 @@ async fn main() -> color_eyre::Result<()> {
             amount,
         } => {
             let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?;
+            let searched = client.search(&list).await?.results;
             match searched.get(&list) {
                 None => println!("Could add to list: {}", yansi::Paint::red("No such list")),
                 Some(info) => {
@@ -391,14 +137,14 @@ async fn main() -> color_eyre::Result<()> {
         } => {
             let client = Client::new(args.url, token);
             let account = client.search_account(&name).await?;
-            let searched = client.search(&list).await?;
+            let searched = client.search(&list).await?.results;
             match searched.get(&list) {
                 None => println!(
                     "Could not share list: {}",
                     yansi::Paint::red("No such list")
                 ),
                 Some(info) => {
-                    client.share(&info.id, &account, readonly).await?;
+                    client.share(&info.id, &account.id, readonly).await?;
                 }
             }
         }
@@ -408,20 +154,20 @@ async fn main() -> color_eyre::Result<()> {
         }
         Commands::Unshare { token, name } => {
             let client = Client::new(args.url, token);
-            let searched = client.search(&name).await?;
+            let searched = client.search(&name).await?.results;
             match searched.get(&name) {
                 None => println!(
                     "Could not unshare list: {}",
                     yansi::Paint::red("No such list")
                 ),
                 Some(info) => {
-                    client.unshare(&info.id).await?;
+                    client.delete_share(&info.id).await?;
                 }
             }
         }
         Commands::Tick { token, list, item } => {
             let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?;
+            let searched = client.search(&list).await?.results;
             match searched.get(&list) {
                 None => println!(
                     "Could not unshare list: {}",
