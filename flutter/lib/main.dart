@@ -429,6 +429,7 @@ class _ListDrawerState extends State<ListDrawer> {
                                                       const InputDecoration(
                                                           hintText:
                                                               "Share with"),
+                                                  autofocus: true,
                                                   validator: (String? value) {
                                                     if (value == null ||
                                                         value.isEmpty) {
@@ -523,6 +524,7 @@ class _ListDrawerState extends State<ListDrawer> {
                                                 decoration:
                                                     const InputDecoration(
                                                         hintText: "Name"),
+                                                autofocus: true,
                                                 validator: (String? value) {
                                                   if (value == null ||
                                                       value.isEmpty) {
@@ -612,8 +614,7 @@ class _AuthListsState extends State<AuthLists> {
     final status = lastUsed["status"]!;
     return ListInfo(
         name: lastUsed["name"]!,
-        status: ListStatus.values
-            .firstWhere((e) => e.toString() == status),
+        status: ListStatus.values.firstWhere((e) => e.toString() == status),
         id: lastUsed["id"]!);
   }
 
@@ -630,9 +631,7 @@ class _AuthListsState extends State<AuthLists> {
 
   void loadLastUsed() async {
     final lastUsed = await getLastUsedList();
-    setState(() {
-      selectedList.value = lastUsed;
-    });
+    setList(lastUsed);
   }
 
   void doAddItem(String name, String? amount) async {
@@ -669,7 +668,7 @@ class _AuthListsState extends State<AuthLists> {
           showDialog(
               context: context,
               builder: (BuildContext context) => AlertDialog(
-                  title: Text("Add List"),
+                  title: Text("Add Item"),
                   content: Form(
                       key: _formKey,
                       child: Container(
@@ -680,6 +679,7 @@ class _AuthListsState extends State<AuthLists> {
                                 TextFormField(
                                   decoration:
                                       const InputDecoration(hintText: "Name"),
+                                  autofocus: true,
                                   validator: (String? value) {
                                     if (value == null || value.isEmpty) {
                                       return "Name can't be empty";
