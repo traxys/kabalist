@@ -23,6 +23,24 @@ Generates a `Bearer` token.
 }
 ```
 
+## `/register/<id>`
+
+### POST
+
+Consumes the register token `id` and creates an account
+
+#### Request
+```json
+{
+	"username": "...",
+	"password": "..."
+}
+```
+
+#### Reply
+
+No body
+
 ## `/list`
 
 ### `[AUTH]` POST
@@ -116,7 +134,7 @@ Empty body
 
 Empty request
 
-## `list/<list:uuid>/<item:i32>`
+## `/list/<list:uuid>/<item:i32>`
 
 ### `[AUTH]` DELETE
 
