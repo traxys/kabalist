@@ -24,7 +24,14 @@
         dense
     >
       <v-subheader>LISTS {{this.username == null ? "" : `(${this.username})`}}</v-subheader>
+      <v-list-item @click="addList()">
+         <v-list-item-icon>
+         <v-icon>mdi-playlist-edit</v-icon>
+         </v-list-item-icon>
+        <v-list-item-title class="text-h6">Add List</v-list-item-title>
+      </v-list-item>
       <v-list-item-group v-model="selectedList" color="primary" @change="selectList()">
+      <v-divider></v-divider>
        <v-list-item
           v-for="(item, i) in this.lists"
           :key="'list'+ i"
@@ -174,6 +181,27 @@
     </v-card>
   </v-dialog>
 
+  <v-dialog
+      v-model="addListDialog"
+      max-width="600px"
+  >
+    <v-card>
+      <v-card-title>Add List</v-card-title>
+      <v-card-text>
+        <v-container>
+         <v-row>
+           <v-text-field v-model="addListName" label="List Name" required></v-text-field>
+         </v-row>
+        </v-container>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="red darken-1" text @click="doAddListCancel()">Cancel</v-btn>
+        <v-btn color="blue darken-1" text @click="doAddList()">Add</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <v-main>
     <v-container v-if="this.selectedList != null">
       <v-row justify="center">
@@ -229,6 +257,8 @@ const ENDPOINT = "http://localhost:8000";
 
 export default {
 	data: () => ({
+    addListDialog: false,
+    addListName: null,
     register: false,
 		drawer: false,
     login: true,
@@ -354,6 +384,36 @@ export default {
           }
         } else {
           this.registererror = this.errorDesc(regResp_body.err);
+        }
+      }
+    },
+    addList: function() {
+      this.addListDialog = true;
+    },
+    doAddListCancel() {
+      this.addListDialog = false;
+      this.addListName = null;
+    },
+    doAddList: async function() {
+      this.addListDialog = false;
+      this.selectedList = null;
+      const resp = await fetch(ENDPOINT + "/list", {
+        method: "POST",
+        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}`},
+        body: JSON.stringify({name: this.addListName})
+      })
+
+      if(!resp.ok) {
+        console.log(resp);
+        alert("Unexpected error occured");
+      } else{
+        const resp_body = await resp.json();
+        if("ok" in resp_body) {
+          this.addListName = "";
+          this.fetchLists();
+        } else {
+          console.log(resp_body);
+          alert("Unexpected error occured");
         }
       }
     },
