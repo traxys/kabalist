@@ -158,6 +158,23 @@
   </v-dialog>
 
   <v-dialog
+      v-model="deleteDialog"
+      max-width="600px"
+  >
+    <v-card>
+      <v-card-title>Delete List</v-card-title>
+      <v-card-text>
+        Are you sure you want to delete the list ?
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="red darken-1" text @click="deleteDialog = !deleteDialog">Cancel</v-btn>
+        <v-btn color="blue darken-1" text @click="doDelete()">Delete</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
       v-model="shareDialog"
       max-width="600px"
   >
@@ -209,6 +226,7 @@
           <v-card-title>
             <p>List: {{this.selectedName}}</p>
             <v-spacer></v-spacer>
+            <v-btn text color="red" @click="deleteDialog = !deleteDialog" v-if="owned">Delete</v-btn>
             <v-btn text color="blue" @click="shareDialog = !shareDialog" v-if="!readonly">Share</v-btn>
           </v-card-title>
           <v-card-text>
@@ -257,6 +275,7 @@ const ENDPOINT = "http://localhost:8000";
 
 export default {
 	data: () => ({
+    deleteDialog: false,
     addListDialog: false,
     addListName: null,
     register: false,
@@ -292,6 +311,9 @@ export default {
     },
     selectedStatus: function () {
       return this.lists[this.selectedList][1].status
+    },
+    owned: function () {
+      return this.selectedStatus === "owned";
     },
     selectedName: function() {
       return this.lists[this.selectedList][0]
@@ -410,6 +432,27 @@ export default {
         const resp_body = await resp.json();
         if("ok" in resp_body) {
           this.addListName = "";
+          this.fetchLists();
+        } else {
+          console.log(resp_body);
+          alert("Unexpected error occured");
+        }
+      }
+    },
+    doDelete: async function() {
+      this.deleteDialog = false;
+      const resp = await fetch(ENDPOINT + "/list/" + this.selectedId, {
+        method: "DELETE",
+        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}`},
+      })
+
+      if(!resp.ok) {
+        console.log(resp);
+        alert("Unexpected error occured");
+      } else{
+        const resp_body = await resp.json();
+        if("ok" in resp_body) {
+          this.selectedList = null;
           this.fetchLists();
         } else {
           console.log(resp_body);
