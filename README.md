@@ -1,4 +1,4 @@
-# lists
+# kabalist
 
 [ALPHA] A webserver to manage and share lists
 
