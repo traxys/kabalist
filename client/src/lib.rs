@@ -1,6 +1,6 @@
 use serde::Serialize;
-use lists_types::RspData;
-pub use lists_types::{
+use kabalist_types::RspData;
+pub use kabalist_types::{
     add_to_list::Response as AddItemResponse,
     create_list::Response as CreateListResponse,
     delete_item::Response as DeleteItemResponse,
@@ -26,7 +26,7 @@ pub enum Error {
 }
 
 fn map_res<T>(res: RspData<T>) -> Result<T> {
-    let res: Result<_, lists_types::RspErr> = res.into();
+    let res: Result<_, kabalist_types::RspErr> = res.into();
     res.map_err(Into::into)
 }
 
@@ -65,7 +65,7 @@ impl Client {
     }
 
     pub async fn lists(&self) -> Result<ListsResponse> {
-        let lists: RspData<lists_types::get_lists::Response> = self
+        let lists: RspData<kabalist_types::get_lists::Response> = self
             .client
             .get(&format!("{}/list", self.url))
             .bearer_auth(&self.token)
@@ -78,7 +78,7 @@ impl Client {
     }
 
     pub async fn search(&self, name: &str) -> Result<ListsResponse> {
-        let lists: RspData<lists_types::get_lists::Response> = self
+        let lists: RspData<kabalist_types::get_lists::Response> = self
             .client
             .get(&format!("{}/search/list/{}", self.url, name))
             .bearer_auth(&self.token)

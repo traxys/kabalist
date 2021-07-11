@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar app>
         <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-        <v-toolbar-title>Lists</v-toolbar-title>
+        <v-toolbar-title>KabaList</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn
           color="blue darken-1"

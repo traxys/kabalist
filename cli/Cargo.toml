@@ -1,12 +1,12 @@
 [package]
-name = "lists_cli"
+name = "kabalist_cli"
 version = "0.1.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lists_client = { path = "../client" }
+kabalist_client = { path = "../client" }
 color-eyre = "0.5.11"
 promptly = "0.3.0"
 rpassword = "5.0.1"

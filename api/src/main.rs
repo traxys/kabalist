@@ -13,7 +13,7 @@ use rocket::{
     Build, Rocket, State,
 };
 use sqlx::ConnectOptions;
-use lists_types::{uuid::Uuid, RspData, RspErr};
+use kabalist_types::{uuid::Uuid, RspData, RspErr};
 
 type Db = sqlx::PgPool;
 
@@ -198,8 +198,8 @@ macro_rules! try_rsp {
 async fn login(
     cfg: &State<Config>,
     db: &State<Db>,
-    request: Json<lists_types::login::Request>,
-) -> Result<Rsp<lists_types::login::Response>, rocket::response::Debug<jsonwebtoken::errors::Error>> {
+    request: Json<kabalist_types::login::Request>,
+) -> Result<Rsp<kabalist_types::login::Response>, rocket::response::Debug<jsonwebtoken::errors::Error>> {
     let mut rsp = sqlx::query!(
         "SELECT id FROM accounts WHERE name = $1::text::citext AND password = crypt($2, password)",
         request.username,
@@ -227,15 +227,15 @@ async fn login(
         Ok(t) => t,
     };
 
-    Ok(Rsp::ok(lists_types::login::Response { token }))
+    Ok(Rsp::ok(kabalist_types::login::Response { token }))
 }
 
 #[post("/list", data = "<list>")]
 async fn create_list(
     db: &State<Db>,
     user: User,
-    list: Json<lists_types::create_list::Request>,
-) -> Rsp<lists_types::create_list::Response> {
+    list: Json<kabalist_types::create_list::Request>,
+) -> Rsp<kabalist_types::create_list::Response> {
     let fetch_lists = try_rsp!(
         sqlx::query!(
             "SELECT COUNT(*) FROM lists WHERE owner = $1 AND name = $2",
@@ -261,11 +261,11 @@ async fn create_list(
         .await
     );
 
-    Rsp::ok(lists_types::create_list::Response { id: list_id.id })
+    Rsp::ok(kabalist_types::create_list::Response { id: list_id.id })
 }
 
 #[get("/search/list/<name>")]
-async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<lists_types::get_lists::Response> {
+async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<kabalist_types::get_lists::Response> {
     let results_owned = try_rsp!(
         sqlx::query!(
             "SELECT name, id FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
@@ -289,27 +289,27 @@ async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<lists_type
         .await
     );
 
-    Rsp::ok(lists_types::get_lists::Response {
+    Rsp::ok(kabalist_types::get_lists::Response {
         results: results_owned
             .into_iter()
             .map(|row| {
                 (
                     row.name,
-                    lists_types::get_lists::ListInfo {
+                    kabalist_types::get_lists::ListInfo {
                         id: row.id,
-                        status: lists_types::get_lists::ListStatus::Owned,
+                        status: kabalist_types::get_lists::ListStatus::Owned,
                     },
                 )
             })
             .chain(results_shared.into_iter().map(|row| {
                 (
                     row.name,
-                    lists_types::get_lists::ListInfo {
+                    kabalist_types::get_lists::ListInfo {
                         id: row.id,
                         status: if row.readonly {
-                            lists_types::get_lists::ListStatus::SharedRead
+                            kabalist_types::get_lists::ListStatus::SharedRead
                         } else {
-                            lists_types::get_lists::ListStatus::SharedWrite
+                            kabalist_types::get_lists::ListStatus::SharedWrite
                         },
                     },
                 )
@@ -323,7 +323,7 @@ async fn search_account(
     db: &State<Db>,
     _user: User,
     name: String,
-) -> Rsp<lists_types::search_account::Response> {
+) -> Rsp<kabalist_types::search_account::Response> {
     let result = try_rsp!(
         sqlx::query!(
             "SELECT id FROM accounts WHERE name ILIKE $1::text::citext",
@@ -333,11 +333,11 @@ async fn search_account(
         .await
     );
 
-    Rsp::ok(lists_types::search_account::Response { id: result.id })
+    Rsp::ok(kabalist_types::search_account::Response { id: result.id })
 }
 
 #[get("/list")]
-async fn list_lists(db: &State<Db>, user: User) -> Rsp<lists_types::get_lists::Response> {
+async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists::Response> {
     let results_owned = try_rsp!(
         sqlx::query!(
             r#"
@@ -360,27 +360,27 @@ async fn list_lists(db: &State<Db>, user: User) -> Rsp<lists_types::get_lists::R
         .await
     );
 
-    Rsp::ok(lists_types::get_lists::Response {
+    Rsp::ok(kabalist_types::get_lists::Response {
         results: results_owned
             .into_iter()
             .map(|row| {
                 (
                     row.name,
-                    lists_types::get_lists::ListInfo {
+                    kabalist_types::get_lists::ListInfo {
                         id: row.id,
-                        status: lists_types::get_lists::ListStatus::Owned,
+                        status: kabalist_types::get_lists::ListStatus::Owned,
                     },
                 )
             })
             .chain(results_shared.into_iter().map(|row| {
                 (
                     row.name,
-                    lists_types::get_lists::ListInfo {
+                    kabalist_types::get_lists::ListInfo {
                         id: row.id,
                         status: if row.readonly {
-                            lists_types::get_lists::ListStatus::SharedRead
+                            kabalist_types::get_lists::ListStatus::SharedRead
                         } else {
-                            lists_types::get_lists::ListStatus::SharedWrite
+                            kabalist_types::get_lists::ListStatus::SharedWrite
                         },
                     },
                 )
@@ -446,7 +446,7 @@ macro_rules! try_check_list {
 }
 
 #[get("/list/<id>")]
-async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<lists_types::read_list::Response> {
+async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<kabalist_types::read_list::Response> {
     try_check_list!(check_list(db, &user.id, &id, false).await);
 
     let items = try_rsp!(
@@ -470,10 +470,10 @@ async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<lists_types::rea
         None => false,
     };
 
-    Rsp::ok(lists_types::read_list::Response {
+    Rsp::ok(kabalist_types::read_list::Response {
         items: items
             .into_iter()
-            .map(|row| lists_types::read_list::Item {
+            .map(|row| kabalist_types::read_list::Item {
                 id: row.id,
                 name: row.name,
                 amount: row.amount,
@@ -488,8 +488,8 @@ async fn add_list(
     db: &State<Db>,
     user: User,
     id: Uuid,
-    item: Json<lists_types::add_to_list::Request>,
-) -> Rsp<lists_types::add_to_list::Response> {
+    item: Json<kabalist_types::add_to_list::Request>,
+) -> Rsp<kabalist_types::add_to_list::Response> {
     try_check_list!(check_list(db, &user.id, &id, true).await);
 
     let id = try_rsp!(
@@ -503,7 +503,7 @@ async fn add_list(
         .await
     );
 
-    Rsp::ok(lists_types::add_to_list::Response { id: id.id })
+    Rsp::ok(kabalist_types::add_to_list::Response { id: id.id })
 }
 
 #[delete("/list/<list>/<item>")]
@@ -512,7 +512,7 @@ async fn delete_item(
     user: User,
     list: Uuid,
     item: i32,
-) -> Rsp<lists_types::delete_item::Response> {
+) -> Rsp<kabalist_types::delete_item::Response> {
     try_check_list!(check_list(db, &user.id, &list, true).await);
 
     try_rsp!(
@@ -525,7 +525,7 @@ async fn delete_item(
         .await
     );
 
-    Rsp::ok(lists_types::delete_item::Response {})
+    Rsp::ok(kabalist_types::delete_item::Response {})
 }
 
 #[put("/share/<id>", data = "<request>")]
@@ -533,8 +533,8 @@ async fn share_list(
     db: &State<Db>,
     user: User,
     id: Uuid,
-    request: Json<lists_types::share_list::Request>,
-) -> Rsp<lists_types::share_list::Response> {
+    request: Json<kabalist_types::share_list::Request>,
+) -> Rsp<kabalist_types::share_list::Response> {
     try_check_list!(check_list(db, &user.id, &id, true).await);
 
     try_rsp!(
@@ -550,11 +550,11 @@ async fn share_list(
         .await
     );
 
-    Rsp::ok(lists_types::share_list::Response {})
+    Rsp::ok(kabalist_types::share_list::Response {})
 }
 
 #[delete("/share/<id>")]
-async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<lists_types::delete_share::Response> {
+async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<kabalist_types::delete_share::Response> {
     try_check_list!(is_owner(db, &user.id, &id).await);
 
     try_rsp!(
@@ -563,11 +563,11 @@ async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<lists_types::
             .await
     );
 
-    Rsp::ok(lists_types::delete_share::Response {})
+    Rsp::ok(kabalist_types::delete_share::Response {})
 }
 
 #[delete("/list/<id>")]
-async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<lists_types::delete_list::Response> {
+async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<kabalist_types::delete_list::Response> {
     try_check_list!(is_owner(db, &user.id, &id).await);
     let mut tx = try_rsp!(db.begin().await);
 
@@ -589,15 +589,15 @@ async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<lists_types::d
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(lists_types::delete_list::Response {})
+    Rsp::ok(kabalist_types::delete_list::Response {})
 }
 
 #[post("/register/<id>", data = "<req>")]
 async fn register(
     db: &State<Db>,
     id: Uuid,
-    req: Json<lists_types::register::Request>,
-) -> Rsp<lists_types::register::Response> {
+    req: Json<kabalist_types::register::Request>,
+) -> Rsp<kabalist_types::register::Response> {
     let mut tx = try_rsp!(db.begin().await);
 
     let mut is_registered =
@@ -628,7 +628,7 @@ async fn register(
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(lists_types::register::Response {})
+    Rsp::ok(kabalist_types::register::Response {})
 }
 
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {

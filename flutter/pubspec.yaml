@@ -1,4 +1,4 @@
-name: lists
+name: kabalist
 description: A new Flutter project.
 
 # The following line prevents the package from being accidentally published to
@@ -34,7 +34,14 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_rename_app:
 
+flutter_rename_app:
+  application_name: KabaList
+  dart_package_name: kabalist
+  application_id: com.traxys.kabalist
+  bundle_id: com.ios.kabalist
+  android_package_name: com.kabalist.app
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

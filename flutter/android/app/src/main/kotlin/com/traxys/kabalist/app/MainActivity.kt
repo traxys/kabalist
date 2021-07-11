@@ -1,4 +1,4 @@
-package com.example.lists
+package com.traxy.kabalist
 
 import io.flutter.embedding.android.FlutterActivity
 

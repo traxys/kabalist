@@ -1,5 +1,5 @@
 [package]
-name = "lists_client"
+name = "kabalist_client"
 version = "0.1.0"
 edition = "2018"
 
@@ -9,4 +9,4 @@ edition = "2018"
 reqwest = { version = "0.11.3", features = ["json", "rustls-tls"], default-features = false }
 serde = { version = "1.0.126", features = ["derive"] }
 thiserror = "1.0.25"
-lists_types = { path = "../types" }
+kabalist_types = { path = "../types" }

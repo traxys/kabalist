@@ -1,4 +1,4 @@
-use lists_client::Client;
+use kabalist_client::Client;
 use structopt::StructOpt;
 use yansi::Paint;
 
@@ -68,7 +68,7 @@ async fn main() -> color_eyre::Result<()> {
             let password = password
                 .map(Ok)
                 .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
-            let token = lists_client::login(&args.url, &name, &password).await?;
+            let token = kabalist_client::login(&args.url, &name, &password).await?;
             println!("Token: {}", token.token);
             println!("You can export in as LIST_TOKEN or pass it as parameters");
         }
@@ -80,9 +80,9 @@ async fn main() -> color_eyre::Result<()> {
             lists.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
             for (list, info) in lists {
                 let status = match info.status {
-                    lists_client::ListStatus::Owned => "owned",
-                    lists_client::ListStatus::SharedWrite => "readonly",
-                    lists_client::ListStatus::SharedRead => "shared",
+                    kabalist_client::ListStatus::Owned => "owned",
+                    kabalist_client::ListStatus::SharedWrite => "readonly",
+                    kabalist_client::ListStatus::SharedRead => "shared",
                 };
                 println!("  - {} ({})", yansi::Paint::new(list).italic(), status);
             }

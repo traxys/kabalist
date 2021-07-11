@@ -901,6 +901,53 @@ dependencies = [
 ]
 
 [[package]]
+name = "kabalist_api"
+version = "0.1.0"
+dependencies = [
+ "base64 0.13.0",
+ "chrono",
+ "jsonwebtoken",
+ "kabalist_types",
+ "rocket",
+ "rocket_sync_db_pools",
+ "serde",
+ "sqlx",
+ "uuid",
+]
+
+[[package]]
+name = "kabalist_cli"
+version = "0.1.0"
+dependencies = [
+ "color-eyre",
+ "kabalist_client",
+ "promptly",
+ "rpassword",
+ "structopt",
+ "tokio",
+ "yansi",
+]
+
+[[package]]
+name = "kabalist_client"
+version = "0.1.0"
+dependencies = [
+ "kabalist_types",
+ "reqwest",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "kabalist_types"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror",
+ "uuid",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -924,53 +971,6 @@ name = "libc"
 version = "0.2.97"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "12b8adadd720df158f4d70dfe7ccc6adb0472d7c55ca83445f6a5ab3e36f8fb6"
-
-[[package]]
-name = "list_api"
-version = "0.1.0"
-dependencies = [
- "base64 0.13.0",
- "chrono",
- "jsonwebtoken",
- "lists_types",
- "rocket",
- "rocket_sync_db_pools",
- "serde",
- "sqlx",
- "uuid",
-]
-
-[[package]]
-name = "lists_cli"
-version = "0.1.0"
-dependencies = [
- "color-eyre",
- "lists_client",
- "promptly",
- "rpassword",
- "structopt",
- "tokio",
- "yansi",
-]
-
-[[package]]
-name = "lists_client"
-version = "0.1.0"
-dependencies = [
- "lists_types",
- "reqwest",
- "serde",
- "thiserror",
-]
-
-[[package]]
-name = "lists_types"
-version = "0.1.0"
-dependencies = [
- "serde",
- "thiserror",
- "uuid",
-]
 
 [[package]]
 name = "lock_api"
