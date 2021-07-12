@@ -3,6 +3,7 @@ extern crate rocket;
 use std::{collections::HashMap, str::FromStr};
 
 use jsonwebtoken::DecodingKey;
+use kabalist_types::{uuid::Uuid, RspData, RspErr};
 use rocket::{
     fairing::{self, AdHoc},
     futures::StreamExt,
@@ -13,7 +14,6 @@ use rocket::{
     Build, Rocket, State,
 };
 use sqlx::ConnectOptions;
-use kabalist_types::{uuid::Uuid, RspData, RspErr};
 
 type Db = sqlx::PgPool;
 
@@ -199,7 +199,10 @@ async fn login(
     cfg: &State<Config>,
     db: &State<Db>,
     request: Json<kabalist_types::login::Request>,
-) -> Result<Rsp<kabalist_types::login::Response>, rocket::response::Debug<jsonwebtoken::errors::Error>> {
+) -> Result<
+    Rsp<kabalist_types::login::Response>,
+    rocket::response::Debug<jsonwebtoken::errors::Error>,
+> {
     let mut rsp = sqlx::query!(
         "SELECT id FROM accounts WHERE name = $1::text::citext AND password = crypt($2, password)",
         request.username,
@@ -265,7 +268,11 @@ async fn create_list(
 }
 
 #[get("/search/list/<name>")]
-async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<kabalist_types::get_lists::Response> {
+async fn search_list(
+    db: &State<Db>,
+    user: User,
+    name: String,
+) -> Rsp<kabalist_types::get_lists::Response> {
     let results_owned = try_rsp!(
         sqlx::query!(
             "SELECT name, id FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
@@ -446,7 +453,11 @@ macro_rules! try_check_list {
 }
 
 #[get("/list/<id>")]
-async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<kabalist_types::read_list::Response> {
+async fn read_list(
+    db: &State<Db>,
+    user: User,
+    id: Uuid,
+) -> Rsp<kabalist_types::read_list::Response> {
     try_check_list!(check_list(db, &user.id, &id, false).await);
 
     let items = try_rsp!(
@@ -506,6 +517,47 @@ async fn add_list(
     Rsp::ok(kabalist_types::add_to_list::Response { id: id.id })
 }
 
+#[patch("/list/<id>/<item>", data = "<update>")]
+async fn update_item(
+    db: &State<Db>,
+    user: User,
+    id: Uuid,
+    item: i32,
+    update: Json<kabalist_types::update_item::Request>,
+) -> Rsp<kabalist_types::update_item::Response> {
+    try_check_list!(check_list(db, &user.id, &id, true).await);
+
+    let mut tx = try_rsp!(db.begin().await);
+    if let Some(name) = &update.name {
+        try_rsp!(
+            sqlx::query!(
+                "UPDATE lists_content SET name = $1 WHERE list = $2 AND id = $3",
+                name,
+                id,
+                item
+            )
+            .execute(&mut tx)
+            .await
+        );
+    }
+    if let Some(amount) = &update.amount {
+        try_rsp!(
+            sqlx::query!(
+                "UPDATE lists_content SET amount = $1 WHERE list = $2 AND id = $3",
+                amount,
+                id,
+                item
+            )
+            .execute(&mut tx)
+            .await
+        );
+    }
+
+    try_rsp!(tx.commit().await);
+
+    Rsp::ok(kabalist_types::update_item::Response {})
+}
+
 #[delete("/list/<list>/<item>")]
 async fn delete_item(
     db: &State<Db>,
@@ -554,7 +606,11 @@ async fn share_list(
 }
 
 #[delete("/share/<id>")]
-async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<kabalist_types::delete_share::Response> {
+async fn delete_share(
+    db: &State<Db>,
+    user: User,
+    id: Uuid,
+) -> Rsp<kabalist_types::delete_share::Response> {
     try_check_list!(is_owner(db, &user.id, &id).await);
 
     try_rsp!(
@@ -567,7 +623,11 @@ async fn delete_share(db: &State<Db>, user: User, id: Uuid) -> Rsp<kabalist_type
 }
 
 #[delete("/list/<id>")]
-async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<kabalist_types::delete_list::Response> {
+async fn delete_list(
+    db: &State<Db>,
+    user: User,
+    id: Uuid,
+) -> Rsp<kabalist_types::delete_list::Response> {
     try_check_list!(is_owner(db, &user.id, &id).await);
     let mut tx = try_rsp!(db.begin().await);
 
@@ -785,6 +845,7 @@ fn rocket() -> _ {
                 delete_share,
                 delete_item,
                 delete_list,
+                update_item,
                 register,
             ],
         )

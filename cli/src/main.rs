@@ -1,4 +1,4 @@
-use kabalist_client::Client;
+use kabalist_client::{Client, Uuid};
 use structopt::StructOpt;
 use yansi::Paint;
 
@@ -48,6 +48,16 @@ pub enum Commands {
         token: String,
         list: String,
         item: String,
+    },
+    Update {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        list: String,
+        item: String,
+        #[structopt(short = "n", long = "name")]
+        new_name: Option<String>,
+        #[structopt(short = "a", long = "amount")]
+        new_amount: Option<String>,
     },
 }
 
@@ -194,6 +204,51 @@ async fn main() -> color_eyre::Result<()> {
                         return Ok(());
                     };
                     client.delete_item(&info.id, to_delete).await?;
+                }
+            }
+        }
+        Commands::Update {
+            token,
+            list,
+            item,
+            new_name,
+            new_amount,
+        } => {
+            let client = Client::new(args.url, token);
+            let searched = client.search(&list).await?.results;
+            match searched.get(&list) {
+                None => println!(
+                    "Could not unshare list: {}",
+                    yansi::Paint::red("No such list")
+                ),
+                Some(info) => {
+                    let items = client.read(&info.id).await?;
+                    let pat = item.to_lowercase();
+                    let items: Vec<_> = items
+                        .items
+                        .iter()
+                        .filter(|item| item.name.to_lowercase().contains(&pat))
+                        .collect();
+                    let to_update: i32 = if items.len() == 1 {
+                        items[0].id
+                    } else if items.len() > 1 {
+                        println!("Choose item to update:");
+                        for (id, item) in items.iter().enumerate() {
+                            println!("  {}) {}", id, item.name)
+                        }
+                        let idx: usize = promptly::prompt("Item to delete")?;
+                        items[idx].id
+                    } else {
+                        return Ok(());
+                    };
+                    client
+                        .update_item(
+                            &info.id,
+                            to_update,
+                            new_name.as_deref(),
+                            new_amount.as_deref(),
+                        )
+                        .await?;
                 }
             }
         }

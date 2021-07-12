@@ -1,4 +1,3 @@
-use serde::Serialize;
 use kabalist_types::RspData;
 pub use kabalist_types::{
     add_to_list::Response as AddItemResponse,
@@ -11,9 +10,11 @@ pub use kabalist_types::{
     register::Response as RegisterResponse,
     search_account::Response as SearchAccountResponse,
     share_list::Response as ShareResponse,
+    update_item::Response as UpdateItemResponse,
     uuid::Uuid,
     RspErr,
 };
+use serde::Serialize;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
@@ -47,6 +48,30 @@ pub async fn login(url: &str, username: &str, password: &str) -> Result<LoginRes
         .await?;
 
     map_res(token)
+}
+
+pub async fn register(
+    url: &str,
+    token: Uuid,
+    username: &str,
+    password: &str,
+) -> Result<RegisterResponse> {
+    #[derive(Serialize)]
+    struct RegisterRequest<'a> {
+        username: &'a str,
+        password: &'a str,
+    }
+
+    let client = reqwest::Client::new();
+    let rsp: RspData<RegisterResponse> = client
+        .post(&format!("{}/register/{}", url, token))
+        .json(&RegisterRequest { username, password })
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    map_res(rsp)
 }
 
 pub struct Client {
@@ -214,23 +239,24 @@ impl Client {
         map_res(rsp)
     }
 
-    pub async fn register(
+    pub async fn update_item(
         &self,
-        token: Uuid,
-        username: &str,
-        password: &str,
-    ) -> Result<RegisterResponse> {
+        list: &Uuid,
+        item: i32,
+        name: Option<&str>,
+        amount: Option<&str>,
+    ) -> Result<UpdateItemResponse> {
         #[derive(Serialize)]
-        struct RegisterRequest<'a> {
-            username: &'a str,
-            password: &'a str,
+        struct Request<'a> {
+            name: Option<&'a str>,
+            amount: Option<&'a str>,
         }
 
-        let rsp: RspData<RegisterResponse> = self
+        let rsp: RspData<UpdateItemResponse> = self
             .client
-            .post(&format!("{}/register/{}", self.url, token))
-            .json(&RegisterRequest { username, password })
+            .patch(&format!("{}/list/{}/{}", self.url, list, item))
             .bearer_auth(&self.token)
+            .json(&Request { name, amount })
             .send()
             .await?
             .json()

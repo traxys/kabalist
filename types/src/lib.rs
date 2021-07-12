@@ -160,3 +160,15 @@ pub mod register {
 
     pub type Response = super::Empty;
 }
+
+pub mod update_item {
+    pub use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize)]
+    pub struct Request {
+        pub name: Option<String>,
+        pub amount: Option<String>,
+    }
+
+    pub type Response = super::Empty;
+}
