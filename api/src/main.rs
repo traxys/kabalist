@@ -517,15 +517,15 @@ async fn add_list(
     Rsp::ok(kabalist_types::add_to_list::Response { id: id.id })
 }
 
-#[patch("/list/<id>/<item>", data = "<update>")]
+#[patch("/list/<list>/<item>", data = "<update>")]
 async fn update_item(
     db: &State<Db>,
     user: User,
-    id: Uuid,
+    list: Uuid,
     item: i32,
     update: Json<kabalist_types::update_item::Request>,
 ) -> Rsp<kabalist_types::update_item::Response> {
-    try_check_list!(check_list(db, &user.id, &id, true).await);
+    try_check_list!(check_list(db, &user.id, &list, true).await);
 
     let mut tx = try_rsp!(db.begin().await);
     if let Some(name) = &update.name {
@@ -533,7 +533,7 @@ async fn update_item(
             sqlx::query!(
                 "UPDATE lists_content SET name = $1 WHERE list = $2 AND id = $3",
                 name,
-                id,
+                list,
                 item
             )
             .execute(&mut tx)
@@ -545,7 +545,7 @@ async fn update_item(
             sqlx::query!(
                 "UPDATE lists_content SET amount = $1 WHERE list = $2 AND id = $3",
                 amount,
-                id,
+                list,
                 item
             )
             .execute(&mut tx)
