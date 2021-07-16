@@ -158,6 +158,34 @@
   </v-dialog>
 
   <v-dialog
+      v-model="editDialog"
+      max-width="600px"
+  >
+    <v-card>
+      <v-card-title>Add Item</v-card-title>
+      <v-card-text>
+        <v-container>
+         <v-row>
+           <v-text-field v-model="itemName" label="Name" required></v-text-field>
+         </v-row>
+         <v-row>
+           <v-text-field
+             v-model="itemAmount"
+             label="Amount"
+             required
+           ></v-text-field>
+         </v-row>
+        </v-container>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="red darken-1" text @click="doItemCancel()">Cancel</v-btn>
+        <v-btn color="blue darken-1" text @click="doItemEdit()">Add</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
       v-model="deleteDialog"
       max-width="600px"
   >
@@ -237,9 +265,14 @@
                     <v-list-item-title v-text="formatItem(item)"></v-list-item-title>
                   </v-list-item-content>
                   <v-list-item-action v-if="!readonly">
-                    <v-btn icon color="red" @click="deleteItem(item)">
-                      <v-icon>mdi-delete</v-icon>
-                    </v-btn>
+                    <v-row>
+                      <v-btn icon @click="editItem(item)">
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                      <v-btn icon color="red" @click="deleteItem(item)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </v-row>
                   </v-list-item-action>
                 </v-list-item>
                 <v-divider :key="'div' + i">
@@ -275,6 +308,7 @@ const ENDPOINT = "http://localhost:8000";
 
 export default {
 	data: () => ({
+    editDialog: false,
     deleteDialog: false,
     addListDialog: false,
     addListName: null,
@@ -297,6 +331,7 @@ export default {
     shareWith: "",
     shareReadonly: false,
     registration: null,
+    selectedItem: null,
 	}),
   computed: {
     readonly: function() {
@@ -527,6 +562,10 @@ export default {
     formatTitle(item) {
       return `${item[0]} (${item[1].status})`
     },
+    editItem(item) {
+      this.selectedItem = item;
+      this.editDialog = true;
+    },
     deleteItem: async function(item) {
       const resp = await fetch(ENDPOINT + "/list/" + this.selectedId + "/" + item.id, {
         method: "DELETE",
@@ -546,8 +585,34 @@ export default {
         }
       }
     },
+    doItemEdit: async function() {
+      this.editDialog = false;
+
+      const resp = await fetch(ENDPOINT + "/list/" + this.selectedId + "/" + this.selectedItem.id, {
+        method: "PATCH",
+        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}`},
+        body: JSON.stringify({name: this.itemName == "" ? null : this.itemName, amount: this.itemAmount == "" ? null : this.itemAmount})
+      })
+
+      if(!resp.ok) {
+        console.log(resp);
+        alert("Unexpected error occured");
+      } else{
+        const resp_body = await resp.json();
+        if("ok" in resp_body) {
+          this.itemAmount = "";
+          this.itemName = "";
+          await this.fetchContents();
+        } else {
+          console.log(resp_body);
+          alert("Unexpected error occured");
+        }
+      }
+    },
     doItemCancel() {
       this.itemDialog = false;
+      this.editDialog = false;
+      this.selectedItem = null;
       this.itemAmount = "";
       this.itemName = "";
     },
