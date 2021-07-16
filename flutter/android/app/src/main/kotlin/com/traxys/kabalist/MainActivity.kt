@@ -1,4 +1,4 @@
-package com.traxy.kabalist
+package com.traxys.kabalist
 
 import io.flutter.embedding.android.FlutterActivity
 

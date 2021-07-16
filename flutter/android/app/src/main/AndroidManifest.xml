@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.kabalist.app">
+    package="com.traxys.kabalist">
    <application
         android:label="KabaList"
         android:icon="@mipmap/ic_launcher">

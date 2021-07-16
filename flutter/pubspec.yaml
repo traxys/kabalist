@@ -41,7 +41,7 @@ flutter_rename_app:
   dart_package_name: kabalist
   application_id: com.traxys.kabalist
   bundle_id: com.ios.kabalist
-  android_package_name: com.kabalist.app
+  android_package_name: com.traxys.kabalist
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
