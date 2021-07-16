@@ -802,6 +802,10 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   Set<int> strickedItems = {};
   Set<int> deletedItems = {};
   Timer? timer;
+  String? editError;
+  String? editName;
+  String? editAmount;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   Future<OptionalContents> fetchContents() async {
     ListInfo info;
@@ -911,6 +915,96 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     }
   }
 
+  void doEdit(String? editName, String? editAmount, int itemId) async {
+    ListInfo info;
+    if (widget.list.value == null) {
+      return;
+    } else {
+      info = widget.list.value!;
+    }
+
+    final jsonName;
+    if (editName == null || editName.isEmpty) {
+      jsonName = null;
+    } else {
+      jsonName = '"$editName"';
+    }
+
+    final jsonAmount;
+    if (editAmount == null || editAmount.isEmpty) {
+      jsonAmount = null;
+    } else {
+      jsonAmount = '"$editAmount"';
+    }
+
+    final response =
+        await http.patch(Uri.parse(URL + "/list/${info.id}/$itemId"),
+            headers: {
+              HttpHeaders.contentTypeHeader: "application/json",
+              HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
+            },
+            body: '{"name": $jsonName, "amount": $jsonAmount}');
+
+    parseAPIResponse(response, (m) => null);
+
+    setState(() {
+      contents = fetchContents();
+    });
+  }
+
+  void editItem(ListItem item) {
+    print(item.id);
+    showDialog(
+        context: context,
+        builder: (BuildContext ctx) {
+          final errorTxt;
+          if (editError == null) {
+            errorTxt = <Widget>[];
+          } else {
+            errorTxt = <Widget>[
+              Text(editError!, style: TextStyle(color: Colors.red))
+            ];
+          }
+          return AlertDialog(
+              title: Text("Edit Item"),
+              content: StatefulBuilder(
+                  builder: (BuildContext stCtx, StateSetter setState) {
+                return Form(
+                    key: _formKey,
+                    child: Container(
+                        margin: EdgeInsets.all(10.0),
+                        child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              ...errorTxt,
+                              TextFormField(
+                                decoration:
+                                    const InputDecoration(hintText: "New Name"),
+                                onSaved: (String? name) async {
+                                  editName = name;
+                                },
+                              ),
+                              TextFormField(
+                                decoration: const InputDecoration(
+                                    hintText: "New Amount"),
+                                onSaved: (String? amount) async {
+                                  editAmount = amount;
+                                },
+                              ),
+                              ElevatedButton(
+                                  onPressed: () async {
+                                    if (_formKey.currentState!.validate()) {
+                                      _formKey.currentState!.save();
+                                      doEdit(editName, editAmount, item.id);
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                  child: const Text('Edit'))
+                            ])));
+              }));
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<OptionalContents>(
@@ -929,13 +1023,15 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
                       title: item.render(true),
                       onTap: () {
                         setState(() => strickedItems.remove(item.id));
-                      }));
+                      },
+                      onLongPress: () => editItem(item)));
                 } else {
                   inList.add(ListTile(
                       title: item.render(false),
                       onTap: () {
                         setState(() => strickedItems.add(item.id));
-                      }));
+                      },
+                      onLongPress: () => editItem(item)));
                 }
               }
             });
