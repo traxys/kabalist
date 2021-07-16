@@ -776,7 +776,7 @@ impl fairing::Fairing for CORS {
         res.adjoin_header(Header::new("Access-Control-Allow-Origin", "*"));
         res.adjoin_header(Header::new(
             "Access-Control-Allow-Methods",
-            "POST, GET, DELETE, PUT, OPTIONS",
+            "POST, GET, DELETE, PUT, OPTIONS, PATCH",
         ));
         res.adjoin_header(Header::new("Access-Control-Allow-Headers", "*"));
         res.adjoin_header(Header::new("Access-Control-Allow-Credentials", "true"));
