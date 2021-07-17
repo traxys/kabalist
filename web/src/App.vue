@@ -88,6 +88,45 @@
   </v-dialog>
 
   <v-dialog
+      v-model="recover"
+      persistent
+      max-width="600px"
+  >
+    <v-card>
+      <v-card-title>Recover password for {{username}}</v-card-title>
+      <v-card-text>
+         <v-container>
+          <v-row v-if="recovererror" class="red--text">
+            <p>
+              {{this.recovererror}}
+            </p>
+          </v-row>
+          <v-row>
+            <v-text-field
+              v-model="password"
+              label="Password"
+              required
+              :append-icon="showpass ? 'mdi-eye' : 'mdi-eye-off'"
+              :type="showpass ? 'text' : 'password'"
+              @click:append="showpass = !showpass"
+            ></v-text-field>
+          </v-row>
+         </v-container>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="blue darken-1"
+          text
+          @click="doRecover()"
+        >
+          Change Password
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
       v-model="register"
       persistent
       max-width="600px"
@@ -332,10 +371,12 @@ export default {
     shareReadonly: false,
     registration: null,
     selectedItem: null,
+    recovery: null,
+    recover: false,
+    recovererror: null,
 	}),
   computed: {
     readonly: function() {
-      console.log(this.content?.readonly);
       return this.content?.readonly
     },
     items: function() {
@@ -352,15 +393,37 @@ export default {
     },
     selectedName: function() {
       return this.lists[this.selectedList][0]
-    }
+    },
   },
 	created () {
 		this.$vuetify.theme.dark = true
 	},
   async mounted() {
     this.registration = new URL(location.href).searchParams.get('registration');
-    if(this.registration != null) {
+    this.recovery = new URL(location.href).searchParams.get('recovery');
+    if (this.recovery != null) {
+      const rsp = await fetch(ENDPOINT + "/recover/" + this.recovery, {
+        method: "GET",
+        headers: {'Content-Type': 'application/json'},
+      });
+
+      if(!rsp.ok) {
+        console.log(rsp);
+        this.error = "An unexpected error occured";
+      } else {
+        const resp_body = await rsp.json();
+        if("ok" in resp_body) {
+          this.username = resp_body.ok.username;
+        } else {
+          this.recovererror = this.errorDesc(resp_body.err);
+        }
+      }
+
+      this.recover = true;
+      this.login = false;
+    } else if(this.registration != null) {
       this.register = true;
+      this.login = false;
     } else if(localStorage.token) {
 			this.token = localStorage.token;
       this.username = localStorage.username;
@@ -399,6 +462,27 @@ export default {
           await this.fetchLists();
         } else {
           this.loginerror = this.errorDesc(resp_body.err);
+        }
+      }
+    },
+    doRecover: async function() {
+      this.recovererror = null;
+      const rsp = await fetch(ENDPOINT + "/recover/" + this.recovery, {
+        method: "POST",
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({password: this.password})
+      });
+
+      if(!rsp.ok) {
+        console.log(rsp);
+        this.recovererror = "An unexpected error occured";
+      } else {
+        const resp_body = await rsp.json();
+        if("ok" in resp_body) {
+          this.recover = false;
+          await this.doLogin();
+        } else {
+          this.recovererror = this.errorDesc(resp_body.err);
         }
       }
     },
