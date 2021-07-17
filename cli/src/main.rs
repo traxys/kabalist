@@ -4,6 +4,10 @@ use yansi::Paint;
 
 #[derive(StructOpt, Debug)]
 pub enum Commands {
+    Recover {
+        id: Uuid,
+        password: Option<String>,
+    },
     Login {
         name: String,
         password: Option<String>,
@@ -251,6 +255,16 @@ async fn main() -> color_eyre::Result<()> {
                         .await?;
                 }
             }
+        }
+        Commands::Recover { id, password } => {
+            let account_name = kabalist_client::recover_info(&args.url, &id)
+                .await?
+                .username;
+            println!("Recovery for {}", account_name);
+            let password = password
+                .map(Ok)
+                .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
+            kabalist_client::recover_password(&args.url, &id, &password).await?;
         }
     }
     Ok(())

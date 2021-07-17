@@ -7,6 +7,8 @@ pub use kabalist_types::{
     get_lists::{ListInfo, ListStatus, Response as ListsResponse},
     login::Response as LoginResponse,
     read_list::{Item, Response as ReadResponse},
+    recover_password::Response as RecoverPasswordResponse,
+    recovery_info::Response as RecoveryInfoResponse,
     register::Response as RegisterResponse,
     search_account::Response as SearchAccountResponse,
     share_list::Response as ShareResponse,
@@ -66,6 +68,42 @@ pub async fn register(
     let rsp: RspData<RegisterResponse> = client
         .post(&format!("{}/register/{}", url, token))
         .json(&RegisterRequest { username, password })
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    map_res(rsp)
+}
+
+pub async fn recover_info(url: &str, recovery_id: &Uuid) -> Result<RecoveryInfoResponse> {
+    let client = reqwest::Client::new();
+    let rsp: RspData<RecoveryInfoResponse> = client
+        .get(&format!("{}/recover/{}", url, recovery_id))
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    map_res(rsp)
+}
+
+pub async fn recover_password(
+    url: &str,
+    recovery_id: &Uuid,
+    new_password: &str,
+) -> Result<RecoverPasswordResponse> {
+    #[derive(Serialize)]
+    struct Request<'a> {
+        password: &'a str,
+    }
+
+    let client = reqwest::Client::new();
+    let rsp: RspData<RecoverPasswordResponse> = client
+        .post(&format!("{}/recover/{}", url, recovery_id))
+        .json(&Request {
+            password: new_password,
+        })
         .send()
         .await?
         .json()
