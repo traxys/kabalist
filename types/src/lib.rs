@@ -172,3 +172,23 @@ pub mod update_item {
 
     pub type Response = super::Empty;
 }
+
+pub mod recovery_info {
+    pub use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize)]
+    pub struct Response {
+        pub username: String,
+    }
+}
+
+pub mod recover_password {
+    pub use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize)]
+    pub struct Request {
+        pub password: String,
+    }
+
+    pub type Response = super::Empty;
+}
