@@ -153,6 +153,10 @@ define_error! {
             description: "registration does not exist",
             code: 5,
         },
+        InvalidRecovery = {
+            description: "recovery does not exists",
+            code: 6,
+        },
     }
 }
 
@@ -691,6 +695,65 @@ async fn register(
     Rsp::ok(kabalist_types::register::Response {})
 }
 
+#[get("/recover/<id>")]
+async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<kabalist_types::recovery_info::Response> {
+    let username = try_rsp!(
+        sqlx::query!(
+            r#"SELECT accounts.name::text 
+               FROM password_reset,accounts 
+               WHERE password_reset.id = $1 
+                AND password_reset.account = accounts.id"#,
+            id
+        )
+        .fetch_one(&**db)
+        .await
+    )
+    .name;
+
+    match username {
+        Some(username) => Rsp::ok(kabalist_types::recovery_info::Response { username }),
+        None => Error::InvalidRecovery.default_err().into(),
+    }
+}
+
+#[post("/recover/<id>", data = "<request>")]
+async fn recover_password(
+    db: &State<Db>,
+    id: Uuid,
+    request: Json<kabalist_types::recover_password::Request>,
+) -> Rsp<kabalist_types::recover_password::Response> {
+    let mut tx = try_rsp!(db.begin().await);
+
+    let account = try_rsp!(
+        sqlx::query!(
+            "SELECT password_reset.account FROM password_reset WHERE id = $1",
+            id
+        )
+        .fetch_one(&mut tx)
+        .await
+    )
+    .account;
+
+    try_rsp!(
+        sqlx::query!("DELETE FROM password_reset WHERE id = $1", id)
+            .execute(&mut tx)
+            .await
+    );
+    try_rsp!(
+        sqlx::query!(
+            "UPDATE accounts SET password = crypt($2, gen_salt('bf')) WHERE id = $1",
+            account,
+            request.password
+        )
+        .execute(&mut tx)
+        .await
+    );
+
+    try_rsp!(tx.commit().await);
+
+    Rsp::ok(kabalist_types::recover_password::Response {})
+}
+
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {
     use rocket_sync_db_pools::Config;
 
@@ -847,6 +910,8 @@ fn rocket() -> _ {
                 delete_list,
                 update_item,
                 register,
+                recovery_info,
+                recover_password,
             ],
         )
 }
