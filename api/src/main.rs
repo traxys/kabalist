@@ -584,6 +584,32 @@ async fn delete_item(
     Rsp::ok(kabalist_types::delete_item::Response {})
 }
 
+#[get("/share/<id>")]
+async fn get_shares(
+    db: &State<Db>,
+    user: User,
+    id: Uuid,
+) -> Rsp<kabalist_types::get_shares::Response> {
+    try_check_list!(check_list(db, &user.id, &id, true).await);
+
+    let shared = try_rsp!(
+        sqlx::query!(
+            "SELECT shared, readonly FROM list_sharing WHERE list = $1",
+            id
+        )
+        .fetch_all(&**db)
+        .await
+    );
+
+    Rsp::ok(kabalist_types::get_shares::Response {
+        public_link: None,
+        shared_with: shared
+            .into_iter()
+            .map(|row| (row.shared, row.readonly))
+            .collect(),
+    })
+}
+
 #[put("/share/<id>", data = "<request>")]
 async fn share_list(
     db: &State<Db>,
@@ -609,8 +635,30 @@ async fn share_list(
     Rsp::ok(kabalist_types::share_list::Response {})
 }
 
+#[delete("/share/<list>/<account>")]
+async fn unshare(
+    db: &State<Db>,
+    user: User,
+    list: Uuid,
+    account: Uuid,
+) -> Rsp<kabalist_types::unshare::Response> {
+    try_check_list!(is_owner(db, &user.id, &list).await);
+
+    try_rsp!(
+        sqlx::query!(
+            "DELETE FROM list_sharing WHERE list = $1 AND shared = $2",
+            list,
+            account
+        )
+        .execute(&**db)
+        .await
+    );
+
+    Rsp::ok(kabalist_types::unshare::Response {})
+}
+
 #[delete("/share/<id>")]
-async fn delete_share(
+async fn delete_shares(
     db: &State<Db>,
     user: User,
     id: Uuid,
@@ -905,13 +953,15 @@ fn rocket() -> _ {
                 add_list,
                 share_list,
                 search_account,
-                delete_share,
+                delete_shares,
                 delete_item,
                 delete_list,
                 update_item,
                 register,
                 recovery_info,
                 recover_password,
+                unshare,
+                get_shares,
             ],
         )
 }

@@ -148,7 +148,35 @@ Empty Body
 
 Empty Body
 
+## `/share/<list_id:uuid/<account_id:uuid>`
+
+### `[AUTH]` DELETE
+
+#### Request
+
+Empty Body
+
+#### Reply
+
+Empty Reply
+
 ## `/share/<list_id:uuid>`
+
+### `[AUTH]` GET
+
+#### Request 
+
+Empty Body
+
+#### Reply
+```json
+{
+	"public_url": "null/url",
+	"shared_with": [
+		["account:uuid", "bool:readonly"]
+	]
+}
+```
 
 ### `[AUTH]` PUT
 

@@ -192,3 +192,20 @@ pub mod recover_password {
 
     pub type Response = super::Empty;
 }
+
+pub mod get_shares {
+    pub use serde::{Deserialize, Serialize};
+    use uuid::Uuid;
+
+    #[derive(Serialize, Deserialize)]
+    pub struct Response {
+        pub shared_with: Vec<(Uuid, bool)>,
+        pub public_link: Option<String>,
+    }
+}
+
+pub mod unshare {
+    pub use serde::{Serialize, Deserialize};
+
+    pub type Response = super::Empty;
+}
