@@ -246,6 +246,46 @@
       max-width="600px"
   >
     <v-card>
+      <v-card-title>Manage Shares</v-card-title>
+      <v-card-text>
+        <v-container>
+         <v-list>
+           <template v-for="(share, i) in shares">
+             <v-list-item :key="'share' + i">
+               <v-list-item-content>
+                 <v-list-item-title v-text="formatShare(share)"></v-list-item-title>
+               </v-list-item-content>
+               <v-list-item-action v-if="owned">
+                 <v-row>
+                   <v-btn icon color="red" @click="deleteShare(share)">
+                     <v-icon>mdi-delete</v-icon>
+                   </v-btn>
+                 </v-row>
+               </v-list-item-action>
+             </v-list-item>
+             <v-divider :key="'divshare' + i">
+             </v-divider>
+           </template>
+         </v-list>
+         <v-row justify="center">
+          <v-btn color="red darken-1" text @click="deleteAllShares()" v-if="owned">Delete All Shares</v-btn>
+          <v-btn color="blue darken-1" text @click="addShareDialog = !addShareDialog" v-if="!readonly">Add Share</v-btn>
+         </v-row>
+        </v-container>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="red darken-1" text @click="shareDialog = !shareDialog">Close</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
+      v-model="addShareDialog"
+      max-width="600px"
+  >
+    <v-card>
       <v-card-title>Share List</v-card-title>
       <v-card-text>
         <v-container>
@@ -374,6 +414,8 @@ export default {
     recovery: null,
     recover: false,
     recovererror: null,
+    addShareDialog: false,
+    shares: [],
 	}),
   computed: {
     readonly: function() {
@@ -383,16 +425,30 @@ export default {
       return this.content?.items
     },
     selectedId: function() {
+      if(this.selectedList == null){
+        return null
+      }
       return this.lists[this.selectedList][1].id
     },
     selectedStatus: function () {
+      if(this.selectedList == null){
+        return null;
+      }
       return this.lists[this.selectedList][1].status
     },
     owned: function () {
       return this.selectedStatus === "owned";
     },
     selectedName: function() {
+      if(this.selectedList == null){
+        return null
+      }
       return this.lists[this.selectedList][0]
+    },
+  },
+  watch: {
+    selectedId: async function(list) {
+      await this.fetchShares(list);
     },
   },
 	created () {
@@ -440,6 +496,44 @@ export default {
       this.content = null;
       this.lists = [];
     },
+    fetchShares: async function(list) {
+      const rsp = await fetch(ENDPOINT + "/share/" + list, {
+        method: "GET",
+        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}`},
+      });
+
+      if(!rsp.ok) {
+        console.log(rsp);
+      } else {
+        const resp_body = await rsp.json();
+        if("ok" in resp_body) {
+          this.shares = [];
+          const shared_with = resp_body.ok.shared_with;
+          for(var i = 0; i < shared_with.length; i++) {
+            const [account, readonly] = shared_with[i];
+            const nameRsp = await fetch(ENDPOINT + "/account/" + account + "/name", {
+              method: "GET",
+              headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}`},
+            });
+
+            if(!nameRsp.ok) {
+              console.log(nameRsp);
+            } else {
+              const nameRspBody = await nameRsp.json();
+              if("ok" in nameRspBody) {
+                this.shares.push({"username": nameRspBody.ok.username, "readonly": readonly, "id": account});
+              } else {
+                console.log(nameRspBody.err);
+                this.shares = [];
+                return;
+              }
+            }
+          }
+        } else {
+          console.log(resp_body.err);
+        }
+      }
+    },
     doLogin: async function() {
       this.loginerror = null;
       const resp = await fetch(ENDPOINT + "/login", {
@@ -479,8 +573,11 @@ export default {
       } else {
         const resp_body = await rsp.json();
         if("ok" in resp_body) {
-          this.recover = false;
           await this.doLogin();
+          this.recovererror = this.loginerror;
+          if(this.recovererror == null) {
+            this.recover = false;
+          }
         } else {
           this.recovererror = this.errorDesc(resp_body.err);
         }
@@ -500,28 +597,10 @@ export default {
       } else {
         const regResp_body = await regRsp.json();
         if("ok" in regResp_body) {
-          const resp = await fetch(ENDPOINT + "/login", {
-            method: "POST",
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({password: this.password, username: this.username})
-          })
-
-          if(!resp.ok) {
-            console.log(resp);
-            this.registererror = "An unexpected error occured";
-          } else {
-            const resp_body = await resp.json();
-            if("ok" in resp_body) {
-              this.token = resp_body.ok.token;
-              localStorage.token = this.token;
-              localStorage.username = this.username;
-              this.register = false;
-              this.login = false;
-              this.password = "";
-              await this.fetchLists();
-            } else {
-              this.registererror = this.errorDesc(resp_body.err);
-            }
+          await this.doLogin();
+          this.registererror = this.loginerror;
+          if(this.registererror == null) {
+            this.register = false;
           }
         } else {
           this.registererror = this.errorDesc(regResp_body.err);
@@ -640,8 +719,49 @@ export default {
         }
       }
     },
+    formatShare(share) {
+      return share.username + (share.readonly ? " (readonly)" : "")
+    },
     formatItem(item) {
       return item.name + (item.amount == null ? "" : ` (${item.amount})`)
+    },
+    deleteShare: async function(share) {
+      const resp = await fetch(ENDPOINT + "/share/" + this.selectedId + "/" + share.id, {
+        method: "DELETE",
+        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}`},
+      })
+
+      if(!resp.ok) {
+        console.log(resp);
+        alert("Unexpected error occured");
+      } else{
+        const resp_body = await resp.json();
+        if("ok" in resp_body) {
+          await this.fetchShares(this.selectedId);
+        } else {
+          console.log(resp_body);
+          alert("Unexpected error occured");
+        }
+      }
+    },
+    deleteAllShares: async function() {
+      const resp = await fetch(ENDPOINT + "/share/" + this.selectedId, {
+        method: "DELETE",
+        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}`},
+      })
+
+      if(!resp.ok) {
+        console.log(resp);
+        alert("Unexpected error occured");
+      } else{
+        const resp_body = await resp.json();
+        if("ok" in resp_body) {
+          await this.fetchShares(this.selectedId);
+        } else {
+          console.log(resp_body);
+          alert("Unexpected error occured");
+        }
+      }
     },
     formatTitle(item) {
       return `${item[0]} (${item[1].status})`
@@ -725,7 +845,7 @@ export default {
       }
     },
     doShareCancel() {
-      this.shareDialog = false;
+      this.addShareDialog = false;
       this.shareWith = "";
       this.shareReadonly = false;
     },
@@ -763,9 +883,10 @@ export default {
       } else{
         const resp_body = await resp.json();
         if("ok" in resp_body) {
-          this.shareDialog = false;
+          this.addShareDialog = false;
           this.shareWith = "";
           this.shareReadonly = false;
+          await this.fetchShares(this.selectedId);
         } else {
           console.log(resp_body);
           alert("Unexpected error occured");
