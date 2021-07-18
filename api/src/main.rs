@@ -927,6 +927,9 @@ impl fairing::Fairing for Options {
                 let mut value = route.clone();
                 value.method = rocket::http::Method::Options;
                 value.handler = Box::new(OptionsHandler);
+                if let Some(name) = &value.name {
+                    value.name = Some(("options_".to_string() + name).into());
+                }
                 routes.insert(key, value);
             }
         }
