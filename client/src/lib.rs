@@ -4,7 +4,9 @@ pub use kabalist_types::{
     create_list::Response as CreateListResponse,
     delete_item::Response as DeleteItemResponse,
     delete_share::Response as DeleteShareResponse,
+    get_account_name::Response as AccountNameResponse,
     get_lists::{ListInfo, ListStatus, Response as ListsResponse},
+    get_shares::Response as GetSharesResponse,
     login::Response as LoginResponse,
     read_list::{Item, Response as ReadResponse},
     recover_password::Response as RecoverPasswordResponse,
@@ -12,6 +14,7 @@ pub use kabalist_types::{
     register::Response as RegisterResponse,
     search_account::Response as SearchAccountResponse,
     share_list::Response as ShareResponse,
+    unshare::Response as UnshareResponse,
     update_item::Response as UpdateItemResponse,
     uuid::Uuid,
     RspErr,
@@ -295,6 +298,45 @@ impl Client {
             .patch(&format!("{}/list/{}/{}", self.url, list, item))
             .bearer_auth(&self.token)
             .json(&Request { name, amount })
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn get_shares(&self, list: &Uuid) -> Result<GetSharesResponse> {
+        let rsp: RspData<GetSharesResponse> = self
+            .client
+            .get(&format!("{}/share/{}", self.url, list))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn unshare_with(&self, list: &Uuid, account: &Uuid) -> Result<UnshareResponse> {
+        let rsp: RspData<UnshareResponse> = self
+            .client
+            .delete(&format!("{}/share/{}/{}", self.url, list, account))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn account_name(&self, account: &Uuid) -> Result<AccountNameResponse> {
+        let rsp: RspData<AccountNameResponse> = self
+            .client
+            .get(&format!("{}/account/{}/name", self.url, account))
+            .bearer_auth(&self.token)
             .send()
             .await?
             .json()

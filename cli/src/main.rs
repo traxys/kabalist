@@ -37,6 +37,11 @@ pub enum Commands {
         #[structopt(short, long)]
         readonly: bool,
     },
+    Shares {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        list: String,
+    },
     Create {
         #[structopt(short, long, env = "LIST_TOKEN")]
         token: String,
@@ -45,7 +50,10 @@ pub enum Commands {
     Unshare {
         #[structopt(short, long, env = "LIST_TOKEN")]
         token: String,
-        name: String,
+        #[structopt(short, long)]
+        all: bool,
+        list: String,
+        names: Vec<String>,
     },
     Tick {
         #[structopt(short, long, env = "LIST_TOKEN")]
@@ -166,16 +174,28 @@ async fn main() -> color_eyre::Result<()> {
             let client = Client::new(args.url, token);
             client.create_list(&name).await?;
         }
-        Commands::Unshare { token, name } => {
+        Commands::Unshare {
+            token,
+            names,
+            list,
+            all,
+        } => {
             let client = Client::new(args.url, token);
-            let searched = client.search(&name).await?.results;
-            match searched.get(&name) {
+            let searched = client.search(&list).await?.results;
+            match searched.get(&list) {
                 None => println!(
                     "Could not unshare list: {}",
                     yansi::Paint::red("No such list")
                 ),
                 Some(info) => {
-                    client.delete_share(&info.id).await?;
+                    if all {
+                        client.delete_share(&info.id).await?;
+                    } else {
+                        for name in names {
+                            let account = client.search_account(&name).await?.id;
+                            client.unshare_with(&info.id, &account).await?;
+                        }
+                    }
                 }
             }
         }
@@ -265,6 +285,34 @@ async fn main() -> color_eyre::Result<()> {
                 .map(Ok)
                 .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
             kabalist_client::recover_password(&args.url, &id, &password).await?;
+        }
+        Commands::Shares { token, list } => {
+            let client = Client::new(args.url, token);
+            let searched = client.search(&list).await?.results;
+            match searched.get(&list) {
+                None => println!(
+                    "Could not get shares for list: {}",
+                    yansi::Paint::red("No such list")
+                ),
+                Some(info) => {
+                    let rsp = client.get_shares(&info.id).await?;
+                    println!(
+                        "Shares{}:",
+                        match rsp.public_link {
+                            Some(link) => format!(" (public link: {})", link),
+                            None => "".into(),
+                        }
+                    );
+                    for (account, readonly) in rsp.shared_with {
+                        let account_name = client.account_name(&account).await?.username;
+                        print!("  - {}", Paint::new(account_name).underline());
+                        if readonly {
+                            print!(" (readonly)");
+                        }
+                        println!()
+                    }
+                }
+            }
         }
     }
     Ok(())
