@@ -249,6 +249,13 @@
       <v-card-title>Manage Shares</v-card-title>
       <v-card-text>
         <v-container>
+         <v-row v-if="selectedPublic" justify="center">
+          <p>Public url: {{ENDPOINT + "/public/" + this.selectedId}}</p>
+         </v-row>
+         <v-row v-if="owned" justify="center">
+          <v-btn color="red darken-1" text @click="removePublic()" v-if="selectedPublic">Remove Public</v-btn>
+          <v-btn color="blue darken-1" text @click="setPublic()" v-if="!selectedPublic">Set Public</v-btn>
+         </v-row>
          <v-list>
            <template v-for="(share, i) in shares">
              <v-list-item :key="'share' + i">
@@ -436,6 +443,12 @@ export default {
       }
       return this.lists[this.selectedList][1].status
     },
+    selectedPublic: function () {
+      if(this.selectedList == null){
+        return null;
+      }
+      return this.lists[this.selectedList][1].public
+    },
     owned: function () {
       return this.selectedStatus === "owned";
     },
@@ -453,6 +466,7 @@ export default {
   },
 	created () {
 		this.$vuetify.theme.dark = true
+    this.ENDPOINT = ENDPOINT
 	},
   async mounted() {
     this.registration = new URL(location.href).searchParams.get('registration');
@@ -636,6 +650,20 @@ export default {
           alert("Unexpected error occured");
         }
       }
+    },
+    setPublic: async function() {
+      await fetch(ENDPOINT + "/public/" + this.selectedId, {
+        method: "PUT",
+        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}`},
+      })
+      this.fetchLists();
+    },
+    removePublic: async function() {
+      await fetch(ENDPOINT + "/public/" + this.selectedId, {
+        method: "DELETE",
+        headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.token}`},
+      })
+      this.fetchLists();
     },
     doDelete: async function() {
       this.deleteDialog = false;
