@@ -223,13 +223,15 @@ class ListDrawer extends StatefulWidget {
       required this.logout,
       required this.token,
       required this.selectList,
-      required this.listDeleted})
+      required this.listDeleted,
+      required this.openSettings})
       : super(key: key);
 
   final void Function() logout;
   final String token;
   final void Function(String, ListData) selectList;
   final void Function(String) listDeleted;
+  final VoidCallback openSettings;
 
   @override
   State<ListDrawer> createState() => _ListDrawerState();
@@ -553,9 +555,74 @@ class _ListDrawerState extends State<ListDrawer> {
                   leading: Icon(Icons.logout),
                   title: Text('Logout'),
                   onTap: widget.logout),
+              ListTile(
+                  leading: Icon(Icons.settings),
+                  title: Text('Settings'),
+                  onTap: () {
+                    widget.openSettings();
+                    Navigator.of(context).pop();
+                  }),
             ],
           ));
         });
+  }
+}
+
+class Settings extends StatefulWidget {
+  const Settings(
+      {Key? key, required this.saveSettings, required this.initialValues})
+      : super(key: key);
+
+  final void Function(SettingsValue) saveSettings;
+  final SettingsValue initialValues;
+
+  @override
+  State<Settings> createState() => _SettingsState();
+}
+
+class _SettingsState extends State<Settings> {
+  late double? listExtent = widget.initialValues.listExtent;
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> extentChooser = [];
+    if (listExtent != null) {
+      extentChooser = [
+        Slider(
+            value: listExtent!,
+            min: 35,
+            max: 60,
+            divisions: 25,
+            label: listExtent!.round().toString(),
+            onChanged: (double value) {
+              setState(() {
+                listExtent = value;
+              });
+            })
+      ];
+    }
+    return Column(children: <Widget>[
+      CheckboxListTile(
+          title: Text("Custom Spacing"),
+          value: listExtent != null,
+          onChanged: (bool? value) {
+            if (value == false) {
+              setState(() {
+                listExtent = null;
+              });
+            } else if (value == true) {
+              setState(() {
+                listExtent = 50;
+              });
+            }
+          }),
+      ...extentChooser,
+      ElevatedButton(
+          onPressed: () {
+            widget.saveSettings(SettingsValue(listExtent: listExtent));
+          },
+          child: const Text('Save'))
+    ]);
   }
 }
 
@@ -593,6 +660,32 @@ class AddedItemNotifier extends ChangeNotifier {
   }
 }
 
+class SettingsValue {
+  SettingsValue({this.listExtent});
+
+  final double? listExtent;
+
+  void save() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (listExtent != null) {
+      prefs.setDouble("listExtent", listExtent!);
+    } else {
+      prefs.remove("listExtent");
+    }
+  }
+
+  static Future<SettingsValue> load() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final double? listExtent;
+    if (prefs.containsKey("listExtent")) {
+      listExtent = prefs.getDouble("listExtent");
+    } else {
+      listExtent = null;
+    }
+    return SettingsValue(listExtent: listExtent);
+  }
+}
+
 class _AuthListsState extends State<AuthLists> {
   ValueNotifier<ListInfo?> selectedList = ValueNotifier(null);
   AddedItemNotifier addedItem = AddedItemNotifier();
@@ -600,11 +693,21 @@ class _AuthListsState extends State<AuthLists> {
   Function()? addItem;
   late String addItemName;
   late String? addItemAmount;
+  SettingsValue settingsValues = SettingsValue();
+  bool settings = false;
 
   @override
   void initState() {
     super.initState();
     loadLastUsed();
+    loadSettings();
+  }
+
+  void loadSettings() async {
+    final s = await SettingsValue.load();
+    setState(() {
+      settingsValues = s;
+    });
   }
 
   Future<ListInfo> getLastUsedList() async {
@@ -725,6 +828,25 @@ class _AuthListsState extends State<AuthLists> {
       floatingButton =
           FloatingActionButton(onPressed: addItem, child: Icon(Icons.add));
     }
+    final Widget child;
+    if (!settings) {
+      child = ListContent(
+          list: selectedList,
+          token: widget.token,
+          addedItem: addedItem,
+          listExtent: settingsValues.listExtent);
+    } else {
+      child = Settings(
+          saveSettings: (newValues) {
+            newValues.save();
+            setState(() {
+              settings = false;
+              settingsValues = newValues;
+            });
+          },
+          initialValues: settingsValues);
+    }
+
     return Scaffold(
       appBar: widget.appBar,
       drawer: ListDrawer(
@@ -741,13 +863,18 @@ class _AuthListsState extends State<AuthLists> {
           },
           selectList: (name, data) async {
             final info = ListInfo(id: data.id, name: name, status: data.status);
+            setState(() {
+              settings = false;
+            });
             setList(info);
             setLastUsed(info);
+          },
+          openSettings: () {
+            setState(() {
+              settings = true;
+            });
           }),
-      body: Center(
-        child: ListContent(
-            list: selectedList, token: widget.token, addedItem: addedItem),
-      ),
+      body: Center(child: child),
       floatingActionButton: floatingButton,
     );
   }
@@ -759,11 +886,13 @@ class ListContent extends StatefulWidget {
     required this.list,
     required this.token,
     required this.addedItem,
+    required this.listExtent,
   }) : super(key: key);
 
   final ValueNotifier<ListInfo?> list;
   final AddedItemNotifier addedItem;
   final String token;
+  final double? listExtent;
 
   @override
   State<ListContent> createState() => _ListContentState();
@@ -806,6 +935,11 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   String? editName;
   String? editAmount;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  late VoidCallback fetchContentsCallback = () {
+    setState(() {
+      contents = fetchContents();
+    });
+  };
 
   Future<OptionalContents> fetchContents() async {
     ListInfo info;
@@ -879,21 +1013,15 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
         });
       }
     });
-    widget.list.addListener(() {
-      setState(() {
-        contents = fetchContents();
-      });
-    });
-    widget.addedItem.addListener(() {
-      setState(() {
-        contents = fetchContents();
-      });
-    });
+    widget.list.addListener(fetchContentsCallback);
+    widget.addedItem.addListener(fetchContentsCallback);
   }
 
   @override
   void dispose() {
     timer?.cancel();
+    widget.list.removeListener(fetchContentsCallback);
+    widget.addedItem.removeListener(fetchContentsCallback);
     WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
   }
@@ -1049,13 +1177,16 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
                   onPressed: strikeItems,
                   child: const Text('Delete Striked Items')));
             }
-            return ListView(padding: const EdgeInsets.all(8), children: [
-              ListTile(
-                  title: Text(
-                      "List: ${widget.list.value!.name}${readOnly ? " (readonly)" : ""}")),
-              Divider(),
-              ...items
-            ]);
+            return ListView(
+                padding: const EdgeInsets.all(8),
+                itemExtent: widget.listExtent,
+                children: [
+                  ListTile(
+                      title: Text(
+                          "List: ${widget.list.value!.name}${readOnly ? " (readonly)" : ""}")),
+                  Divider(),
+                  ...items
+                ]);
           } else if (snapshot.hasError) {
             print("Err: ${snapshot.error}");
             if (snapshot.error is ApiError?) {
