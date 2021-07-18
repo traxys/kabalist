@@ -218,3 +218,11 @@ pub mod get_account_name {
         pub username: String,
     }
 }
+
+pub mod set_public {
+    pub type Response = crate::Empty;
+}
+
+pub mod remove_public {
+    pub type Response = crate::Empty;
+}

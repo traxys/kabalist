@@ -825,6 +825,82 @@ async fn get_account_name(
     }
 }
 
+#[put("/public/<id>")]
+async fn set_public(
+    db: &State<Db>,
+    id: Uuid,
+    user: User,
+) -> Rsp<kabalist_types::set_public::Response> {
+    try_check_list!(is_owner(db, &user.id, &id).await);
+
+    try_rsp!(
+        sqlx::query!("UPDATE lists SET pub = true WHERE id = $1", id)
+            .execute(&**db)
+            .await
+    );
+
+    Rsp::ok(kabalist_types::set_public::Response {})
+}
+
+#[delete("/public/<id>")]
+async fn remove_public(
+    db: &State<Db>,
+    id: Uuid,
+    user: User,
+) -> Rsp<kabalist_types::remove_public::Response> {
+    try_check_list!(is_owner(db, &user.id, &id).await);
+
+    try_rsp!(
+        sqlx::query!("UPDATE lists SET pub = false WHERE id = $1", id)
+            .execute(&**db)
+            .await
+    );
+
+    Rsp::ok(kabalist_types::remove_public::Response {})
+}
+
+#[derive(Responder)]
+enum PublicResponse {
+    SqlxError(rocket::response::Debug<sqlx::Error>),
+    NotFound(rocket::response::status::NotFound<()>),
+    Ok(String),
+}
+
+#[get("/public/<id>")]
+async fn get_public_list(db: &State<Db>, id: Uuid) -> PublicResponse {
+    let pb = match sqlx::query!("SELECT pub FROM lists WHERE id = $1", id)
+        .fetch_one(&**db)
+        .await
+    {
+        Ok(v) => v,
+        Err(e) => return PublicResponse::SqlxError(e.into()),
+    };
+    if !pb.r#pub.unwrap_or(false) {
+        return PublicResponse::NotFound(rocket::response::status::NotFound(()));
+    }
+
+    let contents = match sqlx::query!("SELECT name,amount FROM lists_content WHERE list = $1", id)
+        .fetch_all(&**db)
+        .await
+    {
+        Ok(v) => v,
+        Err(e) => return PublicResponse::SqlxError(e.into()),
+    };
+
+    PublicResponse::Ok(
+        contents
+            .into_iter()
+            .fold(String::new(), |mut current, row| {
+                current.push_str(&format!(" - {}", row.name));
+                if let Some(amount) = row.amount {
+                    current.push_str(&format!(" ({})", amount));
+                }
+                current.push('\n');
+                current
+            }),
+    )
+}
+
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {
     use rocket_sync_db_pools::Config;
 
@@ -989,6 +1065,9 @@ fn rocket() -> _ {
                 unshare,
                 get_shares,
                 get_account_name,
+                set_public,
+                get_public_list,
+                remove_public,
             ],
         )
 }
