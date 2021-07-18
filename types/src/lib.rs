@@ -209,3 +209,12 @@ pub mod unshare {
 
     pub type Response = super::Empty;
 }
+
+pub mod get_account_name {
+    pub use serde::{Serialize, Deserialize};
+
+    #[derive(Serialize, Deserialize)]
+    pub struct Response {
+        pub username: String,
+    }
+}

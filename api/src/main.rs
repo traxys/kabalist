@@ -157,6 +157,10 @@ define_error! {
             description: "recovery does not exists",
             code: 6,
         },
+        AccountNotFound = {
+            description: "account not found",
+            code: 7,
+        },
     }
 }
 
@@ -802,6 +806,25 @@ async fn recover_password(
     Rsp::ok(kabalist_types::recover_password::Response {})
 }
 
+#[get("/account/<id>/name")]
+async fn get_account_name(
+    db: &State<Db>,
+    _user: User,
+    id: Uuid,
+) -> Rsp<kabalist_types::get_account_name::Response> {
+    let name = try_rsp!(
+        sqlx::query!("SELECT name::text FROM accounts WHERE id = $1", id)
+            .fetch_one(&**db)
+            .await
+    )
+    .name;
+
+    match name {
+        Some(username) => Rsp::ok(kabalist_types::get_account_name::Response { username }),
+        None => Error::AccountNotFound.default_err().into(),
+    }
+}
+
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {
     use rocket_sync_db_pools::Config;
 
@@ -965,6 +988,7 @@ fn rocket() -> _ {
                 recover_password,
                 unshare,
                 get_shares,
+                get_account_name,
             ],
         )
 }
