@@ -216,3 +216,35 @@ Empty Body
 	"id": "uuid",
 }
 ```
+
+## `/recover/<id:uuid>`
+
+### GET
+
+Get the account name for the recovery id
+
+#### Request
+
+Empty Body
+
+#### Reply 
+```json
+{
+	"username": "...",
+}
+```
+
+### POST
+
+Recover the password, consuming the `id`
+
+#### Request 
+```json
+{
+	"password": "...",
+}
+```
+
+#### Reply
+
+Empty Reply
