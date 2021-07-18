@@ -12,7 +12,9 @@ pub use kabalist_types::{
     recover_password::Response as RecoverPasswordResponse,
     recovery_info::Response as RecoveryInfoResponse,
     register::Response as RegisterResponse,
+    remove_public::Response as RemovePublicResponse,
     search_account::Response as SearchAccountResponse,
+    set_public::Response as SetPublicResponse,
     share_list::Response as ShareResponse,
     unshare::Response as UnshareResponse,
     update_item::Response as UpdateItemResponse,
@@ -336,6 +338,32 @@ impl Client {
         let rsp: RspData<AccountNameResponse> = self
             .client
             .get(&format!("{}/account/{}/name", self.url, account))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn set_public(&self, list: &Uuid) -> Result<SetPublicResponse> {
+        let rsp: RspData<SetPublicResponse> = self
+            .client
+            .put(&format!("{}/public/{}", self.url, list))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn remove_public(&self, list: &Uuid) -> Result<RemovePublicResponse> {
+        let rsp: RspData<RemovePublicResponse> = self
+            .client
+            .delete(&format!("{}/public/{}", self.url, list))
             .bearer_auth(&self.token)
             .send()
             .await?

@@ -71,6 +71,16 @@ pub enum Commands {
         #[structopt(short = "a", long = "amount")]
         new_amount: Option<String>,
     },
+    SetPublic {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        list: String,
+    },
+    RemovePublic {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        list: String,
+    },
 }
 
 #[derive(StructOpt, Debug)]
@@ -311,6 +321,33 @@ async fn main() -> color_eyre::Result<()> {
                         }
                         println!()
                     }
+                }
+            }
+        }
+        Commands::SetPublic { token, list } => {
+            let client = Client::new(args.url.clone(), token);
+            let searched = client.search(&list).await?.results;
+            match searched.get(&list) {
+                None => println!(
+                    "Could not set list public: {}",
+                    yansi::Paint::red("No such list")
+                ),
+                Some(info) => {
+                    client.set_public(&info.id).await?;
+                    println!("Public url is: {}/public/{}", args.url, info.id);
+                }
+            }
+        }
+        Commands::RemovePublic { token, list } => {
+            let client = Client::new(args.url, token);
+            let searched = client.search(&list).await?.results;
+            match searched.get(&list) {
+                None => println!(
+                    "Could not remove public list: {}",
+                    yansi::Paint::red("No such list")
+                ),
+                Some(info) => {
+                    client.remove_public(&info.id).await?;
                 }
             }
         }
