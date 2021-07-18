@@ -283,7 +283,7 @@ async fn search_list(
 ) -> Rsp<kabalist_types::get_lists::Response> {
     let results_owned = try_rsp!(
         sqlx::query!(
-            "SELECT name, id FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
+            "SELECT name, id, pub FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
             user.id,
             name
         )
@@ -292,7 +292,7 @@ async fn search_list(
     );
     let results_shared = try_rsp!(
         sqlx::query!(
-            r#"SELECT name, id, readonly 
+            r#"SELECT name, id, readonly, pub
                FROM lists, list_sharing
                WHERE (lists.id = list_sharing.list) 
                    AND shared = $1 
@@ -313,6 +313,7 @@ async fn search_list(
                     kabalist_types::get_lists::ListInfo {
                         id: row.id,
                         status: kabalist_types::get_lists::ListStatus::Owned,
+                        public: row.r#pub.unwrap_or(false),
                     },
                 )
             })
@@ -326,6 +327,7 @@ async fn search_list(
                         } else {
                             kabalist_types::get_lists::ListStatus::SharedWrite
                         },
+                        public: row.r#pub.unwrap_or(false),
                     },
                 )
             }))
@@ -356,7 +358,7 @@ async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists
     let results_owned = try_rsp!(
         sqlx::query!(
             r#"
-        SELECT name, id 
+        SELECT name, id, pub
         FROM lists WHERE owner = $1"#,
             user.id
         )
@@ -365,7 +367,7 @@ async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists
     );
     let results_shared = try_rsp!(
         sqlx::query!(
-            r#"SELECT name, id, readonly 
+            r#"SELECT name, id, readonly, pub
                FROM lists, list_sharing
                WHERE (lists.id = list_sharing.list) 
                    AND shared = $1 "#,
@@ -384,6 +386,7 @@ async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists
                     kabalist_types::get_lists::ListInfo {
                         id: row.id,
                         status: kabalist_types::get_lists::ListStatus::Owned,
+                        public: row.r#pub.unwrap_or(false),
                     },
                 )
             })
@@ -397,6 +400,7 @@ async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists
                         } else {
                             kabalist_types::get_lists::ListStatus::SharedWrite
                         },
+                        public: row.r#pub.unwrap_or(false),
                     },
                 )
             }))

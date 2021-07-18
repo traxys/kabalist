@@ -74,6 +74,7 @@ pub mod get_lists {
     pub struct ListInfo {
         pub id: Uuid,
         pub status: ListStatus,
+        pub public: bool,
     }
 
     #[derive(Serialize, Deserialize)]
