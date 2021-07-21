@@ -157,63 +157,66 @@ class _LoginFormState extends State<LoginForm> {
 
     return Form(
         key: _formKey,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: <
-            Widget>[
-          ...errorTxt,
-          TextFormField(
-            decoration: const InputDecoration(hintText: "Username"),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return "Username can't be empty";
-              }
-              return null;
-            },
-            onSaved: (String? nm) => setState(() => username = nm),
-          ),
-          TextFormField(
-            decoration: InputDecoration(
-                hintText: "Password",
-                suffixIcon: IconButton(
-                    icon: Icon(
-                        showPassword ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () {
-                      setState(() {
-                        showPassword = !showPassword;
-                      });
-                    })),
-            obscureText: !showPassword,
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return "Password can't be empty";
-              }
-              return null;
-            },
-            onSaved: (String? pass) => setState(() => password = pass),
-          ),
-          ElevatedButton(
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-                  final response = await http.post(
-                    Uri.parse(URL + "/login"),
-                    headers: {
-                      HttpHeaders.contentTypeHeader: "application/json"
-                    },
-                    body: '{"username": "$username", "password": "$password"}',
-                  );
-                  try {
-                    final token = parseAPIResponse(
-                        response, (fields) => fields!["token"]);
-                    widget.getToken(token);
-                  } on ApiError catch (err) {
-                    setState(() {
-                      error = err.errMsg();
-                    });
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              ...errorTxt,
+              TextFormField(
+                decoration: const InputDecoration(hintText: "Username"),
+                validator: (String? value) {
+                  if (value == null || value.isEmpty) {
+                    return "Username can't be empty";
                   }
-                }
-              },
-              child: const Text('Login'))
-        ]));
+                  return null;
+                },
+                onSaved: (String? nm) => setState(() => username = nm),
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                    hintText: "Password",
+                    suffixIcon: IconButton(
+                        icon: Icon(showPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility),
+                        onPressed: () {
+                          setState(() {
+                            showPassword = !showPassword;
+                          });
+                        })),
+                obscureText: !showPassword,
+                validator: (String? value) {
+                  if (value == null || value.isEmpty) {
+                    return "Password can't be empty";
+                  }
+                  return null;
+                },
+                onSaved: (String? pass) => setState(() => password = pass),
+              ),
+              ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
+                      final response = await http.post(
+                        Uri.parse(URL + "/login"),
+                        headers: {
+                          HttpHeaders.contentTypeHeader: "application/json"
+                        },
+                        body:
+                            '{"username": ${jsonEncode(username)}, "password": ${jsonEncode(password)}}',
+                      );
+                      try {
+                        final token = parseAPIResponse(
+                            response, (fields) => fields!["token"]);
+                        widget.getToken(token);
+                      } on ApiError catch (err) {
+                        setState(() {
+                          error = err.errMsg();
+                        });
+                      }
+                    }
+                  },
+                  child: const Text('Login'))
+            ]));
   }
 }
 
@@ -309,7 +312,7 @@ class _ListDrawerState extends State<ListDrawer> {
           HttpHeaders.contentTypeHeader: "application/json",
           HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
         },
-        body: '{"name":"$name"}');
+        body: '{"name":${jsonEncode(name)}}');
 
     parseAPIResponse(response, (m) => null);
     setState(() {
@@ -345,7 +348,8 @@ class _ListDrawerState extends State<ListDrawer> {
             HttpHeaders.contentTypeHeader: "application/json",
             HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
           },
-          body: '{"share_with": "$accountId", "readonly": $readonly}');
+          body:
+              '{"share_with": ${jsonEncode(accountId)}, "readonly": ${jsonEncode(readonly)}}');
 
       parseAPIResponse(response, (m) => null);
     } on ApiError catch (e) {
@@ -742,15 +746,15 @@ class _AuthListsState extends State<AuthLists> {
     if (amount == null || amount.isEmpty) {
       amt = null;
     } else {
-      amt = '"$amount"';
+      amt = amount;
     }
-    final response =
-        await http.post(Uri.parse(URL + "/list/${selectedList.value!.id}"),
-            headers: {
-              HttpHeaders.contentTypeHeader: "application/json",
-              HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-            },
-            body: '{"name": "$name", "amount": $amt}');
+    final response = await http.post(
+        Uri.parse(URL + "/list/${selectedList.value!.id}"),
+        headers: {
+          HttpHeaders.contentTypeHeader: "application/json",
+          HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
+        },
+        body: '{"name": ${jsonEncode(name)}, "amount": ${jsonEncode(amt)}}');
 
     parseAPIResponse(response, (m) => null);
     addedItem.addedItem();
@@ -1055,23 +1059,24 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     if (editName == null || editName.isEmpty) {
       jsonName = null;
     } else {
-      jsonName = '"$editName"';
+      jsonName = editName;
     }
 
     final jsonAmount;
     if (editAmount == null || editAmount.isEmpty) {
       jsonAmount = null;
     } else {
-      jsonAmount = '"$editAmount"';
+      jsonAmount = editAmount;
     }
 
-    final response =
-        await http.patch(Uri.parse(URL + "/list/${info.id}/$itemId"),
-            headers: {
-              HttpHeaders.contentTypeHeader: "application/json",
-              HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-            },
-            body: '{"name": $jsonName, "amount": $jsonAmount}');
+    final response = await http.patch(
+        Uri.parse(URL + "/list/${info.id}/$itemId"),
+        headers: {
+          HttpHeaders.contentTypeHeader: "application/json",
+          HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
+        },
+        body:
+            '{"name": ${jsonEncode(jsonName)}, "amount": ${jsonEncode(jsonAmount)}}');
 
     parseAPIResponse(response, (m) => null);
 
