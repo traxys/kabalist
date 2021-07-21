@@ -1086,7 +1086,6 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   }
 
   void editItem(ListItem item) {
-    print(item.id);
     showDialog(
         context: context,
         builder: (BuildContext ctx) {
@@ -1113,6 +1112,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
                               TextFormField(
                                 decoration:
                                     const InputDecoration(hintText: "New Name"),
+                                initialValue: item.name,
                                 onSaved: (String? name) async {
                                   editName = name;
                                 },
@@ -1120,6 +1120,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
                               TextFormField(
                                 decoration: const InputDecoration(
                                     hintText: "New Amount"),
+								initialValue: item.amount,
                                 onSaved: (String? amount) async {
                                   editAmount = amount;
                                 },
