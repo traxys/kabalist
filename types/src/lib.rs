@@ -227,3 +227,12 @@ pub mod set_public {
 pub mod remove_public {
     pub type Response = crate::Empty;
 }
+
+pub mod get_history {
+    use serde::{Serialize, Deserialize};
+
+    #[derive(Serialize, Deserialize)]
+    pub struct Response {
+        pub matches: Vec<String>,
+    }
+}

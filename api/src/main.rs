@@ -515,18 +515,62 @@ async fn add_list(
 ) -> Rsp<kabalist_types::add_to_list::Response> {
     try_check_list!(check_list(db, &user.id, &id, true).await);
 
-    let id = try_rsp!(
+    let mut tx = try_rsp!(db.begin().await);
+
+    let item_id = try_rsp!(
         sqlx::query!(
             "INSERT INTO lists_content (list, name, amount) VALUES ($1, $2, $3) RETURNING id",
             id,
             item.name,
             item.amount
         )
-        .fetch_one(&**db)
+        .fetch_one(&mut tx)
         .await
     );
 
-    Rsp::ok(kabalist_types::add_to_list::Response { id: id.id })
+    try_rsp!(
+        sqlx::query!(
+            r#"INSERT INTO history (list, creator, name, last_used) 
+               VALUES ($1, $2, $3::text::citext, now()) 
+               ON CONFLICT (list, creator, name) DO 
+               UPDATE SET last_used = now()"#,
+            id,
+            user.id,
+            item.name
+        )
+        .execute(&mut tx)
+        .await
+    );
+
+    try_rsp!(tx.commit().await);
+
+    Rsp::ok(kabalist_types::add_to_list::Response { id: item_id.id })
+}
+
+#[get("/history/<list>?<search>")]
+async fn history_search(
+    db: &State<Db>,
+    user: User,
+    list: Uuid,
+    search: String,
+) -> Rsp<kabalist_types::get_history::Response> {
+    let results = try_rsp!(
+        sqlx::query!(
+            "SELECT name::text FROM history WHERE list = $1 AND creator = $2 AND name ILIKE '%' || $3 || '%'",
+            list,
+            user.id, search
+        )
+        .fetch_all(&**db)
+        .await
+    );
+
+    Rsp::ok(kabalist_types::get_history::Response {
+        matches: results
+            .into_iter()
+            .map(|row| row.name)
+            .filter_map(|x| x)
+            .collect(),
+    })
 }
 
 #[patch("/list/<list>/<item>", data = "<update>")]
@@ -652,15 +696,29 @@ async fn unshare(
 ) -> Rsp<kabalist_types::unshare::Response> {
     try_check_list!(is_owner(db, &user.id, &list).await);
 
+    let mut tx = try_rsp!(db.begin().await);
+
     try_rsp!(
         sqlx::query!(
             "DELETE FROM list_sharing WHERE list = $1 AND shared = $2",
             list,
             account
         )
-        .execute(&**db)
+        .execute(&mut tx)
         .await
     );
+
+    try_rsp!(
+        sqlx::query!(
+            "DELETE FROM history WHERE list = $1 AND creator = $2",
+            list,
+            account
+        )
+        .execute(&mut tx)
+        .await
+    );
+
+    try_rsp!(tx.commit().await);
 
     Rsp::ok(kabalist_types::unshare::Response {})
 }
@@ -673,11 +731,25 @@ async fn delete_shares(
 ) -> Rsp<kabalist_types::delete_share::Response> {
     try_check_list!(is_owner(db, &user.id, &id).await);
 
+    let mut tx = try_rsp!(db.begin().await);
+
     try_rsp!(
         sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
-            .execute(&**db)
+            .execute(&mut tx)
             .await
     );
+
+    try_rsp!(
+        sqlx::query!(
+            "DELETE FROM history WHERE list = $1 AND creator != $2",
+            id,
+            user.id,
+        )
+        .execute(&mut tx)
+        .await
+    );
+
+    try_rsp!(tx.commit().await);
 
     Rsp::ok(kabalist_types::delete_share::Response {})
 }
@@ -698,6 +770,11 @@ async fn delete_list(
     );
     try_rsp!(
         sqlx::query!("DELETE FROM lists_content WHERE list = $1", id)
+            .execute(&mut tx)
+            .await
+    );
+    try_rsp!(
+        sqlx::query!("DELETE FROM history WHERE list = $1", id)
             .execute(&mut tx)
             .await
     );
@@ -1072,6 +1149,7 @@ fn rocket() -> _ {
                 set_public,
                 get_public_list,
                 remove_public,
+                history_search,
             ],
         )
 }
