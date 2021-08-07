@@ -13,6 +13,7 @@ use rocket::{
     serde::{json::Json, Deserialize, Deserializer, Serialize},
     Build, Rocket, State,
 };
+use rocket_dyn_templates::Template;
 use sqlx::ConnectOptions;
 
 type Db = sqlx::PgPool;
@@ -944,7 +945,12 @@ async fn remove_public(
 enum PublicResponse {
     SqlxError(rocket::response::Debug<sqlx::Error>),
     NotFound(rocket::response::status::NotFound<()>),
-    Ok(String),
+    Ok(Template),
+}
+
+#[derive(Serialize)]
+struct PublicResponseCtx {
+    items: Vec<(String, Option<String>)>,
 }
 
 #[get("/public/<id>")]
@@ -967,19 +973,14 @@ async fn get_public_list(db: &State<Db>, id: Uuid) -> PublicResponse {
         Ok(v) => v,
         Err(e) => return PublicResponse::SqlxError(e.into()),
     };
-
-    PublicResponse::Ok(
-        contents
+    let contents = PublicResponseCtx {
+        items: contents
             .into_iter()
-            .fold(String::new(), |mut current, row| {
-                current.push_str(&format!(" - {}", row.name));
-                if let Some(amount) = row.amount {
-                    current.push_str(&format!(" ({})", amount));
-                }
-                current.push('\n');
-                current
-            }),
-    )
+            .map(|row| (row.name, row.amount))
+            .collect(),
+    };
+
+    PublicResponse::Ok(Template::render("public_list", &contents))
 }
 
 async fn init_db(rocket: Rocket<Build>) -> fairing::Result {
@@ -1125,6 +1126,7 @@ fn rocket() -> _ {
         .attach(AdHoc::config::<Config>())
         .attach(CORS)
         .attach(Options)
+        .attach(Template::fairing())
         .mount(
             "/",
             routes![
