@@ -81,6 +81,12 @@ pub enum Commands {
         token: String,
         list: String,
     },
+    SearchHistory {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        list: String,
+        search: String,
+    },
 }
 
 #[derive(StructOpt, Debug)]
@@ -348,6 +354,26 @@ async fn main() -> color_eyre::Result<()> {
                 ),
                 Some(info) => {
                     client.remove_public(&info.id).await?;
+                }
+            }
+        }
+        Commands::SearchHistory {
+            token,
+            list,
+            search,
+        } => {
+            let client = Client::new(args.url, token);
+            let searched = client.search(&list).await?.results;
+            match searched.get(&list) {
+                None => println!(
+                    "Could not search in list: {}",
+                    yansi::Paint::red("No such list")
+                ),
+                Some(info) => {
+                    let results = client.search_history(&info.id, &search).await?;
+                    for result in results.matches {
+                        println!(" - {}", result);
+                    }
                 }
             }
         }

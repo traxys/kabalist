@@ -5,6 +5,7 @@ pub use kabalist_types::{
     delete_item::Response as DeleteItemResponse,
     delete_share::Response as DeleteShareResponse,
     get_account_name::Response as AccountNameResponse,
+    get_history::Response as SearchHistoryResponse,
     get_lists::{ListInfo, ListStatus, Response as ListsResponse},
     get_shares::Response as GetSharesResponse,
     login::Response as LoginResponse,
@@ -364,6 +365,20 @@ impl Client {
         let rsp: RspData<RemovePublicResponse> = self
             .client
             .delete(&format!("{}/public/{}", self.url, list))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn search_history(&self, list: &Uuid, search: &str) -> Result<SearchHistoryResponse> {
+        let rsp: RspData<SearchHistoryResponse> = self
+            .client
+            .get(&format!("{}/history/{}", self.url, list))
+            .query(&[("search", search)])
             .bearer_auth(&self.token)
             .send()
             .await?
