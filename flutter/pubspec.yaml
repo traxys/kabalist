@@ -40,6 +40,7 @@ dev_dependencies:
 flutter_icons:
   android: "launcher_icon"
   image_path: "assets/launcher.png"
+  adaptive_icon_background: "#e8e4c9"
 
 flutter_rename_app:
   application_name: KabaList

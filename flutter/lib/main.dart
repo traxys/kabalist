@@ -783,17 +783,10 @@ class _AuthListsState extends State<AuthLists> {
                           child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
-                                TextFormField(
-                                  decoration:
-                                      const InputDecoration(hintText: "Name"),
-                                  autofocus: true,
-                                  validator: (String? value) {
-                                    if (value == null || value.isEmpty) {
-                                      return "Name can't be empty";
-                                    }
-                                    return null;
-                                  },
-                                  onSaved: (String? name) async {
+                                ItemInput(
+                                  listId: selectedList.value!.id,
+                                  token: widget.token,
+                                  update: (String? name) {
                                     addItemName = name!;
                                   },
                                 ),
@@ -884,6 +877,95 @@ class _AuthListsState extends State<AuthLists> {
   }
 }
 
+class ItemInput extends StatelessWidget {
+  ItemInput({
+    Key? key,
+    required listId,
+    required token,
+    required this.update,
+  })  : history = fetchHistory(listId, token),
+        super(key: key);
+
+  final Future<List<String>> history;
+  final void Function(String?) update;
+
+  // TODO: Maybe not fetch everything, but use the query to narrow instead of doing it client side
+  static Future<List<String>> fetchHistory(String listId, String token) async {
+    final response =
+        await http.get(Uri.parse(URL + "/history/$listId?search"), headers: {
+      HttpHeaders.contentTypeHeader: "application/json",
+      HttpHeaders.authorizationHeader: "Bearer $token"
+    });
+
+    return parseAPIResponse(response, (m) {
+      List<String> values = (m!["matches"] as List<dynamic>)
+          .cast<String>()
+          .map((String value) => value.toLowerCase())
+          .toList();
+      values.sort();
+      return values;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: history,
+        builder: (context, snapshot) {
+          print(snapshot.error);
+          if (!snapshot.hasData) {
+            return Autocomplete<String>(
+              onSelected: update,
+              optionsBuilder: (TextEditingValue _textEditingValue) {
+                return const Iterable<String>.empty();
+              },
+              fieldViewBuilder: (BuildContext context,
+                  TextEditingController fieldTextEditingController,
+                  FocusNode fieldFocusNode,
+                  VoidCallback onFieldSubmitted) {
+                fieldTextEditingController.addListener(() {
+                  update(fieldTextEditingController.text);
+                });
+                return TextField(
+                  controller: fieldTextEditingController,
+                  focusNode: fieldFocusNode,
+                  decoration: const InputDecoration(hintText: "Name"),
+                  autofocus: true,
+                );
+              },
+            );
+          } else {
+            return Autocomplete<String>(
+              onSelected: update,
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                if (textEditingValue.text == '') {
+                  return const Iterable<String>.empty();
+                }
+                List<String> data = snapshot.data as List<String>;
+                return data.where((String option) {
+                  return option.contains(textEditingValue.text.toLowerCase());
+                });
+              },
+              fieldViewBuilder: (BuildContext context,
+                  TextEditingController fieldTextEditingController,
+                  FocusNode fieldFocusNode,
+                  VoidCallback onFieldSubmitted) {
+                fieldTextEditingController.addListener(() {
+                  update(fieldTextEditingController.text);
+                });
+                return TextField(
+                  controller: fieldTextEditingController,
+                  focusNode: fieldFocusNode,
+                  decoration: const InputDecoration(hintText: "Name"),
+                  autofocus: true,
+                );
+              },
+            );
+          }
+        });
+  }
+}
+
 class ListContent extends StatefulWidget {
   ListContent({
     Key? key,
@@ -939,6 +1021,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   String? editName;
   String? editAmount;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   late VoidCallback fetchContentsCallback = () {
     setState(() {
       contents = fetchContents();
@@ -1120,7 +1203,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
                               TextFormField(
                                 decoration: const InputDecoration(
                                     hintText: "New Amount"),
-								initialValue: item.amount,
+                                initialValue: item.amount,
                                 onSaved: (String? amount) async {
                                   editAmount = amount;
                                 },
