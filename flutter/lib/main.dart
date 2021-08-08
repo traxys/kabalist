@@ -227,14 +227,18 @@ class ListDrawer extends StatefulWidget {
       required this.token,
       required this.selectList,
       required this.listDeleted,
-      required this.openSettings})
+      required this.openSettings,
+      required this.listSorter,
+      required this.fetchedList})
       : super(key: key);
 
   final void Function() logout;
   final String token;
   final void Function(String, ListData) selectList;
   final void Function(String) listDeleted;
+  final void Function(List<String>) fetchedList;
   final VoidCallback openSettings;
+  final int Function(String, String) listSorter;
 
   @override
   State<ListDrawer> createState() => _ListDrawerState();
@@ -302,6 +306,7 @@ class _ListDrawerState extends State<ListDrawer> {
               }
               return MapEntry(key, ListData(id: value["id"], status: status));
             }).cast<String, ListData>());
+    widget.fetchedList(List.from(rsp.keys));
 
     return rsp;
   }
@@ -370,9 +375,12 @@ class _ListDrawerState extends State<ListDrawer> {
     return FutureBuilder<Map<String, ListData>>(
         future: lists,
         builder: (context, snapshots) {
+          final names;
           final data;
           if (snapshots.hasData) {
-            data = List.from(snapshots.data!.entries.map((entry) => ListTile(
+            names = List.from(snapshots.data!.entries);
+            names.sort((a, b) => widget.listSorter(a.key, b.key));
+            data = List.from(names.map((entry) => ListTile(
                 title: Text("${entry.key}${entry.value.fmtStatus()}"),
                 onTap: () {
                   widget.selectList(entry.key, entry.value);
@@ -480,7 +488,6 @@ class _ListDrawerState extends State<ListDrawer> {
                       break;
                   }
                 })));
-            data.sort((a, b) => a.title.data!.compareTo(b.title.data!) as int);
           } else if (snapshots.hasError) {
             final error;
             if (snapshots.error is ApiError) {
@@ -584,11 +591,19 @@ class Settings extends StatefulWidget {
   State<Settings> createState() => _SettingsState();
 }
 
+enum SorterKind {
+  ALPHABETICAL,
+  CUSTOM,
+}
+
 class _SettingsState extends State<Settings> {
   late double? listExtent = widget.initialValues.listExtent;
+  late SorterKind sorterKind = widget.initialValues.listSorter.kind;
+  late List<String> customOrder = widget.initialValues.listSorter.customOrder;
 
   @override
   Widget build(BuildContext context) {
+    print(customOrder);
     List<Widget> extentChooser = [];
     if (listExtent != null) {
       extentChooser = [
@@ -605,6 +620,33 @@ class _SettingsState extends State<Settings> {
             })
       ];
     }
+    List<Widget> customChooser = [];
+    if (sorterKind == SorterKind.CUSTOM) {
+      customChooser = [
+        ExpansionTile(
+            title: Text("Custom Order",
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            children: <Widget>[
+              Container(
+                  height: 300,
+                  child: ReorderableListView(
+                      children: List.from(customOrder.map((name) =>
+                          ListTile(title: Text(name), key: Key(name)))),
+                      onReorder: (int oldIndex, int newIndex) {
+                        setState(() {
+                          if (oldIndex < newIndex) {
+                            newIndex -= 1;
+                          }
+                          final String item = customOrder.removeAt(oldIndex);
+                          customOrder.insert(newIndex, item);
+                        });
+                      }))
+            ]),
+      ];
+      /* customChooser
+          .addAll(customOrder.map((name) => ListTile(title: Text(name)))); */
+    }
+
     return Column(children: <Widget>[
       CheckboxListTile(
           title: Text("Custom Spacing"),
@@ -621,9 +663,32 @@ class _SettingsState extends State<Settings> {
             }
           }),
       ...extentChooser,
+      ListTile(title: Text("Item Sorter")),
+      RadioListTile<SorterKind>(
+          title: const Text("Alphabetical"),
+          groupValue: sorterKind,
+          value: SorterKind.ALPHABETICAL,
+          onChanged: (val) {
+            setState(() {
+              sorterKind = val!;
+            });
+          }),
+      RadioListTile<SorterKind>(
+          title: const Text("Custom"),
+          groupValue: sorterKind,
+          value: SorterKind.CUSTOM,
+          onChanged: (val) {
+            setState(() {
+              sorterKind = val!;
+            });
+          }),
+      ...customChooser,
       ElevatedButton(
           onPressed: () {
-            widget.saveSettings(SettingsValue(listExtent: listExtent));
+            widget.saveSettings(SettingsValue(
+                listExtent: listExtent,
+                listSorter:
+                    ListSorter(kind: sorterKind, customOrder: customOrder)));
           },
           child: const Text('Save'))
     ]);
@@ -664,10 +729,34 @@ class AddedItemNotifier extends ChangeNotifier {
   }
 }
 
+class ListSorter {
+  ListSorter({required this.kind, required this.customOrder});
+
+  final SorterKind kind;
+  final List<String> customOrder;
+
+  int Function(String, String) sorter() {
+    switch (kind) {
+      case SorterKind.ALPHABETICAL:
+        return Comparable.compare;
+      case SorterKind.CUSTOM:
+        return (String a, String b) {
+          if (!customOrder.contains(a) || !customOrder.contains(b)) {
+            return a.compareTo(b);
+          }
+          final int idA = customOrder.indexOf(a);
+          final int idB = customOrder.indexOf(b);
+          return idA.compareTo(idB);
+        };
+    }
+  }
+}
+
 class SettingsValue {
-  SettingsValue({this.listExtent});
+  SettingsValue({this.listExtent, required this.listSorter});
 
   final double? listExtent;
+  final ListSorter listSorter;
 
   void save() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -676,6 +765,8 @@ class SettingsValue {
     } else {
       prefs.remove("listExtent");
     }
+    prefs.setStringList("customOrder", listSorter.customOrder);
+    prefs.setBool("isCustom", listSorter.kind == SorterKind.CUSTOM);
   }
 
   static Future<SettingsValue> load() async {
@@ -686,7 +777,41 @@ class SettingsValue {
     } else {
       listExtent = null;
     }
-    return SettingsValue(listExtent: listExtent);
+
+    final SorterKind kind;
+    if (prefs.containsKey("isCustom")) {
+      if (prefs.getBool("isCustom")!) {
+        kind = SorterKind.CUSTOM;
+      } else {
+        kind = SorterKind.ALPHABETICAL;
+      }
+    } else {
+      kind = SorterKind.ALPHABETICAL;
+    }
+
+    final List<String> customOrder;
+    if (prefs.containsKey("customOrder")) {
+      final order = prefs.getStringList("customOrder");
+      if (order != null) {
+        customOrder = order;
+      } else {
+        customOrder = [];
+      }
+    } else {
+      customOrder = [];
+    }
+
+    return SettingsValue(
+        listExtent: listExtent,
+        listSorter: ListSorter(kind: kind, customOrder: customOrder));
+  }
+
+  SettingsValue merge(List<String> lists) {
+    List<String> newList = List.from(listSorter.customOrder);
+    newList.addAll(lists.where((val) => !listSorter.customOrder.contains(val)));
+    return SettingsValue(
+        listExtent: listExtent,
+        listSorter: ListSorter(kind: listSorter.kind, customOrder: newList));
   }
 }
 
@@ -697,7 +822,8 @@ class _AuthListsState extends State<AuthLists> {
   Function()? addItem;
   late String addItemName;
   late String? addItemAmount;
-  SettingsValue settingsValues = SettingsValue();
+  SettingsValue settingsValues = SettingsValue(
+      listSorter: ListSorter(kind: SorterKind.ALPHABETICAL, customOrder: []));
   bool settings = false;
 
   @override
@@ -869,6 +995,13 @@ class _AuthListsState extends State<AuthLists> {
           openSettings: () {
             setState(() {
               settings = true;
+            });
+          },
+          listSorter: settingsValues.listSorter.sorter(),
+          fetchedList: (lists) {
+            final SettingsValue newSettings = settingsValues.merge(lists);
+            setState(() {
+              settingsValues = newSettings;
             });
           }),
       body: Center(child: child),
