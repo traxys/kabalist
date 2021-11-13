@@ -201,15 +201,15 @@
       max-width="600px"
   >
     <v-card>
-      <v-card-title>Add Item</v-card-title>
+      <v-card-title>Edit Item</v-card-title>
       <v-card-text>
         <v-container>
          <v-row>
-           <v-text-field v-model="itemName" label="Name" required></v-text-field>
+           <v-text-field v-model="editItemName" label="Name" required></v-text-field>
          </v-row>
          <v-row>
            <v-text-field
-             v-model="itemAmount"
+             v-model="editItemAmount"
              label="Amount"
              required
            ></v-text-field>
@@ -413,7 +413,9 @@ export default {
     content: null,
     itemDialog: false,
     itemAmount: "",
+    editItemAmount: "",
     itemName: "",
+    editItemName: "",
     shareWith: "",
     shareReadonly: false,
     registration: null,
@@ -796,6 +798,8 @@ export default {
     },
     editItem(item) {
       this.selectedItem = item;
+      this.editItemAmount = item.amount;
+      this.editItemName = item.name;
       this.editDialog = true;
     },
     deleteItem: async function(item) {
