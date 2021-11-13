@@ -177,7 +177,7 @@
       <v-card-text>
         <v-container>
          <v-row>
-           <v-text-field v-model="itemName" label="Name" required></v-text-field>
+           <v-text-field v-model="itemName" label="Name" required autofocus></v-text-field>
          </v-row>
          <v-row>
            <v-text-field
@@ -205,7 +205,7 @@
       <v-card-text>
         <v-container>
          <v-row>
-           <v-text-field v-model="editItemName" label="Name" required></v-text-field>
+           <v-text-field v-model="editItemName" label="Name" required autofocus></v-text-field>
          </v-row>
          <v-row>
            <v-text-field
