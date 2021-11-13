@@ -1145,7 +1145,7 @@ class OptionalContents {
 }
 
 class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
-  late Future<OptionalContents> contents;
+  OptionalContents contents = OptionalContents(contents: null);
   bool render = false;
   Set<int> strickedItems = {};
   Set<int> deletedItems = {};
@@ -1156,12 +1156,10 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   late VoidCallback fetchContentsCallback = () {
-    setState(() {
-      contents = fetchContents();
-    });
+    this.updateContents();
   };
 
-  Future<OptionalContents> fetchContents() async {
+  Future<OptionalContents> fetchContentsFailable() async {
     ListInfo info;
     if (widget.list.value == null) {
       return OptionalContents(contents: null);
@@ -1190,6 +1188,41 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     return OptionalContents(contents: contents);
   }
 
+  void updateContents() async {
+    try {
+      final newContents = await this.fetchContentsFailable();
+      setState(() {
+        contents = newContents;
+      });
+    } catch (e) {
+      final widget;
+      if (e is ApiError) {
+        widget = Text(
+            "An error occured while fetching the contents: ${e.errMsg()}",
+            style: TextStyle(color: Colors.red));
+      } else {
+        widget = Text("An unexpected error occured: $e",
+            style: TextStyle(color: Colors.red));
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: widget,
+        duration: const Duration(milliseconds: 4000),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        width: 280.0,
+      ));
+    }
+  }
+
+  /* Future<OptionalContents> fetchContents() async {
+  	try {
+		return this.fetchContentsFailable();
+	} catch (e) {
+	}
+  } */
+
   void strikeItems() async {
     ListInfo info;
     if (widget.list.value == null) {
@@ -1198,9 +1231,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       info = widget.list.value!;
     }
 
-    setState(() {
-      contents = fetchContents();
-    });
+    updateContents();
 
     this.strickedItems.forEach((itemId) async {
       final response = await http
@@ -1215,8 +1246,8 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       });
     });
 
+    updateContents();
     setState(() {
-      contents = fetchContents();
       this.strickedItems.clear();
     });
   }
@@ -1225,12 +1256,10 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance!.addObserver(this);
-    contents = fetchContents();
+    updateContents();
     timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
       if (shouldFetch) {
-        setState(() {
-          contents = fetchContents();
-        });
+        updateContents();
       }
     });
     widget.list.addListener(fetchContentsCallback);
@@ -1296,9 +1325,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
 
     parseAPIResponse(response, (m) => null);
 
-    setState(() {
-      contents = fetchContents();
-    });
+    updateContents();
   }
 
   void editItem(ListItem item) {
@@ -1357,71 +1384,50 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<OptionalContents>(
-        future: contents,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data!.contents == null) {
-              return SizedBox.shrink();
-            }
-            List<Widget> inList = [];
-            List<Widget> striked = [];
-            snapshot.data!.contents!.items.forEach((item) {
-              if (!deletedItems.contains(item.id)) {
-                if (strickedItems.contains(item.id)) {
-                  striked.add(ListTile(
-                      title: item.render(true),
-                      onTap: () {
-                        setState(() => strickedItems.remove(item.id));
-                      },
-                      onLongPress: () => editItem(item)));
-                } else {
-                  inList.add(ListTile(
-                      title: item.render(false),
-                      onTap: () {
-                        setState(() => strickedItems.add(item.id));
-                      },
-                      onLongPress: () => editItem(item)));
-                }
-              }
-            });
-            final List<Widget> items;
-            if (striked.isEmpty) {
-              items = inList;
-            } else {
-              items = [...inList, Divider(), ...striked];
-            }
-            bool readOnly = snapshot.data!.contents!.readonly;
-            if (!readOnly && strickedItems.isNotEmpty) {
-              items.add(ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.red, onPrimary: Colors.white),
-                  onPressed: strikeItems,
-                  child: const Text('Delete Striked Items')));
-            }
-            return ListView(
-                padding: const EdgeInsets.all(8),
-                itemExtent: widget.listExtent,
-                children: [
-                  ListTile(
-                      title: Text(
-                          "List: ${widget.list.value!.name}${readOnly ? " (readonly)" : ""}")),
-                  Divider(),
-                  ...items
-                ]);
-          } else if (snapshot.hasError) {
-            print("Err: ${snapshot.error}");
-            if (snapshot.error is ApiError?) {
-              return Text(
-                  "An error occured while fetching the contents: ${(snapshot.error! as ApiError).errMsg()}",
-                  style: TextStyle(color: Colors.red));
-            } else {
-              return Text("An unexpected error occured: ${snapshot.error}",
-                  style: TextStyle(color: Colors.red));
-            }
-          } else {
-            return CircularProgressIndicator();
-          }
-        });
+    List<Widget> inList = [];
+    List<Widget> striked = [];
+    contents.contents?.items.forEach((item) {
+      if (!deletedItems.contains(item.id)) {
+        if (strickedItems.contains(item.id)) {
+          striked.add(ListTile(
+              title: item.render(true),
+              onTap: () {
+                setState(() => strickedItems.remove(item.id));
+              },
+              onLongPress: () => editItem(item)));
+        } else {
+          inList.add(ListTile(
+              title: item.render(false),
+              onTap: () {
+                setState(() => strickedItems.add(item.id));
+              },
+              onLongPress: () => editItem(item)));
+        }
+      }
+    });
+    final List<Widget> items;
+    if (striked.isEmpty) {
+      items = inList;
+    } else {
+      items = [...inList, Divider(), ...striked];
+    }
+    bool readOnly = contents.contents?.readonly ?? true;
+    if (!readOnly && strickedItems.isNotEmpty) {
+      items.add(ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              primary: Colors.red, onPrimary: Colors.white),
+          onPressed: strikeItems,
+          child: const Text('Delete Striked Items')));
+    }
+    return ListView(
+        padding: const EdgeInsets.all(8),
+        itemExtent: widget.listExtent,
+        children: [
+          ListTile(
+              title: Text(
+                  "List: ${widget.list.value?.name ?? "Unkown"}${readOnly ? " (readonly)" : ""}")),
+          Divider(),
+          ...items
+        ]);
   }
 }
