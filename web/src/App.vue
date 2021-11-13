@@ -502,6 +502,11 @@ export default {
       this.login = false;
       await this.fetchLists();
 		}
+
+    if(localStorage.selectedList != null) {
+      this.selectedList = localStorage.selectedList;
+      await this.fetchContents();
+    }
 	},
   methods: {
     logout () {
@@ -709,6 +714,8 @@ export default {
     },
     selectList: async function() {
       this.drawer = false;
+      console.log();
+      localStorage.selectedList = this.selectedList;
       await this.fetchContents();
     },
     fetchContents: async function() {
