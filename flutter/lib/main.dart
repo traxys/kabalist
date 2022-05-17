@@ -10,7 +10,8 @@ void main() {
   runApp(MyApp());
 }
 
-const String URL = "http://192.168.1.23:8000";
+//const String URL = "http://192.168.1.23:8000";
+const String URL = "https://list.familleboyer.net/";
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
