@@ -3,5 +3,6 @@ members = [
 	"api",
 	"cli",
 	"types",
-	"client"
+	"client",
+	"web",
 ]

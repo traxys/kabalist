@@ -24,7 +24,7 @@ impl<T> From<RspData<T>> for Result<T, RspErr> {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Empty {}
 
 pub mod login {
@@ -62,7 +62,7 @@ pub mod get_lists {
     use std::collections::HashMap;
     use uuid::Uuid;
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
     #[serde(rename_all = "snake_case")]
     pub enum ListStatus {
         Owned,
@@ -70,14 +70,14 @@ pub mod get_lists {
         SharedRead,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
     pub struct ListInfo {
         pub id: Uuid,
         pub status: ListStatus,
         pub public: bool,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
     pub struct Response {
         pub results: HashMap<String, ListInfo>,
     }

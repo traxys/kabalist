@@ -19,6 +19,7 @@ pub use kabalist_types::{
     share_list::Response as ShareResponse,
     unshare::Response as UnshareResponse,
     update_item::Response as UpdateItemResponse,
+    delete_list::Response as DeleteListResponse,
     uuid::Uuid,
     RspErr,
 };
@@ -118,6 +119,7 @@ pub async fn recover_password(
     map_res(rsp)
 }
 
+#[derive(Clone)]
 pub struct Client {
     client: reqwest::Client,
     token: String,
@@ -163,6 +165,19 @@ impl Client {
         let rsp: RspData<ReadResponse> = self
             .client
             .get(&format!("{}/list/{}", self.url, id))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn delete_list(&self, id: &Uuid) -> Result<DeleteListResponse> {
+        let rsp: RspData<DeleteListResponse> = self
+            .client
+            .delete(&format!("{}/list/{}", self.url, id))
             .bearer_auth(&self.token)
             .send()
             .await?

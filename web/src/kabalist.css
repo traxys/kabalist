@@ -1,0 +1,57 @@
+html,
+body,
+.bodylike-container {
+  height: 100%;
+}
+
+.centering {
+  padding-top: 40px;
+  align-items: center;
+  padding-bottom: 40px;
+}
+
+.bodylike-container {
+  display: flex;
+  width: 100%;
+}
+
+.form-login {
+  max-width: 330px;
+  padding: 15px;
+}
+
+.form-login .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-login #floatingInput,
+.form-add-item #floatingAddItemName {
+	margin-bottom: -1px;
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.form-login #floatingPassword,
+.form-add-item #floatingAddItemAmount {
+	margin-bottom: 10px;
+	border-top-right-radius: 0;
+	border-top-left-radius: 0;
+}
+
+#header {
+	height: fit-content;
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+.alert {
+	height: fit-content;
+}
+
+.sidebar-bg {
+	background-color: rgba(25,27,30,1);
+}
+
+#list {
+	--bs-border-color: rgba(25,27,30,1);
+}
