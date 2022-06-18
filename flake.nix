@@ -20,15 +20,19 @@
         };
         overlays = [(import rust-overlay)];
       };
+      openapi-generator-cli = pkgs.fetchurl {
+        url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.0.0/openapi-generator-cli-6.0.0.jar";
+        sha256 = "sha256-DLimlQ/JuMag4WGysYJ/vdglNw6nu0QP7vDT66LEKT4=";
+      };
     in {
       devShell = with pkgs;
         mkShell {
           nativeBuildInputs = [pkgs.bashInteractive];
 
-		  DATABASE_URL="postgres://traxys:traxys@localhost/list";
+          DATABASE_URL = "postgres://traxys:traxys@localhost/list";
 
           buildInputs = [
-		  	# Flutter
+            # Flutter
             (android-nixpkgs.sdk."${system}" (sdkPkgs:
               with sdkPkgs; [
                 cmdline-tools-latest
@@ -42,16 +46,21 @@
             flutter
             jdk8
             dart
-			openapi-generator-cli
+            (pkgs.writeShellApplication {
+			  name = "openapi-generator-cli";
+              text = ''
+                ${pkgs.jdk11}/bin/java -jar ${openapi-generator-cli} "$@"
+              '';
+            })
 
-			# Rust
+            # Rust
             (rust-bin.stable.latest.default.override {
               targets = ["wasm32-unknown-unknown"];
             })
 
-			# Web
-			trunk
-			wasm-bindgen-cli
+            # Web
+            trunk
+            wasm-bindgen-cli
           ];
         };
     });
