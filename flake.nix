@@ -42,6 +42,7 @@
             flutter
             jdk8
             dart
+			openapi-generator-cli
 
 			# Rust
             (rust-bin.stable.latest.default.override {
