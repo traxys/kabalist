@@ -5,13 +5,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'endpoint.dart';
 
 void main() {
   runApp(MyApp());
 }
-
-//const String URL = "http://192.168.1.23:8000";
-const String URL = "https://list.familleboyer.net/";
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -198,7 +196,7 @@ class _LoginFormState extends State<LoginForm> {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
                       final response = await http.post(
-                        Uri.parse(URL + "/login"),
+                        Uri.parse(ENDPOINT + "/login"),
                         headers: {
                           HttpHeaders.contentTypeHeader: "application/json"
                         },
@@ -279,7 +277,7 @@ class _ListDrawerState extends State<ListDrawer> {
 
   Future<Map<String, ListData>> fetchLists() async {
     final response = await http.get(
-      Uri.parse(URL + "/list"),
+      Uri.parse(ENDPOINT + "/list"),
       headers: {
         HttpHeaders.contentTypeHeader: "application/json",
         HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
@@ -313,7 +311,7 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void addList(String name) async {
-    final response = await http.post(Uri.parse(URL + "/list"),
+    final response = await http.post(Uri.parse(ENDPOINT + "/list"),
         headers: {
           HttpHeaders.contentTypeHeader: "application/json",
           HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
@@ -327,7 +325,7 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void deleteList(String id) async {
-    final response = await http.delete(Uri.parse(URL + "/list/$id"), headers: {
+    final response = await http.delete(Uri.parse(ENDPOINT + "/list/$id"), headers: {
       HttpHeaders.contentTypeHeader: "application/json",
       HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
     });
@@ -341,7 +339,7 @@ class _ListDrawerState extends State<ListDrawer> {
 
   void shareList(String listId, String shareWith, bool readonly) async {
     final accountRsp =
-        await http.get(Uri.parse(URL + "/search/account/$shareWith"), headers: {
+        await http.get(Uri.parse(ENDPOINT + "/search/account/$shareWith"), headers: {
       HttpHeaders.contentTypeHeader: "application/json",
       HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
     });
@@ -349,7 +347,7 @@ class _ListDrawerState extends State<ListDrawer> {
     try {
       final accountId = parseAPIResponse(accountRsp, (m) => m!["id"] as String);
 
-      final response = await http.put(Uri.parse(URL + "/share/$listId"),
+      final response = await http.put(Uri.parse(ENDPOINT + "/share/$listId"),
           headers: {
             HttpHeaders.contentTypeHeader: "application/json",
             HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
@@ -876,7 +874,7 @@ class _AuthListsState extends State<AuthLists> {
       amt = amount;
     }
     final response = await http.post(
-        Uri.parse(URL + "/list/${selectedList.value!.id}"),
+        Uri.parse(ENDPOINT + "/list/${selectedList.value!.id}"),
         headers: {
           HttpHeaders.contentTypeHeader: "application/json",
           HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
@@ -1026,7 +1024,7 @@ class ItemInput extends StatelessWidget {
   // TODO: Maybe not fetch everything, but use the query to narrow instead of doing it client side
   static Future<List<String>> fetchHistory(String listId, String token) async {
     final response =
-        await http.get(Uri.parse(URL + "/history/$listId?search"), headers: {
+        await http.get(Uri.parse(ENDPOINT + "/history/$listId?search"), headers: {
       HttpHeaders.contentTypeHeader: "application/json",
       HttpHeaders.authorizationHeader: "Bearer $token"
     });
@@ -1169,7 +1167,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     }
 
     final response =
-        await http.get(Uri.parse(URL + "/list/${info.id}"), headers: {
+        await http.get(Uri.parse(ENDPOINT + "/list/${info.id}"), headers: {
       HttpHeaders.contentTypeHeader: "application/json",
       HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
     });
@@ -1236,7 +1234,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
 
     this.strickedItems.forEach((itemId) async {
       final response = await http
-          .delete(Uri.parse(URL + "/list/${info.id}/$itemId"), headers: {
+          .delete(Uri.parse(ENDPOINT + "/list/${info.id}/$itemId"), headers: {
         HttpHeaders.contentTypeHeader: "application/json",
         HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
       });
@@ -1316,7 +1314,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     }
 
     final response = await http.patch(
-        Uri.parse(URL + "/list/${info.id}/$itemId"),
+        Uri.parse(ENDPOINT + "/list/${info.id}/$itemId"),
         headers: {
           HttpHeaders.contentTypeHeader: "application/json",
           HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
