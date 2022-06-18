@@ -6,9 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'endpoint.dart';
+import 'package:kabalist_client/api.dart';
 
 void main() {
   runApp(MyApp());
+}
+
+KabaListApi apiClient(String? token) {
+	if (token == null) {
+		return KabaListApi(ApiClient(basePath: ENDPOINT));
+	} else {
+		final auth = HttpBearerAuth();
+		auth.accessToken = token;
+		return KabaListApi(ApiClient(authentication: auth, basePath: ENDPOINT));
+	}
 }
 
 class MyApp extends StatelessWidget {
@@ -101,34 +112,6 @@ class _ListsState extends State<Lists> {
   }
 }
 
-class ApiError implements Exception {
-  ApiError({required this.code});
-
-  final int code;
-
-  String errMsg() {
-    switch (code) {
-      case 2:
-        return "Account is unknown";
-      default:
-        return "unkown error: $code";
-    }
-  }
-}
-
-T parseAPIResponse<T>(
-    http.Response response, T Function(Map<String, dynamic>?) parser) {
-  String rspStr = utf8.decode(response.bodyBytes);
-  Map<String, dynamic> rsp = jsonDecode(rspStr);
-  if (rsp.containsKey("ok")) {
-    return parser(rsp["ok"]);
-  } else {
-    Map<String, dynamic> err = rsp["err"];
-    print("ApiError: ${err["description"]}");
-    throw ApiError(code: err["code"]);
-  }
-}
-
 class LoginForm extends StatefulWidget {
   const LoginForm({Key? key, required this.getToken}) : super(key: key);
 
@@ -195,21 +178,15 @@ class _LoginFormState extends State<LoginForm> {
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
-                      final response = await http.post(
-                        Uri.parse(ENDPOINT + "/login"),
-                        headers: {
-                          HttpHeaders.contentTypeHeader: "application/json"
-                        },
-                        body:
-                            '{"username": ${jsonEncode(username)}, "password": ${jsonEncode(password)}}',
-                      );
+
+					  final instance = apiClient(null);
+					  final loginRequest = LoginRequest(username: username!, password: password!);
                       try {
-                        final token = parseAPIResponse(
-                            response, (fields) => fields!["token"]);
-                        widget.getToken(token);
-                      } on ApiError catch (err) {
+						final response = await instance.login(loginRequest);
+                        widget.getToken(response!.ok.token);
+                      } on ApiException catch (err) {
                         setState(() {
-                          error = err.errMsg();
+                          error = err.toString();
                         });
                       }
                     }
@@ -233,7 +210,7 @@ class ListDrawer extends StatefulWidget {
 
   final void Function() logout;
   final String token;
-  final void Function(String, ListData) selectList;
+  final void Function(String, ListInfo) selectList;
   final void Function(String) listDeleted;
   final void Function(List<String>) fetchedList;
   final VoidCallback openSettings;
@@ -243,27 +220,16 @@ class ListDrawer extends StatefulWidget {
   State<ListDrawer> createState() => _ListDrawerState();
 }
 
-enum ListStatus {
-  Owned,
-  SharedReadonly,
-  SharedWritable,
-}
-
-class ListData {
-  ListData({required this.id, required this.status});
-
-  String id;
-  ListStatus status;
-
-  String fmtStatus() {
-    switch (status) {
-      case ListStatus.Owned:
-        return "";
-      case ListStatus.SharedReadonly:
-        return " (readonly)";
-      case ListStatus.SharedWritable:
-        return " (shared)";
-    }
+String fmtStatus(ListStatus status) {
+  switch (status) {
+    case ListStatus.owned:
+      return "";
+    case ListStatus.sharedRead:
+      return " (readonly)";
+    case ListStatus.sharedWrite:
+      return " (shared)";
+	default:
+	  return "";
   }
 }
 
@@ -273,64 +239,33 @@ class _ListDrawerState extends State<ListDrawer> {
 
   late String shareName;
   bool shareReadonly = false;
-  late Future<Map<String, ListData>> lists;
+  late Future<Map<String, ListInfo>> lists;
 
-  Future<Map<String, ListData>> fetchLists() async {
-    final response = await http.get(
-      Uri.parse(ENDPOINT + "/list"),
-      headers: {
-        HttpHeaders.contentTypeHeader: "application/json",
-        HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-      },
-    );
+  Future<Map<String, ListInfo>> fetchLists() async {
+	final instance = apiClient(widget.token);
+	final rsp = (await instance.listLists())!.ok.results;
 
-    final rsp = parseAPIResponse(
-        response,
-        (m) => m!["results"]
-                .cast<String, Map<String, dynamic>>()
-                .map((key, value) {
-              final status;
-              switch (value["status"]) {
-                case "owned":
-                  status = ListStatus.Owned;
-                  break;
-                case "shared_write":
-                  status = ListStatus.SharedWritable;
-                  break;
-                case "shared_read":
-                  status = ListStatus.SharedReadonly;
-                  break;
-                default:
-                  throw "Unknown status: ${value["status"]}";
-              }
-              return MapEntry(key, ListData(id: value["id"], status: status));
-            }).cast<String, ListData>());
     widget.fetchedList(List.from(rsp.keys));
 
     return rsp;
   }
 
   void addList(String name) async {
-    final response = await http.post(Uri.parse(ENDPOINT + "/list"),
-        headers: {
-          HttpHeaders.contentTypeHeader: "application/json",
-          HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-        },
-        body: '{"name":${jsonEncode(name)}}');
+	final instance = apiClient(widget.token);
+	final request = CreateListRequest(name: name);
 
-    parseAPIResponse(response, (m) => null);
+	await instance.createList(request);
+
     setState(() {
       lists = fetchLists();
     });
   }
 
   void deleteList(String id) async {
-    final response = await http.delete(Uri.parse(ENDPOINT + "/list/$id"), headers: {
-      HttpHeaders.contentTypeHeader: "application/json",
-      HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-    });
+	final instance = apiClient(widget.token);
 
-    parseAPIResponse(response, (m) => null);
+	await instance.deleteList(id);
+
     setState(() {
       lists = fetchLists();
     });
@@ -338,27 +273,16 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void shareList(String listId, String shareWith, bool readonly) async {
-    final accountRsp =
-        await http.get(Uri.parse(ENDPOINT + "/search/account/$shareWith"), headers: {
-      HttpHeaders.contentTypeHeader: "application/json",
-      HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-    });
+	final instance = apiClient(widget.token);
 
     try {
-      final accountId = parseAPIResponse(accountRsp, (m) => m!["id"] as String);
+	  final account = (await instance.searchAccount(shareWith))!.ok.id;
+	  final request = ShareListRequest(shareWith: account, readonly: readonly);
+	  await instance.shareList(listId, request);
 
-      final response = await http.put(Uri.parse(ENDPOINT + "/share/$listId"),
-          headers: {
-            HttpHeaders.contentTypeHeader: "application/json",
-            HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-          },
-          body:
-              '{"share_with": ${jsonEncode(accountId)}, "readonly": ${jsonEncode(readonly)}}');
-
-      parseAPIResponse(response, (m) => null);
-    } on ApiError catch (e) {
+    } on ApiException catch (e) {
       setState(() {
-        shareError = e.errMsg();
+        shareError = e.toString();
       });
     }
   }
@@ -371,7 +295,7 @@ class _ListDrawerState extends State<ListDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, ListData>>(
+    return FutureBuilder<Map<String, ListInfo>>(
         future: lists,
         builder: (context, snapshots) {
           final names;
@@ -380,7 +304,7 @@ class _ListDrawerState extends State<ListDrawer> {
             names = List.from(snapshots.data!.entries);
             names.sort((a, b) => widget.listSorter(a.key, b.key));
             data = List.from(names.map((entry) => ListTile(
-                title: Text("${entry.key}${entry.value.fmtStatus()}"),
+                title: Text("${entry.key}${fmtStatus(entry.value.status)}"),
                 onTap: () {
                   widget.selectList(entry.key, entry.value);
                   Navigator.pop(context);
@@ -397,7 +321,7 @@ class _ListDrawerState extends State<ListDrawer> {
                             child: Text("Delete List"),
                           )
                         ];
-                        if (entry.value.status != ListStatus.SharedReadonly) {
+                        if (entry.value.status != ListStatus.sharedRead) {
                           actions.add(SimpleDialogOption(
                             onPressed: () {
                               Navigator.pop(ctx, ListAction.Share);
@@ -489,13 +413,15 @@ class _ListDrawerState extends State<ListDrawer> {
                 })));
           } else if (snapshots.hasError) {
             final error;
-            if (snapshots.error is ApiError) {
+            if (snapshots.error is ApiException) {
               error =
-                  "An error occured: ${(snapshots.error as ApiError).errMsg()}";
-            } else {
-              print((snapshots.error as TypeError).stackTrace);
+                  "An error occured: ${(snapshots.error as ApiException).toString()}";
+            } else if (snapshots.error is Error) {
+			  print((snapshots.error as Error).stackTrace);
               error = "An unexpected error occured: ${snapshots.error}";
-            }
+            } else {
+              error = "An unexpected error occured: ${snapshots.error}";
+			}
             data = <Widget>[
               ListTile(title: Text(error)),
             ];
@@ -712,8 +638,8 @@ class AuthLists extends StatefulWidget {
 
 enum ListAction { Delete, Share }
 
-class ListInfo {
-  ListInfo({required this.id, required this.name, required this.status});
+class ListDesc {
+  ListDesc({required this.id, required this.name, required this.status});
 
   final String id;
   final String name;
@@ -815,7 +741,7 @@ class SettingsValue {
 }
 
 class _AuthListsState extends State<AuthLists> {
-  ValueNotifier<ListInfo?> selectedList = ValueNotifier(null);
+  ValueNotifier<ListDesc?> selectedList = ValueNotifier(null);
   AddedItemNotifier addedItem = AddedItemNotifier();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   Function()? addItem;
@@ -839,18 +765,18 @@ class _AuthListsState extends State<AuthLists> {
     });
   }
 
-  Future<ListInfo> getLastUsedList() async {
+  Future<ListDesc> getLastUsedList() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final Map<String, String> lastUsed =
         json.decode(prefs.getString("lastUsed")!).cast<String, String>();
     final status = lastUsed["status"]!;
-    return ListInfo(
+    return ListDesc(
         name: lastUsed["name"]!,
         status: ListStatus.values.firstWhere((e) => e.toString() == status),
         id: lastUsed["id"]!);
   }
 
-  void setLastUsed(ListInfo info) async {
+  void setLastUsed(ListDesc info) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("lastUsed",
         '{"id":"${info.id}","status":"${info.status.toString()}","name":"${info.name}"}');
@@ -873,19 +799,15 @@ class _AuthListsState extends State<AuthLists> {
     } else {
       amt = amount;
     }
-    final response = await http.post(
-        Uri.parse(ENDPOINT + "/list/${selectedList.value!.id}"),
-        headers: {
-          HttpHeaders.contentTypeHeader: "application/json",
-          HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-        },
-        body: '{"name": ${jsonEncode(name)}, "amount": ${jsonEncode(amt)}}');
+	final instance = apiClient(widget.token);
+	final request = AddToListRequest(name: name, amount: amt);
 
-    parseAPIResponse(response, (m) => null);
+	await instance.addList(selectedList.value!.id, request);
+
     addedItem.addedItem();
   }
 
-  void setList(ListInfo? list) {
+  void setList(ListDesc? list) {
     if (list == null) {
       setState(() {
         selectedList.value = null;
@@ -893,7 +815,7 @@ class _AuthListsState extends State<AuthLists> {
       });
     } else {
       final addItemFn;
-      if (list.status == ListStatus.SharedReadonly) {
+      if (list.status == ListStatus.sharedRead) {
         addItemFn = null;
       } else {
         addItemFn = () {
@@ -984,7 +906,7 @@ class _AuthListsState extends State<AuthLists> {
             }
           },
           selectList: (name, data) async {
-            final info = ListInfo(id: data.id, name: name, status: data.status);
+            final info = ListDesc(id: data.id, name: name, status: data.status);
             setState(() {
               settings = false;
             });
@@ -1023,20 +945,11 @@ class ItemInput extends StatelessWidget {
 
   // TODO: Maybe not fetch everything, but use the query to narrow instead of doing it client side
   static Future<List<String>> fetchHistory(String listId, String token) async {
-    final response =
-        await http.get(Uri.parse(ENDPOINT + "/history/$listId?search"), headers: {
-      HttpHeaders.contentTypeHeader: "application/json",
-      HttpHeaders.authorizationHeader: "Bearer $token"
-    });
+	final instance = apiClient(token);
 
-    return parseAPIResponse(response, (m) {
-      List<String> values = (m!["matches"] as List<dynamic>)
-          .cast<String>()
-          .map((String value) => value.toLowerCase())
-          .toList();
-      values.sort();
-      return values;
-    });
+	final matches = (await instance.historySearch(listId, ""))!.ok.matches;
+
+	return matches.map((String value) => value.toLowerCase()).toList();
   }
 
   @override
@@ -1107,7 +1020,7 @@ class ListContent extends StatefulWidget {
     required this.listExtent,
   }) : super(key: key);
 
-  final ValueNotifier<ListInfo?> list;
+  final ValueNotifier<ListDesc?> list;
   final AddedItemNotifier addedItem;
   final String token;
   final double? listExtent;
@@ -1116,25 +1029,17 @@ class ListContent extends StatefulWidget {
   State<ListContent> createState() => _ListContentState();
 }
 
-class ListItem {
-  ListItem({required this.name, this.amount, required this.id});
-
-  int id;
-  String name;
-  String? amount;
-
-  Widget render(bool stricken) {
-    return Text("$name ${amount == null ? '' : '($amount)'}",
-        style: TextStyle(
-            decoration: stricken ? TextDecoration.lineThrough : null));
-  }
+Widget renderItem(Item item, bool stricken) {
+  return Text("${item.name} ${item.amount == null ? '' : '(${item.amount})'}",
+      style: TextStyle(
+          decoration: stricken ? TextDecoration.lineThrough : null));
 }
 
 class Contents {
   Contents({required this.items, required this.readonly});
 
   bool readonly;
-  List<ListItem> items;
+  List<Item> items;
 }
 
 class OptionalContents {
@@ -1159,32 +1064,25 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   };
 
   Future<OptionalContents> fetchContentsFailable() async {
-    ListInfo info;
+    ListDesc info;
     if (widget.list.value == null) {
       return OptionalContents(contents: null);
     } else {
       info = widget.list.value!;
     }
 
-    final response =
-        await http.get(Uri.parse(ENDPOINT + "/list/${info.id}"), headers: {
-      HttpHeaders.contentTypeHeader: "application/json",
-      HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-    });
-
-    final contents = parseAPIResponse(
-        response,
-        (m) => Contents(
-            readonly: m!["readonly"],
-            items: List.from(m["items"].map((item) => ListItem(
-                name: item["name"], amount: item["amount"], id: item["id"])))));
+	final instance = apiClient(widget.token);
+	final response = (await instance.readList(info.id))!.ok;
 
     setState(() {
-      strickedItems.retainAll(contents.items.map((item) => item.id));
+      strickedItems.retainAll(response.items.map((item) => item.id));
       deletedItems.clear();
     });
 
-    return OptionalContents(contents: contents);
+    return OptionalContents(contents: Contents(
+		items: response.items,
+		readonly: response.readonly,
+	));
   }
 
   void updateContents() async {
@@ -1195,9 +1093,9 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       });
     } catch (e) {
       final widget;
-      if (e is ApiError) {
+      if (e is ApiException) {
         widget = Text(
-            "An error occured while fetching the contents: ${e.errMsg()}",
+            "An error occured while fetching the contents: ${e.toString()}",
             style: TextStyle(color: Colors.red));
       } else {
         widget = Text("An unexpected error occured: $e",
@@ -1223,7 +1121,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   } */
 
   void strikeItems() async {
-    ListInfo info;
+    ListDesc info;
     if (widget.list.value == null) {
       return;
     } else {
@@ -1233,13 +1131,9 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     updateContents();
 
     this.strickedItems.forEach((itemId) async {
-      final response = await http
-          .delete(Uri.parse(ENDPOINT + "/list/${info.id}/$itemId"), headers: {
-        HttpHeaders.contentTypeHeader: "application/json",
-        HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-      });
+	  final instance = apiClient(widget.token);
+	  await instance.deleteItem(info.id, itemId);
 
-      parseAPIResponse(response, (m) => null);
       setState(() {
         deletedItems.add(itemId);
       });
@@ -1292,7 +1186,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   }
 
   void doEdit(String? editName, String? editAmount, int itemId) async {
-    ListInfo info;
+    ListDesc info;
     if (widget.list.value == null) {
       return;
     } else {
@@ -1313,21 +1207,14 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       jsonAmount = editAmount;
     }
 
-    final response = await http.patch(
-        Uri.parse(ENDPOINT + "/list/${info.id}/$itemId"),
-        headers: {
-          HttpHeaders.contentTypeHeader: "application/json",
-          HttpHeaders.authorizationHeader: "Bearer ${widget.token}"
-        },
-        body:
-            '{"name": ${jsonEncode(jsonName)}, "amount": ${jsonEncode(jsonAmount)}}');
-
-    parseAPIResponse(response, (m) => null);
+	final instance = apiClient(widget.token);
+	final request = UpdateItemRequest(name: jsonName, amount: jsonAmount);
+	await instance.updateItem(info.id, itemId, request);
 
     updateContents();
   }
 
-  void editItem(ListItem item) {
+  void editItem(Item item) {
     showDialog(
         context: context,
         builder: (BuildContext ctx) {
@@ -1389,14 +1276,14 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       if (!deletedItems.contains(item.id)) {
         if (strickedItems.contains(item.id)) {
           striked.add(ListTile(
-              title: item.render(true),
+              title: renderItem(item, true),
               onTap: () {
                 setState(() => strickedItems.remove(item.id));
               },
               onLongPress: () => editItem(item)));
         } else {
           inList.add(ListTile(
-              title: item.render(false),
+              title: renderItem(item, false),
               onTap: () {
                 setState(() => strickedItems.add(item.id));
               },

@@ -30,6 +30,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   http: ^0.13.3
   shared_preferences: ^2.0.6
+  kabalist_client:
+    path: ../dart-client
 
 dev_dependencies:
   flutter_test:
