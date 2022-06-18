@@ -5,4 +5,5 @@ members = [
 	"types",
 	"client",
 	"web",
+	"admin",
 ]
