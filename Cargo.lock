@@ -331,7 +331,7 @@ dependencies = [
  "ansi_term",
  "atty",
  "bitflags",
- "strsim",
+ "strsim 0.8.0",
  "textwrap",
  "unicode-width",
  "vec_map",
@@ -462,6 +462,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "darling"
+version = "0.13.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a01d95850c592940db9b8194bc39f4bc0e89dee5c4265e4b1807c34a9aba453c"
+dependencies = [
+ "darling_core",
+ "darling_macro",
+]
+
+[[package]]
+name = "darling_core"
+version = "0.13.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "859d65a907b6852c9361e3185c862aae7fafd2887876799fa55f5f99dc40d610"
+dependencies = [
+ "fnv",
+ "ident_case",
+ "proc-macro2",
+ "quote",
+ "strsim 0.10.0",
+ "syn",
+]
+
+[[package]]
+name = "darling_macro"
+version = "0.13.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c972679f83bdf9c42bd905396b6c3588a843a17f0f16dfcfa3e2c5d57441835"
+dependencies = [
+ "darling_core",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "derive_more"
 version = "0.99.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -578,6 +613,12 @@ name = "dotenv"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "140206b78fb2bc3edbcfc9b5ccbd0b30699cfe8d348b8b31b330e47df5291a5a"
 
 [[package]]
 name = "either"
@@ -1225,6 +1266,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ident_case"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
+
+[[package]]
 name = "idna"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1374,10 +1421,11 @@ dependencies = [
  "kabalist_types",
  "rocket",
  "rocket_dyn_templates",
+ "rocket_okapi",
  "rocket_sync_db_pools",
  "serde",
  "sqlx",
- "uuid",
+ "uuid 1.1.2",
 ]
 
 [[package]]
@@ -1407,9 +1455,10 @@ dependencies = [
 name = "kabalist_types"
 version = "0.1.0"
 dependencies = [
+ "schemars",
  "serde",
  "thiserror",
- "uuid",
+ "uuid 1.1.2",
 ]
 
 [[package]]
@@ -1713,6 +1762,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a38f2be3697a57b4060074ff41b44c16870d916ad7877c17696e063257482bc7"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "okapi"
+version = "0.7.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce66b6366e049880a35c378123fddb630b1a1a3c37fa1ca70caaf4a09f6e2893"
+dependencies = [
+ "log",
+ "schemars",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2201,7 +2262,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util 0.7.3",
  "ubyte",
- "uuid",
+ "uuid 1.1.2",
  "version_check",
  "yansi",
 ]
@@ -2224,16 +2285,14 @@ dependencies = [
 
 [[package]]
 name = "rocket_dyn_templates"
-version = "0.1.0-rc.1"
+version = "0.1.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c83f1287ad8fa034410928297a91db37518d5c46d7cc7e1e1b4a77aec0cd8807"
+checksum = "bab13df598440527c200f46fb944dc55d8d67a1818b617eb5a3981dcd8b63fd2"
 dependencies = [
  "glob",
  "normpath",
  "notify",
  "rocket",
- "serde",
- "serde_json",
  "tera",
 ]
 
@@ -2262,7 +2321,37 @@ dependencies = [
  "time 0.3.9",
  "tokio",
  "uncased",
- "uuid",
+ "uuid 1.1.2",
+]
+
+[[package]]
+name = "rocket_okapi"
+version = "0.8.0-rc.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "489f4f5b120762f7974e65b919fc462d0660fd8b839026d8985b850fe5acccb0"
+dependencies = [
+ "either",
+ "log",
+ "okapi",
+ "rocket",
+ "rocket_dyn_templates",
+ "rocket_okapi_codegen",
+ "schemars",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rocket_okapi_codegen"
+version = "0.8.0-rc.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54f94d1ffe41472e08463d7a2674f1db04dc4df745285e8369b33d3cfd6b0308"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "rocket_http",
+ "syn",
 ]
 
 [[package]]
@@ -2394,6 +2483,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "schemars"
+version = "0.8.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1847b767a3d62d95cbf3d8a9f0e421cf57a0d8aa4f411d4b16525afb0284d4ed"
+dependencies = [
+ "dyn-clone",
+ "indexmap",
+ "schemars_derive",
+ "serde",
+ "serde_json",
+ "uuid 0.8.2",
+ "uuid 1.1.2",
+]
+
+[[package]]
+name = "schemars_derive"
+version = "0.8.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af4d7e1b012cb3d9129567661a63755ea4b8a7386d339dc945ae187e403c6743"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde_derive_internals",
+ "syn",
+]
+
+[[package]]
 name = "scoped-tls"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2457,6 +2573,17 @@ name = "serde_derive"
 version = "1.0.137"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f26faba0c3959972377d3b2d306ee9f71faee9714294e41bb777f83f88578be"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "serde_derive_internals"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85bf8229e7920a9f636479437026331ce11aa132b4dde37d121944a44d6e5f3c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2661,7 +2788,7 @@ dependencies = [
  "thiserror",
  "tokio-stream",
  "url",
- "uuid",
+ "uuid 1.1.2",
  "webpki-roots 0.22.3",
  "whoami",
 ]
@@ -2729,6 +2856,12 @@ name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
+
+[[package]]
+name = "strsim"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "structopt"
@@ -3232,6 +3365,12 @@ name = "utf8parse"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "936e4b492acfd135421d8dca4b1aa80a7bfc26e702ef3af710e0752684df5372"
+
+[[package]]
+name = "uuid"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
 
 [[package]]
 name = "uuid"

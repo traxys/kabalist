@@ -14,6 +14,17 @@ use rocket::{
     Build, Rocket, State,
 };
 use rocket_dyn_templates::Template;
+use rocket_okapi::{
+    okapi::openapi3,
+    openapi_get_routes,
+    rapidoc::{self, make_rapidoc, RapiDocConfig},
+    request::{OpenApiFromRequest, RequestHeaderInput},
+    settings::UrlObject,
+    swagger_ui::{make_swagger_ui, SwaggerUIConfig},
+    util::{add_schema_response, produce_any_responses},
+    JsonSchema,
+};
+use rocket_okapi::{openapi, response::OpenApiResponderInner};
 use sqlx::ConnectOptions;
 
 type Db = sqlx::PgPool;
@@ -94,6 +105,32 @@ impl<'r> FromRequest<'r> for User {
     }
 }
 
+impl<'r> OpenApiFromRequest<'r> for User {
+    fn from_request_input(
+        gen: &mut rocket_okapi::gen::OpenApiGenerator,
+        _name: String,
+        required: bool,
+    ) -> rocket_okapi::Result<rocket_okapi::request::RequestHeaderInput> {
+        Ok(RequestHeaderInput::Parameter(openapi3::Parameter {
+            name: "Authorization".into(),
+            location: "header".into(),
+            description: None,
+            required,
+            deprecated: false,
+            allow_empty_value: false,
+            value: openapi3::ParameterValue::Schema {
+                style: None,
+                explode: None,
+                allow_reserved: false,
+                schema: gen.json_schema::<String>(),
+                example: None,
+                examples: None,
+            },
+            extensions: openapi3::Object::default(),
+        }))
+    }
+}
+
 macro_rules! define_error {
     (
     pub enum Error {
@@ -168,6 +205,20 @@ define_error! {
 #[derive(Responder)]
 struct Rsp<T>(Json<RspData<T>>);
 
+impl<T> OpenApiResponderInner for Rsp<T>
+where
+    T: JsonSchema,
+{
+    fn responses(
+        gen: &mut rocket_okapi::gen::OpenApiGenerator,
+    ) -> rocket_okapi::Result<openapi3::Responses> {
+        let mut response = openapi3::Responses::default();
+        let schema = gen.json_schema::<RspData<T>>();
+        add_schema_response(&mut response, 200, "application/json", schema)?;
+        Ok(response)
+    }
+}
+
 impl<T: Serialize> From<sqlx::Error> for Rsp<T> {
     fn from(err: sqlx::Error) -> Self {
         error!("SQLX error: {:?}", err);
@@ -202,6 +253,7 @@ macro_rules! try_rsp {
     };
 }
 
+#[openapi(tag = "TODO")]
 #[post("/login", data = "<request>")]
 async fn login(
     cfg: &State<Config>,
@@ -241,6 +293,7 @@ async fn login(
     Ok(Rsp::ok(kabalist_types::login::Response { token }))
 }
 
+#[openapi(tag = "TODO")]
 #[post("/list", data = "<list>")]
 async fn create_list(
     db: &State<Db>,
@@ -275,6 +328,7 @@ async fn create_list(
     Rsp::ok(kabalist_types::create_list::Response { id: list_id.id })
 }
 
+#[openapi(tag = "TODO")]
 #[get("/search/list/<name>")]
 async fn search_list(
     db: &State<Db>,
@@ -294,8 +348,8 @@ async fn search_list(
         sqlx::query!(
             r#"SELECT name, id, readonly, pub
                FROM lists, list_sharing
-               WHERE (lists.id = list_sharing.list) 
-                   AND shared = $1 
+               WHERE (lists.id = list_sharing.list)
+                   AND shared = $1
                    AND name ILIKE '%' || $2 || '%'"#,
             user.id,
             name
@@ -335,6 +389,7 @@ async fn search_list(
     })
 }
 
+#[openapi(tag = "TODO")]
 #[get("/search/account/<name>")]
 async fn search_account(
     db: &State<Db>,
@@ -353,6 +408,7 @@ async fn search_account(
     Rsp::ok(kabalist_types::search_account::Response { id: result.id })
 }
 
+#[openapi(tag = "TODO")]
 #[get("/list")]
 async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists::Response> {
     let results_owned = try_rsp!(
@@ -369,7 +425,7 @@ async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists
         sqlx::query!(
             r#"SELECT name, id, readonly, pub
                FROM lists, list_sharing
-               WHERE (lists.id = list_sharing.list) 
+               WHERE (lists.id = list_sharing.list)
                    AND shared = $1 "#,
             user.id
         )
@@ -464,6 +520,7 @@ macro_rules! try_check_list {
     };
 }
 
+#[openapi(tag = "TODO")]
 #[get("/list/<id>")]
 async fn read_list(
     db: &State<Db>,
@@ -506,6 +563,7 @@ async fn read_list(
     })
 }
 
+#[openapi(tag = "TODO")]
 #[post("/list/<id>", data = "<item>")]
 async fn add_list(
     db: &State<Db>,
@@ -530,9 +588,9 @@ async fn add_list(
 
     try_rsp!(
         sqlx::query!(
-            r#"INSERT INTO history (list, creator, name, last_used) 
-               VALUES ($1, $2, $3::text::citext, now()) 
-               ON CONFLICT (list, creator, name) DO 
+            r#"INSERT INTO history (list, creator, name, last_used)
+               VALUES ($1, $2, $3::text::citext, now())
+               ON CONFLICT (list, creator, name) DO
                UPDATE SET last_used = now()"#,
             id,
             user.id,
@@ -547,6 +605,7 @@ async fn add_list(
     Rsp::ok(kabalist_types::add_to_list::Response { id: item_id.id })
 }
 
+#[openapi(tag = "TODO")]
 #[get("/history/<list>?<search>")]
 async fn history_search(
     db: &State<Db>,
@@ -573,6 +632,7 @@ async fn history_search(
     })
 }
 
+#[openapi(tag = "TODO")]
 #[patch("/list/<list>/<item>", data = "<update>")]
 async fn update_item(
     db: &State<Db>,
@@ -614,6 +674,7 @@ async fn update_item(
     Rsp::ok(kabalist_types::update_item::Response {})
 }
 
+#[openapi(tag = "TODO")]
 #[delete("/list/<list>/<item>")]
 async fn delete_item(
     db: &State<Db>,
@@ -636,6 +697,7 @@ async fn delete_item(
     Rsp::ok(kabalist_types::delete_item::Response {})
 }
 
+#[openapi(tag = "TODO")]
 #[get("/share/<id>")]
 async fn get_shares(
     db: &State<Db>,
@@ -662,6 +724,7 @@ async fn get_shares(
     })
 }
 
+#[openapi(tag = "TODO")]
 #[put("/share/<id>", data = "<request>")]
 async fn share_list(
     db: &State<Db>,
@@ -674,7 +737,7 @@ async fn share_list(
     try_rsp!(
         sqlx::query!(
             r#"
-            INSERT INTO list_sharing (list, shared, readonly) 
+            INSERT INTO list_sharing (list, shared, readonly)
             VALUES ($1, $2, $3) ON CONFLICT DO NOTHING"#,
             id,
             request.share_with,
@@ -687,6 +750,7 @@ async fn share_list(
     Rsp::ok(kabalist_types::share_list::Response {})
 }
 
+#[openapi(tag = "TODO")]
 #[delete("/share/<list>/<account>")]
 async fn unshare(
     db: &State<Db>,
@@ -723,6 +787,7 @@ async fn unshare(
     Rsp::ok(kabalist_types::unshare::Response {})
 }
 
+#[openapi(tag = "TODO")]
 #[delete("/share/<id>")]
 async fn delete_shares(
     db: &State<Db>,
@@ -754,6 +819,7 @@ async fn delete_shares(
     Rsp::ok(kabalist_types::delete_share::Response {})
 }
 
+#[openapi(tag = "TODO")]
 #[delete("/list/<id>")]
 async fn delete_list(
     db: &State<Db>,
@@ -789,6 +855,7 @@ async fn delete_list(
     Rsp::ok(kabalist_types::delete_list::Response {})
 }
 
+#[openapi(tag = "TODO")]
 #[post("/register/<id>", data = "<req>")]
 async fn register(
     db: &State<Db>,
@@ -808,7 +875,7 @@ async fn register(
 
     try_rsp!(
         sqlx::query!(
-            r#"INSERT INTO accounts (id, name, password) 
+            r#"INSERT INTO accounts (id, name, password)
                VALUES (uuid_generate_v4(), $1::text::citext, crypt($2, gen_salt('bf')))"#,
             req.username,
             req.password
@@ -828,13 +895,14 @@ async fn register(
     Rsp::ok(kabalist_types::register::Response {})
 }
 
+#[openapi(tag = "TODO")]
 #[get("/recover/<id>")]
 async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<kabalist_types::recovery_info::Response> {
     let username = try_rsp!(
         sqlx::query!(
-            r#"SELECT accounts.name::text 
-               FROM password_reset,accounts 
-               WHERE password_reset.id = $1 
+            r#"SELECT accounts.name::text
+               FROM password_reset,accounts
+               WHERE password_reset.id = $1
                 AND password_reset.account = accounts.id"#,
             id
         )
@@ -849,6 +917,7 @@ async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<kabalist_types::recovery
     }
 }
 
+#[openapi(tag = "TODO")]
 #[post("/recover/<id>", data = "<request>")]
 async fn recover_password(
     db: &State<Db>,
@@ -887,6 +956,7 @@ async fn recover_password(
     Rsp::ok(kabalist_types::recover_password::Response {})
 }
 
+#[openapi(tag = "TODO")]
 #[get("/account/<id>/name")]
 async fn get_account_name(
     db: &State<Db>,
@@ -906,6 +976,7 @@ async fn get_account_name(
     }
 }
 
+#[openapi(tag = "TODO")]
 #[put("/public/<id>")]
 async fn set_public(
     db: &State<Db>,
@@ -923,6 +994,7 @@ async fn set_public(
     Rsp::ok(kabalist_types::set_public::Response {})
 }
 
+#[openapi(tag = "TODO")]
 #[delete("/public/<id>")]
 async fn remove_public(
     db: &State<Db>,
@@ -947,11 +1019,24 @@ enum PublicResponse {
     Ok(Template),
 }
 
+impl OpenApiResponderInner for PublicResponse {
+    fn responses(
+        gen: &mut rocket_okapi::gen::OpenApiGenerator,
+    ) -> rocket_okapi::Result<openapi3::Responses> {
+        let err = rocket::response::Debug::<sqlx::Error>::responses(gen)?;
+        let not_found = rocket::response::status::NotFound::<()>::responses(gen)?;
+        let template = Template::responses(gen)?;
+
+        produce_any_responses(produce_any_responses(err, not_found)?, template)
+    }
+}
+
 #[derive(Serialize)]
 struct PublicResponseCtx {
     items: Vec<(String, Option<String>)>,
 }
 
+#[openapi(tag = "TODO")]
 #[get("/public/<id>")]
 async fn get_public_list(db: &State<Db>, id: Uuid) -> PublicResponse {
     let pb = match sqlx::query!("SELECT pub FROM lists WHERE id = $1", id)
@@ -1128,7 +1213,7 @@ fn rocket() -> _ {
         .attach(Template::fairing())
         .mount(
             "/",
-            routes![
+            openapi_get_routes![
                 login,
                 list_lists,
                 create_list,
@@ -1152,5 +1237,27 @@ fn rocket() -> _ {
                 remove_public,
                 history_search,
             ],
+        )
+        .mount(
+            "/swagger_ui/",
+            make_swagger_ui(&SwaggerUIConfig {
+                url: "../openapi.json".into(),
+                ..Default::default()
+            }),
+        )
+        .mount(
+            "/rapidoc/",
+            make_rapidoc(&RapiDocConfig {
+                general: rapidoc::GeneralConfig {
+                    spec_urls: vec![UrlObject::new("General", "../openapi.json")],
+                    ..Default::default()
+                },
+                hide_show: rapidoc::HideShowConfig {
+                    allow_spec_url_load: false,
+                    allow_spec_file_load: false,
+                    ..Default::default()
+                },
+                ..Default::default()
+            }),
         )
 }

@@ -15,7 +15,8 @@ serde = "1.0.126"
 sqlx = { version = "0.6.0", features = ["postgres", "migrate", "runtime-tokio-rustls", "macros", "uuid"] }
 kabalist_types = { path = "../types" }
 uuid = { version = "1.1.2", features = ["serde"] }
+rocket_okapi = { version = "0.8.0-rc.2", features = ["swagger", "rapidoc", "uuid", "rocket_dyn_templates"] }
 
 [dependencies.rocket_dyn_templates]
-version = "0.1.0-rc.1"
+version = "0.1.0-rc.2"
 features = ["tera"]
