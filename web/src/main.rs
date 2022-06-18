@@ -3,7 +3,7 @@ use kabalist_client::Uuid;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use pages::{home::Home, login::Login};
+use pages::{home::Home, login::Login, register::Register};
 
 pub const ENDPOINT: &str = include_str!("../../endpoint.url");
 
@@ -27,11 +27,16 @@ enum Route {
     List { id: Uuid },
     #[at("/login")]
     Login,
+    #[at("/register")]
+    Register,
+    #[at("/register/:id")]
+    RegisterPrefill { id: Uuid },
     #[at("/404")]
     #[not_found]
     NotFound,
 }
 
+mod button_redirect;
 mod modal;
 mod pages;
 mod text_input;
@@ -70,6 +75,10 @@ fn route_switch(
             html! { <Redirect<Route> to={Route::Login} />}
         }
         (Route::Login | Route::Root, Some(_)) => html! { <Redirect<Route> to={Route::Home}/> },
+        (Route::Register, _) => html! { <Register registration_id={""} /> },
+        (Route::RegisterPrefill { id }, _) => {
+            html! { <Register registration_id={id.to_string()} /> }
+        }
         (Route::Login, None) => html! { <Login {on_login}/> },
         (Route::NotFound, _) => html! { <h1>{"404"}</h1> },
     }

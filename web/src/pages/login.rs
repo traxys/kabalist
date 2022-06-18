@@ -1,6 +1,7 @@
 use crate::{
+    button_redirect::RedirectButton,
     text_input::{self, TextInput},
-    AccountInfo, ENDPOINT,
+    AccountInfo, ENDPOINT, Route,
 };
 use gloo::storage::Storage;
 use yew::prelude::*;
@@ -129,12 +130,21 @@ impl Component for Login {
                     </label>
                   </div>
 
-                  <button
-                    class="w-100 btn btn-lg btn-primary"
-                    type="submit"
-                  >
-                    {"Sign in"}
-                  </button>
+                  <div class="d-flex">
+                    <RedirectButton<Route>
+                      to={Route::Register}
+                      class="btn-lg m-2"
+                    >
+                      {"Register"}
+                    </RedirectButton<Route>>
+                    <button
+                      class="w-100 btn btn-lg btn-primary m-2"
+                      type="submit"
+                    >
+                      {"Sign in"}
+                    </button>
+                  </div>
+                    
               </form>
             </main>
           </div>
