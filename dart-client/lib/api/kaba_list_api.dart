@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.0
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -12,7 +12,7 @@ part of openapi.api;
 
 
 class KabaListApi {
-  KabaListApi([ApiClient apiClient]) : apiClient = apiClient ?? defaultApiClient;
+  KabaListApi([ApiClient? apiClient]) : apiClient = apiClient ?? defaultApiClient;
 
   final ApiClient apiClient;
 
@@ -23,26 +23,17 @@ class KabaListApi {
   ///
   /// * [AddToListRequest] addToListRequest (required):
   Future<Response> addListWithHttpInfo(String id, AddToListRequest addToListRequest,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-    if (addToListRequest == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: addToListRequest');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/list/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody = addToListRequest;
+    Object? postBody = addToListRequest;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>['application/json'];
 
 
@@ -53,8 +44,7 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
@@ -63,7 +53,7 @@ class KabaListApi {
   /// * [String] id (required):
   ///
   /// * [AddToListRequest] addToListRequest (required):
-  Future<RspDataForAddToListResponse> addList(String id, AddToListRequest addToListRequest,) async {
+  Future<RspDataForAddToListResponse?> addList(String id, AddToListRequest addToListRequest,) async {
     final response = await addListWithHttpInfo(id, addToListRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -71,11 +61,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForAddToListResponse',) as RspDataForAddToListResponse;
     
     }
-    return Future<RspDataForAddToListResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'POST /list' operation and returns the [Response].
@@ -83,22 +73,16 @@ class KabaListApi {
   ///
   /// * [CreateListRequest] createListRequest (required):
   Future<Response> createListWithHttpInfo(CreateListRequest createListRequest,) async {
-    // Verify required params are set.
-    if (createListRequest == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: createListRequest');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/list';
 
     // ignore: prefer_final_locals
-    Object postBody = createListRequest;
+    Object? postBody = createListRequest;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>['application/json'];
 
 
@@ -109,15 +93,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [CreateListRequest] createListRequest (required):
-  Future<RspDataForCreateListResponse> createList(CreateListRequest createListRequest,) async {
+  Future<RspDataForCreateListResponse?> createList(CreateListRequest createListRequest,) async {
     final response = await createListWithHttpInfo(createListRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -125,11 +108,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForCreateListResponse',) as RspDataForCreateListResponse;
     
     }
-    return Future<RspDataForCreateListResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'DELETE /list/{list}/{item}' operation and returns the [Response].
@@ -139,27 +122,18 @@ class KabaListApi {
   ///
   /// * [int] item (required):
   Future<Response> deleteItemWithHttpInfo(String list, int item,) async {
-    // Verify required params are set.
-    if (list == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: list');
-    }
-    if (item == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: item');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/list/{list}/{item}'
       .replaceAll('{list}', list)
       .replaceAll('{item}', item.toString());
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -170,8 +144,7 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
@@ -180,7 +153,7 @@ class KabaListApi {
   /// * [String] list (required):
   ///
   /// * [int] item (required):
-  Future<RspDataForEmpty> deleteItem(String list, int item,) async {
+  Future<RspDataForEmpty?> deleteItem(String list, int item,) async {
     final response = await deleteItemWithHttpInfo(list, item,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -188,11 +161,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 
   /// Performs an HTTP 'DELETE /list/{id}' operation and returns the [Response].
@@ -200,23 +173,17 @@ class KabaListApi {
   ///
   /// * [String] id (required):
   Future<Response> deleteListWithHttpInfo(String id,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/list/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -227,15 +194,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<RspDataForEmpty> deleteList(String id,) async {
+  Future<RspDataForEmpty?> deleteList(String id,) async {
     final response = await deleteListWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -243,11 +209,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 
   /// Performs an HTTP 'DELETE /share/{id}' operation and returns the [Response].
@@ -255,23 +221,17 @@ class KabaListApi {
   ///
   /// * [String] id (required):
   Future<Response> deleteSharesWithHttpInfo(String id,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/share/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -282,15 +242,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<RspDataForEmpty> deleteShares(String id,) async {
+  Future<RspDataForEmpty?> deleteShares(String id,) async {
     final response = await deleteSharesWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -298,11 +257,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 
   /// Performs an HTTP 'GET /account/{id}/name' operation and returns the [Response].
@@ -310,23 +269,17 @@ class KabaListApi {
   ///
   /// * [String] id (required):
   Future<Response> getAccountNameWithHttpInfo(String id,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/account/{id}/name'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -337,15 +290,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<RspDataForGetAccountNameResponse> getAccountName(String id,) async {
+  Future<RspDataForGetAccountNameResponse?> getAccountName(String id,) async {
     final response = await getAccountNameWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -353,11 +305,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForGetAccountNameResponse',) as RspDataForGetAccountNameResponse;
     
     }
-    return Future<RspDataForGetAccountNameResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'GET /public/{id}' operation and returns the [Response].
@@ -365,23 +317,17 @@ class KabaListApi {
   ///
   /// * [String] id (required):
   Future<Response> getPublicListWithHttpInfo(String id,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/public/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>[];
     const contentTypes = <String>[];
 
 
@@ -392,15 +338,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<String> getPublicList(String id,) async {
+  Future<String?> getPublicList(String id,) async {
     final response = await getPublicListWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -408,11 +353,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'String',) as String;
     
     }
-    return Future<String>.value();
+    return null;
   }
 
   /// Performs an HTTP 'GET /share/{id}' operation and returns the [Response].
@@ -420,23 +365,17 @@ class KabaListApi {
   ///
   /// * [String] id (required):
   Future<Response> getSharesWithHttpInfo(String id,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/share/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -447,15 +386,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<RspDataForGetSharesResponse> getShares(String id,) async {
+  Future<RspDataForGetSharesResponse?> getShares(String id,) async {
     final response = await getSharesWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -463,11 +401,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForGetSharesResponse',) as RspDataForGetSharesResponse;
     
     }
-    return Future<RspDataForGetSharesResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'GET /history/{list}' operation and returns the [Response].
@@ -477,28 +415,19 @@ class KabaListApi {
   ///
   /// * [String] search (required):
   Future<Response> historySearchWithHttpInfo(String list, String search,) async {
-    // Verify required params are set.
-    if (list == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: list');
-    }
-    if (search == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: search');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/history/{list}'
       .replaceAll('{list}', list);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-      queryParams.addAll(_convertParametersForCollectionFormat('', 'search', search));
+      queryParams.addAll(_queryParams('', 'search', search));
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -509,8 +438,7 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
@@ -519,7 +447,7 @@ class KabaListApi {
   /// * [String] list (required):
   ///
   /// * [String] search (required):
-  Future<RspDataForGetHistoryResponse> historySearch(String list, String search,) async {
+  Future<RspDataForGetHistoryResponse?> historySearch(String list, String search,) async {
     final response = await historySearchWithHttpInfo(list, search,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -527,11 +455,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForGetHistoryResponse',) as RspDataForGetHistoryResponse;
     
     }
-    return Future<RspDataForGetHistoryResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'GET /list' operation and returns the [Response].
@@ -540,13 +468,12 @@ class KabaListApi {
     final path = r'/list';
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -557,12 +484,11 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
-  Future<RspDataForGetListsResponse> listLists() async {
+  Future<RspDataForGetListsResponse?> listLists() async {
     final response = await listListsWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -570,11 +496,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForGetListsResponse',) as RspDataForGetListsResponse;
     
     }
-    return Future<RspDataForGetListsResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'POST /login' operation and returns the [Response].
@@ -582,22 +508,16 @@ class KabaListApi {
   ///
   /// * [LoginRequest] loginRequest (required):
   Future<Response> loginWithHttpInfo(LoginRequest loginRequest,) async {
-    // Verify required params are set.
-    if (loginRequest == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: loginRequest');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/login';
 
     // ignore: prefer_final_locals
-    Object postBody = loginRequest;
+    Object? postBody = loginRequest;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>[];
     const contentTypes = <String>['application/json'];
 
 
@@ -608,15 +528,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [LoginRequest] loginRequest (required):
-  Future<RspDataForLoginResponse> login(LoginRequest loginRequest,) async {
+  Future<RspDataForLoginResponse?> login(LoginRequest loginRequest,) async {
     final response = await loginWithHttpInfo(loginRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -624,11 +543,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForLoginResponse',) as RspDataForLoginResponse;
     
     }
-    return Future<RspDataForLoginResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'GET /list/{id}' operation and returns the [Response].
@@ -636,23 +555,17 @@ class KabaListApi {
   ///
   /// * [String] id (required):
   Future<Response> readListWithHttpInfo(String id,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/list/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -663,15 +576,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<RspDataForReadListResponse> readList(String id,) async {
+  Future<RspDataForReadListResponse?> readList(String id,) async {
     final response = await readListWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -679,11 +591,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForReadListResponse',) as RspDataForReadListResponse;
     
     }
-    return Future<RspDataForReadListResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'POST /recover/{id}' operation and returns the [Response].
@@ -693,26 +605,17 @@ class KabaListApi {
   ///
   /// * [RecoverPasswordRequest] recoverPasswordRequest (required):
   Future<Response> recoverPasswordWithHttpInfo(String id, RecoverPasswordRequest recoverPasswordRequest,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-    if (recoverPasswordRequest == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: recoverPasswordRequest');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/recover/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody = recoverPasswordRequest;
+    Object? postBody = recoverPasswordRequest;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>[];
     const contentTypes = <String>['application/json'];
 
 
@@ -723,8 +626,7 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
@@ -733,7 +635,7 @@ class KabaListApi {
   /// * [String] id (required):
   ///
   /// * [RecoverPasswordRequest] recoverPasswordRequest (required):
-  Future<RspDataForEmpty> recoverPassword(String id, RecoverPasswordRequest recoverPasswordRequest,) async {
+  Future<RspDataForEmpty?> recoverPassword(String id, RecoverPasswordRequest recoverPasswordRequest,) async {
     final response = await recoverPasswordWithHttpInfo(id, recoverPasswordRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -741,11 +643,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 
   /// Performs an HTTP 'GET /recover/{id}' operation and returns the [Response].
@@ -753,23 +655,17 @@ class KabaListApi {
   ///
   /// * [String] id (required):
   Future<Response> recoveryInfoWithHttpInfo(String id,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/recover/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>[];
     const contentTypes = <String>[];
 
 
@@ -780,15 +676,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<RspDataForRecoveryInfoResponse> recoveryInfo(String id,) async {
+  Future<RspDataForRecoveryInfoResponse?> recoveryInfo(String id,) async {
     final response = await recoveryInfoWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -796,11 +691,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForRecoveryInfoResponse',) as RspDataForRecoveryInfoResponse;
     
     }
-    return Future<RspDataForRecoveryInfoResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'POST /register/{id}' operation and returns the [Response].
@@ -810,26 +705,17 @@ class KabaListApi {
   ///
   /// * [RegisterRequest] registerRequest (required):
   Future<Response> registerWithHttpInfo(String id, RegisterRequest registerRequest,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-    if (registerRequest == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: registerRequest');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/register/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody = registerRequest;
+    Object? postBody = registerRequest;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>[];
     const contentTypes = <String>['application/json'];
 
 
@@ -840,8 +726,7 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
@@ -850,7 +735,7 @@ class KabaListApi {
   /// * [String] id (required):
   ///
   /// * [RegisterRequest] registerRequest (required):
-  Future<RspDataForEmpty> register(String id, RegisterRequest registerRequest,) async {
+  Future<RspDataForEmpty?> register(String id, RegisterRequest registerRequest,) async {
     final response = await registerWithHttpInfo(id, registerRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -858,11 +743,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 
   /// Performs an HTTP 'DELETE /public/{id}' operation and returns the [Response].
@@ -870,23 +755,17 @@ class KabaListApi {
   ///
   /// * [String] id (required):
   Future<Response> removePublicWithHttpInfo(String id,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/public/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -897,15 +776,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<RspDataForEmpty> removePublic(String id,) async {
+  Future<RspDataForEmpty?> removePublic(String id,) async {
     final response = await removePublicWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -913,11 +791,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 
   /// Performs an HTTP 'GET /search/account/{name}' operation and returns the [Response].
@@ -925,23 +803,17 @@ class KabaListApi {
   ///
   /// * [String] name (required):
   Future<Response> searchAccountWithHttpInfo(String name,) async {
-    // Verify required params are set.
-    if (name == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: name');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/search/account/{name}'
       .replaceAll('{name}', name);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -952,15 +824,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] name (required):
-  Future<RspDataForSearchAccountResponse> searchAccount(String name,) async {
+  Future<RspDataForSearchAccountResponse?> searchAccount(String name,) async {
     final response = await searchAccountWithHttpInfo(name,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -968,11 +839,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForSearchAccountResponse',) as RspDataForSearchAccountResponse;
     
     }
-    return Future<RspDataForSearchAccountResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'GET /search/list/{name}' operation and returns the [Response].
@@ -980,23 +851,17 @@ class KabaListApi {
   ///
   /// * [String] name (required):
   Future<Response> searchListWithHttpInfo(String name,) async {
-    // Verify required params are set.
-    if (name == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: name');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/search/list/{name}'
       .replaceAll('{name}', name);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -1007,15 +872,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] name (required):
-  Future<RspDataForGetListsResponse> searchList(String name,) async {
+  Future<RspDataForGetListsResponse?> searchList(String name,) async {
     final response = await searchListWithHttpInfo(name,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -1023,11 +887,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForGetListsResponse',) as RspDataForGetListsResponse;
     
     }
-    return Future<RspDataForGetListsResponse>.value();
+    return null;
   }
 
   /// Performs an HTTP 'PUT /public/{id}' operation and returns the [Response].
@@ -1035,23 +899,17 @@ class KabaListApi {
   ///
   /// * [String] id (required):
   Future<Response> setPublicWithHttpInfo(String id,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/public/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -1062,15 +920,14 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
   /// Parameters:
   ///
   /// * [String] id (required):
-  Future<RspDataForEmpty> setPublic(String id,) async {
+  Future<RspDataForEmpty?> setPublic(String id,) async {
     final response = await setPublicWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -1078,11 +935,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 
   /// Performs an HTTP 'PUT /share/{id}' operation and returns the [Response].
@@ -1092,26 +949,17 @@ class KabaListApi {
   ///
   /// * [ShareListRequest] shareListRequest (required):
   Future<Response> shareListWithHttpInfo(String id, ShareListRequest shareListRequest,) async {
-    // Verify required params are set.
-    if (id == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: id');
-    }
-    if (shareListRequest == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: shareListRequest');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/share/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
-    Object postBody = shareListRequest;
+    Object? postBody = shareListRequest;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>['application/json'];
 
 
@@ -1122,8 +970,7 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
@@ -1132,7 +979,7 @@ class KabaListApi {
   /// * [String] id (required):
   ///
   /// * [ShareListRequest] shareListRequest (required):
-  Future<RspDataForEmpty> shareList(String id, ShareListRequest shareListRequest,) async {
+  Future<RspDataForEmpty?> shareList(String id, ShareListRequest shareListRequest,) async {
     final response = await shareListWithHttpInfo(id, shareListRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -1140,11 +987,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 
   /// Performs an HTTP 'DELETE /share/{list}/{account}' operation and returns the [Response].
@@ -1154,27 +1001,18 @@ class KabaListApi {
   ///
   /// * [String] account (required):
   Future<Response> unshareWithHttpInfo(String list, String account,) async {
-    // Verify required params are set.
-    if (list == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: list');
-    }
-    if (account == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: account');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/share/{list}/{account}'
       .replaceAll('{list}', list)
       .replaceAll('{account}', account);
 
     // ignore: prefer_final_locals
-    Object postBody;
+    Object? postBody;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>[];
 
 
@@ -1185,8 +1023,7 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
@@ -1195,7 +1032,7 @@ class KabaListApi {
   /// * [String] list (required):
   ///
   /// * [String] account (required):
-  Future<RspDataForEmpty> unshare(String list, String account,) async {
+  Future<RspDataForEmpty?> unshare(String list, String account,) async {
     final response = await unshareWithHttpInfo(list, account,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -1203,11 +1040,11 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 
   /// Performs an HTTP 'PATCH /list/{list}/{item}' operation and returns the [Response].
@@ -1219,30 +1056,18 @@ class KabaListApi {
   ///
   /// * [UpdateItemRequest] updateItemRequest (required):
   Future<Response> updateItemWithHttpInfo(String list, int item, UpdateItemRequest updateItemRequest,) async {
-    // Verify required params are set.
-    if (list == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: list');
-    }
-    if (item == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: item');
-    }
-    if (updateItemRequest == null) {
-     throw ApiException(HttpStatus.badRequest, 'Missing required param: updateItemRequest');
-    }
-
     // ignore: prefer_const_declarations
     final path = r'/list/{list}/{item}'
       .replaceAll('{list}', list)
       .replaceAll('{item}', item.toString());
 
     // ignore: prefer_final_locals
-    Object postBody = updateItemRequest;
+    Object? postBody = updateItemRequest;
 
     final queryParams = <QueryParam>[];
     final headerParams = <String, String>{};
     final formParams = <String, String>{};
 
-    const authNames = <String>['JWT'];
     const contentTypes = <String>['application/json'];
 
 
@@ -1253,8 +1078,7 @@ class KabaListApi {
       postBody,
       headerParams,
       formParams,
-      contentTypes.isEmpty ? null : contentTypes[0],
-      authNames,
+      contentTypes.isEmpty ? null : contentTypes.first,
     );
   }
 
@@ -1265,7 +1089,7 @@ class KabaListApi {
   /// * [int] item (required):
   ///
   /// * [UpdateItemRequest] updateItemRequest (required):
-  Future<RspDataForEmpty> updateItem(String list, int item, UpdateItemRequest updateItemRequest,) async {
+  Future<RspDataForEmpty?> updateItem(String list, int item, UpdateItemRequest updateItemRequest,) async {
     final response = await updateItemWithHttpInfo(list, item, updateItemRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -1273,10 +1097,10 @@ class KabaListApi {
     // When a remote server returns no body with a status of 204, we shall not decode it.
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
-    if (response.body != null && response.statusCode != HttpStatus.noContent) {
+    if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
       return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'RspDataForEmpty',) as RspDataForEmpty;
     
     }
-    return Future<RspDataForEmpty>.value();
+    return null;
   }
 }

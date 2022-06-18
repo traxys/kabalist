@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.0
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -13,13 +13,13 @@ part of openapi.api;
 class AddToListRequest {
   /// Returns a new [AddToListRequest] instance.
   AddToListRequest({
-    @required this.name,
+    required this.name,
     this.amount,
   });
 
   String name;
 
-  String amount;
+  String? amount;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is AddToListRequest &&
@@ -28,66 +28,93 @@ class AddToListRequest {
 
   @override
   int get hashCode =>
-  // ignore: unnecessary_parenthesis
-    (name == null ? 0 : name.hashCode) +
-    (amount == null ? 0 : amount.hashCode);
+    // ignore: unnecessary_parenthesis
+    (name.hashCode) +
+    (amount == null ? 0 : amount!.hashCode);
 
   @override
   String toString() => 'AddToListRequest[name=$name, amount=$amount]';
 
   Map<String, dynamic> toJson() {
-    final json = <String, dynamic>{};
-      json[r'name'] = name;
+    final _json = <String, dynamic>{};
+      _json[r'name'] = name;
     if (amount != null) {
-      json[r'amount'] = amount;
+      _json[r'amount'] = amount;
     }
-    return json;
+    return _json;
   }
 
   /// Returns a new [AddToListRequest] instance and imports its values from
   /// [value] if it's a [Map], null otherwise.
   // ignore: prefer_constructors_over_static_methods
-  static AddToListRequest fromJson(dynamic value) {
+  static AddToListRequest? fromJson(dynamic value) {
     if (value is Map) {
       final json = value.cast<String, dynamic>();
+
+      // Ensure that the map contains the required keys.
+      // Note 1: the values aren't checked for validity beyond being non-null.
+      // Note 2: this code is stripped in release mode!
+      assert(() {
+        requiredKeys.forEach((key) {
+          assert(json.containsKey(key), 'Required key "AddToListRequest[$key]" is missing from JSON.');
+          assert(json[key] != null, 'Required key "AddToListRequest[$key]" has a null value in JSON.');
+        });
+        return true;
+      }());
+
       return AddToListRequest(
-        name: mapValueOfType<String>(json, r'name'),
+        name: mapValueOfType<String>(json, r'name')!,
         amount: mapValueOfType<String>(json, r'amount'),
       );
     }
     return null;
   }
 
-  static List<AddToListRequest> listFromJson(dynamic json, {bool emptyIsNull, bool growable,}) =>
-    json is List && json.isNotEmpty
-      ? json.map(AddToListRequest.fromJson).toList(growable: true == growable)
-      : true == emptyIsNull ? null : <AddToListRequest>[];
+  static List<AddToListRequest>? listFromJson(dynamic json, {bool growable = false,}) {
+    final result = <AddToListRequest>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = AddToListRequest.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
 
   static Map<String, AddToListRequest> mapFromJson(dynamic json) {
     final map = <String, AddToListRequest>{};
     if (json is Map && json.isNotEmpty) {
-      json
-        .cast<String, dynamic>()
-        .forEach((key, dynamic value) => map[key] = AddToListRequest.fromJson(value));
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      for (final entry in json.entries) {
+        final value = AddToListRequest.fromJson(entry.value);
+        if (value != null) {
+          map[entry.key] = value;
+        }
+      }
     }
     return map;
   }
 
   // maps a json object with a list of AddToListRequest-objects as value to a dart map
-  static Map<String, List<AddToListRequest>> mapListFromJson(dynamic json, {bool emptyIsNull, bool growable,}) {
+  static Map<String, List<AddToListRequest>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<AddToListRequest>>{};
     if (json is Map && json.isNotEmpty) {
-      json
-        .cast<String, dynamic>()
-        .forEach((key, dynamic value) {
-          map[key] = AddToListRequest.listFromJson(
-            value,
-            emptyIsNull: emptyIsNull,
-            growable: growable,
-          );
-        });
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      for (final entry in json.entries) {
+        final value = AddToListRequest.listFromJson(entry.value, growable: growable,);
+        if (value != null) {
+          map[entry.key] = value;
+        }
+      }
     }
     return map;
   }
+
+  /// The list of required keys that must be present in a JSON.
+  static const requiredKeys = <String>{
+    'name',
+  };
 }
 

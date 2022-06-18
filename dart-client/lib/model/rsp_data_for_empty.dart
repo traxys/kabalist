@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.0
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -13,8 +13,8 @@ part of openapi.api;
 class RspDataForEmpty {
   /// Returns a new [RspDataForEmpty] instance.
   RspDataForEmpty({
-    @required this.ok,
-    @required this.err,
+    required this.ok,
+    required this.err,
   });
 
   Object ok;
@@ -28,64 +28,92 @@ class RspDataForEmpty {
 
   @override
   int get hashCode =>
-  // ignore: unnecessary_parenthesis
-    (ok == null ? 0 : ok.hashCode) +
-    (err == null ? 0 : err.hashCode);
+    // ignore: unnecessary_parenthesis
+    (ok.hashCode) +
+    (err.hashCode);
 
   @override
   String toString() => 'RspDataForEmpty[ok=$ok, err=$err]';
 
   Map<String, dynamic> toJson() {
-    final json = <String, dynamic>{};
-      json[r'ok'] = ok;
-      json[r'err'] = err;
-    return json;
+    final _json = <String, dynamic>{};
+      _json[r'ok'] = ok;
+      _json[r'err'] = err;
+    return _json;
   }
 
   /// Returns a new [RspDataForEmpty] instance and imports its values from
   /// [value] if it's a [Map], null otherwise.
   // ignore: prefer_constructors_over_static_methods
-  static RspDataForEmpty fromJson(dynamic value) {
+  static RspDataForEmpty? fromJson(dynamic value) {
     if (value is Map) {
       final json = value.cast<String, dynamic>();
+
+      // Ensure that the map contains the required keys.
+      // Note 1: the values aren't checked for validity beyond being non-null.
+      // Note 2: this code is stripped in release mode!
+      assert(() {
+        requiredKeys.forEach((key) {
+          assert(json.containsKey(key), 'Required key "RspDataForEmpty[$key]" is missing from JSON.');
+          assert(json[key] != null, 'Required key "RspDataForEmpty[$key]" has a null value in JSON.');
+        });
+        return true;
+      }());
+
       return RspDataForEmpty(
-        ok: mapValueOfType<Object>(json, r'ok'),
-        err: RspErr.fromJson(json[r'err']),
+        ok: mapValueOfType<Object>(json, r'ok')!,
+        err: RspErr.fromJson(json[r'err'])!,
       );
     }
     return null;
   }
 
-  static List<RspDataForEmpty> listFromJson(dynamic json, {bool emptyIsNull, bool growable,}) =>
-    json is List && json.isNotEmpty
-      ? json.map(RspDataForEmpty.fromJson).toList(growable: true == growable)
-      : true == emptyIsNull ? null : <RspDataForEmpty>[];
+  static List<RspDataForEmpty>? listFromJson(dynamic json, {bool growable = false,}) {
+    final result = <RspDataForEmpty>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = RspDataForEmpty.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
 
   static Map<String, RspDataForEmpty> mapFromJson(dynamic json) {
     final map = <String, RspDataForEmpty>{};
     if (json is Map && json.isNotEmpty) {
-      json
-        .cast<String, dynamic>()
-        .forEach((key, dynamic value) => map[key] = RspDataForEmpty.fromJson(value));
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      for (final entry in json.entries) {
+        final value = RspDataForEmpty.fromJson(entry.value);
+        if (value != null) {
+          map[entry.key] = value;
+        }
+      }
     }
     return map;
   }
 
   // maps a json object with a list of RspDataForEmpty-objects as value to a dart map
-  static Map<String, List<RspDataForEmpty>> mapListFromJson(dynamic json, {bool emptyIsNull, bool growable,}) {
+  static Map<String, List<RspDataForEmpty>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<RspDataForEmpty>>{};
     if (json is Map && json.isNotEmpty) {
-      json
-        .cast<String, dynamic>()
-        .forEach((key, dynamic value) {
-          map[key] = RspDataForEmpty.listFromJson(
-            value,
-            emptyIsNull: emptyIsNull,
-            growable: growable,
-          );
-        });
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      for (final entry in json.entries) {
+        final value = RspDataForEmpty.listFromJson(entry.value, growable: growable,);
+        if (value != null) {
+          map[entry.key] = value;
+        }
+      }
     }
     return map;
   }
+
+  /// The list of required keys that must be present in a JSON.
+  static const requiredKeys = <String>{
+    'ok',
+    'err',
+  };
 }
 

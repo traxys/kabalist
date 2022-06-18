@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.0
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -13,8 +13,8 @@ part of openapi.api;
 class RspDataForGetListsResponse {
   /// Returns a new [RspDataForGetListsResponse] instance.
   RspDataForGetListsResponse({
-    @required this.ok,
-    @required this.err,
+    required this.ok,
+    required this.err,
   });
 
   GetListsResponse ok;
@@ -28,64 +28,92 @@ class RspDataForGetListsResponse {
 
   @override
   int get hashCode =>
-  // ignore: unnecessary_parenthesis
-    (ok == null ? 0 : ok.hashCode) +
-    (err == null ? 0 : err.hashCode);
+    // ignore: unnecessary_parenthesis
+    (ok.hashCode) +
+    (err.hashCode);
 
   @override
   String toString() => 'RspDataForGetListsResponse[ok=$ok, err=$err]';
 
   Map<String, dynamic> toJson() {
-    final json = <String, dynamic>{};
-      json[r'ok'] = ok;
-      json[r'err'] = err;
-    return json;
+    final _json = <String, dynamic>{};
+      _json[r'ok'] = ok;
+      _json[r'err'] = err;
+    return _json;
   }
 
   /// Returns a new [RspDataForGetListsResponse] instance and imports its values from
   /// [value] if it's a [Map], null otherwise.
   // ignore: prefer_constructors_over_static_methods
-  static RspDataForGetListsResponse fromJson(dynamic value) {
+  static RspDataForGetListsResponse? fromJson(dynamic value) {
     if (value is Map) {
       final json = value.cast<String, dynamic>();
+
+      // Ensure that the map contains the required keys.
+      // Note 1: the values aren't checked for validity beyond being non-null.
+      // Note 2: this code is stripped in release mode!
+      assert(() {
+        requiredKeys.forEach((key) {
+          assert(json.containsKey(key), 'Required key "RspDataForGetListsResponse[$key]" is missing from JSON.');
+          assert(json[key] != null, 'Required key "RspDataForGetListsResponse[$key]" has a null value in JSON.');
+        });
+        return true;
+      }());
+
       return RspDataForGetListsResponse(
-        ok: GetListsResponse.fromJson(json[r'ok']),
-        err: RspErr.fromJson(json[r'err']),
+        ok: GetListsResponse.fromJson(json[r'ok'])!,
+        err: RspErr.fromJson(json[r'err'])!,
       );
     }
     return null;
   }
 
-  static List<RspDataForGetListsResponse> listFromJson(dynamic json, {bool emptyIsNull, bool growable,}) =>
-    json is List && json.isNotEmpty
-      ? json.map(RspDataForGetListsResponse.fromJson).toList(growable: true == growable)
-      : true == emptyIsNull ? null : <RspDataForGetListsResponse>[];
+  static List<RspDataForGetListsResponse>? listFromJson(dynamic json, {bool growable = false,}) {
+    final result = <RspDataForGetListsResponse>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = RspDataForGetListsResponse.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
 
   static Map<String, RspDataForGetListsResponse> mapFromJson(dynamic json) {
     final map = <String, RspDataForGetListsResponse>{};
     if (json is Map && json.isNotEmpty) {
-      json
-        .cast<String, dynamic>()
-        .forEach((key, dynamic value) => map[key] = RspDataForGetListsResponse.fromJson(value));
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      for (final entry in json.entries) {
+        final value = RspDataForGetListsResponse.fromJson(entry.value);
+        if (value != null) {
+          map[entry.key] = value;
+        }
+      }
     }
     return map;
   }
 
   // maps a json object with a list of RspDataForGetListsResponse-objects as value to a dart map
-  static Map<String, List<RspDataForGetListsResponse>> mapListFromJson(dynamic json, {bool emptyIsNull, bool growable,}) {
+  static Map<String, List<RspDataForGetListsResponse>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<RspDataForGetListsResponse>>{};
     if (json is Map && json.isNotEmpty) {
-      json
-        .cast<String, dynamic>()
-        .forEach((key, dynamic value) {
-          map[key] = RspDataForGetListsResponse.listFromJson(
-            value,
-            emptyIsNull: emptyIsNull,
-            growable: growable,
-          );
-        });
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      for (final entry in json.entries) {
+        final value = RspDataForGetListsResponse.listFromJson(entry.value, growable: growable,);
+        if (value != null) {
+          map[entry.key] = value;
+        }
+      }
     }
     return map;
   }
+
+  /// The list of required keys that must be present in a JSON.
+  static const requiredKeys = <String>{
+    'ok',
+    'err',
+  };
 }
 

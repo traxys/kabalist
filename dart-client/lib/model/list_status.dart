@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.0
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -19,7 +19,7 @@ class ListStatus {
   final String value;
 
   @override
-  String toString() => value ?? '';
+  String toString() => value;
 
   String toJson() => value;
 
@@ -34,13 +34,20 @@ class ListStatus {
     sharedRead,
   ];
 
-  static ListStatus fromJson(dynamic value) =>
-    ListStatusTypeTransformer().decode(value);
+  static ListStatus? fromJson(dynamic value) => ListStatusTypeTransformer().decode(value);
 
-  static List<ListStatus> listFromJson(dynamic json, {bool emptyIsNull, bool growable,}) =>
-    json is List && json.isNotEmpty
-      ? json.map(ListStatus.fromJson).toList(growable: true == growable)
-      : true == emptyIsNull ? null : <ListStatus>[];
+  static List<ListStatus>? listFromJson(dynamic json, {bool growable = false,}) {
+    final result = <ListStatus>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = ListStatus.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
 }
 
 /// Transformation class that can [encode] an instance of [ListStatus] to String,
@@ -60,14 +67,14 @@ class ListStatusTypeTransformer {
   ///
   /// The [allowNull] is very handy when an API changes and a new enum value is added or removed,
   /// and users are still using an old app with the old code.
-  ListStatus decode(dynamic data, {bool allowNull}) {
+  ListStatus? decode(dynamic data, {bool allowNull = true}) {
     if (data != null) {
       switch (data.toString()) {
         case r'owned': return ListStatus.owned;
         case r'shared_write': return ListStatus.sharedWrite;
         case r'shared_read': return ListStatus.sharedRead;
         default:
-          if (allowNull == false) {
+          if (!allowNull) {
             throw ArgumentError('Unknown enum value to decode: $data');
           }
       }
@@ -76,6 +83,6 @@ class ListStatusTypeTransformer {
   }
 
   /// Singleton [ListStatusTypeTransformer] instance.
-  static ListStatusTypeTransformer _instance;
+  static ListStatusTypeTransformer? _instance;
 }
 
