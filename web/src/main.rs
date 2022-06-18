@@ -99,7 +99,7 @@ impl Component for App {
             }
             AppMessage::Logout => {
                 self.account_info = None;
-                gloo::storage::LocalStorage::delete("token");
+                gloo::storage::LocalStorage::delete("account_info");
             }
         }
         true
