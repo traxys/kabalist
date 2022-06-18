@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 pub use uuid;
 
-#[derive(Serialize, Deserialize, thiserror::Error, Debug)]
+#[derive(Serialize, Deserialize, thiserror::Error, Debug, PartialEq, Eq, Hash, Clone)]
 #[error("Api returned an error: {description}")]
 pub struct RspErr {
     pub code: usize,
     pub description: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum RspData<T> {
     Ok(T),
@@ -24,19 +24,19 @@ impl<T> From<RspData<T>> for Result<T, RspErr> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Empty {}
 
 pub mod login {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Request {
         pub password: String,
         pub username: String,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Response {
         pub token: String,
     }
@@ -46,12 +46,12 @@ pub mod create_list {
     use serde::{Deserialize, Serialize};
     use uuid::Uuid;
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Request {
         pub name: String,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Response {
         pub id: Uuid,
     }
@@ -62,7 +62,7 @@ pub mod get_lists {
     use std::collections::HashMap;
     use uuid::Uuid;
 
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy, Hash)]
     #[serde(rename_all = "snake_case")]
     pub enum ListStatus {
         Owned,
@@ -70,7 +70,7 @@ pub mod get_lists {
         SharedRead,
     }
 
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash, Copy)]
     pub struct ListInfo {
         pub id: Uuid,
         pub status: ListStatus,
@@ -87,7 +87,7 @@ pub mod search_account {
     use serde::{Deserialize, Serialize};
     use uuid::Uuid;
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
     pub struct Response {
         pub id: Uuid,
     }
@@ -96,14 +96,14 @@ pub mod search_account {
 pub mod read_list {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Item {
         pub id: i32,
         pub name: String,
         pub amount: Option<String>,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Response {
         pub items: Vec<Item>,
         pub readonly: bool,
@@ -113,13 +113,13 @@ pub mod read_list {
 pub mod add_to_list {
     use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Request {
         pub name: String,
         pub amount: Option<String>,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
     pub struct Response {
         pub id: i32,
     }
@@ -129,7 +129,7 @@ pub mod share_list {
     use serde::{Deserialize, Serialize};
     use uuid::Uuid;
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
     pub struct Request {
         pub share_with: Uuid,
         pub readonly: bool,
@@ -153,7 +153,7 @@ pub mod delete_list {
 pub mod register {
     pub use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Request {
         pub username: String,
         pub password: String,
@@ -165,7 +165,7 @@ pub mod register {
 pub mod update_item {
     pub use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Request {
         pub name: Option<String>,
         pub amount: Option<String>,
@@ -177,7 +177,7 @@ pub mod update_item {
 pub mod recovery_info {
     pub use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Response {
         pub username: String,
     }
@@ -186,7 +186,7 @@ pub mod recovery_info {
 pub mod recover_password {
     pub use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Request {
         pub password: String,
     }
@@ -198,7 +198,7 @@ pub mod get_shares {
     pub use serde::{Deserialize, Serialize};
     use uuid::Uuid;
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Response {
         pub shared_with: Vec<(Uuid, bool)>,
         pub public_link: Option<String>,
@@ -206,15 +206,15 @@ pub mod get_shares {
 }
 
 pub mod unshare {
-    pub use serde::{Serialize, Deserialize};
+    pub use serde::{Deserialize, Serialize};
 
     pub type Response = super::Empty;
 }
 
 pub mod get_account_name {
-    pub use serde::{Serialize, Deserialize};
+    pub use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Response {
         pub username: String,
     }
@@ -229,9 +229,9 @@ pub mod remove_public {
 }
 
 pub mod get_history {
-    use serde::{Serialize, Deserialize};
+    use serde::{Deserialize, Serialize};
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
     pub struct Response {
         pub matches: Vec<String>,
     }
