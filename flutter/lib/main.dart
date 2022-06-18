@@ -987,9 +987,9 @@ class ItemInput extends StatelessWidget {
                   return const Iterable<String>.empty();
                 }
                 List<String> data = snapshot.data as List<String>;
-                return data.where((String option) {
+                return ([textEditingValue.text]).followedBy(data.where((String option) {
                   return option.contains(textEditingValue.text.toLowerCase());
-                });
+                }));
               },
               fieldViewBuilder: (BuildContext context,
                   TextEditingController fieldTextEditingController,
