@@ -17,32 +17,32 @@ void main() {
   // final instance = KabaListApi();
 
   group('tests for KabaListApi', () {
-    //Future<RspDataForAddToListResponse> addList(String id, AddToListRequest addToListRequest) async
+    //Future<OkResponseForAddToListResponse> addList(String id, AddToListRequest addToListRequest) async
     test('test addList', () async {
       // TODO
     });
 
-    //Future<RspDataForCreateListResponse> createList(CreateListRequest createListRequest) async
+    //Future<OkResponseForCreateListResponse> createList(CreateListRequest createListRequest) async
     test('test createList', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> deleteItem(String list, int item) async
+    //Future<OkResponseForEmpty> deleteItem(String list, int item) async
     test('test deleteItem', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> deleteList(String id) async
+    //Future<OkResponseForEmpty> deleteList(String id) async
     test('test deleteList', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> deleteShares(String id) async
+    //Future<OkResponseForEmpty> deleteShares(String id) async
     test('test deleteShares', () async {
       // TODO
     });
 
-    //Future<RspDataForGetAccountNameResponse> getAccountName(String id) async
+    //Future<OkResponseForGetAccountNameResponse> getAccountName(String id) async
     test('test getAccountName', () async {
       // TODO
     });
@@ -52,77 +52,77 @@ void main() {
       // TODO
     });
 
-    //Future<RspDataForGetSharesResponse> getShares(String id) async
+    //Future<OkResponseForGetSharesResponse> getShares(String id) async
     test('test getShares', () async {
       // TODO
     });
 
-    //Future<RspDataForGetHistoryResponse> historySearch(String list, String search) async
+    //Future<OkResponseForGetHistoryResponse> historySearch(String list, String search) async
     test('test historySearch', () async {
       // TODO
     });
 
-    //Future<RspDataForGetListsResponse> listLists() async
+    //Future<OkResponseForGetListsResponse> listLists() async
     test('test listLists', () async {
       // TODO
     });
 
-    //Future<RspDataForLoginResponse> login(LoginRequest loginRequest) async
+    //Future<OkResponseForLoginResponse> login(LoginRequest loginRequest) async
     test('test login', () async {
       // TODO
     });
 
-    //Future<RspDataForReadListResponse> readList(String id) async
+    //Future<OkResponseForReadListResponse> readList(String id) async
     test('test readList', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> recoverPassword(String id, RecoverPasswordRequest recoverPasswordRequest) async
+    //Future<OkResponseForEmpty> recoverPassword(String id, RecoverPasswordRequest recoverPasswordRequest) async
     test('test recoverPassword', () async {
       // TODO
     });
 
-    //Future<RspDataForRecoveryInfoResponse> recoveryInfo(String id) async
+    //Future<OkResponseForRecoveryInfoResponse> recoveryInfo(String id) async
     test('test recoveryInfo', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> register(String id, RegisterRequest registerRequest) async
+    //Future<OkResponseForEmpty> register(String id, RegisterRequest registerRequest) async
     test('test register', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> removePublic(String id) async
+    //Future<OkResponseForEmpty> removePublic(String id) async
     test('test removePublic', () async {
       // TODO
     });
 
-    //Future<RspDataForSearchAccountResponse> searchAccount(String name) async
+    //Future<OkResponseForSearchAccountResponse> searchAccount(String name) async
     test('test searchAccount', () async {
       // TODO
     });
 
-    //Future<RspDataForGetListsResponse> searchList(String name) async
+    //Future<OkResponseForGetListsResponse> searchList(String name) async
     test('test searchList', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> setPublic(String id) async
+    //Future<OkResponseForEmpty> setPublic(String id) async
     test('test setPublic', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> shareList(String id, ShareListRequest shareListRequest) async
+    //Future<OkResponseForEmpty> shareList(String id, ShareListRequest shareListRequest) async
     test('test shareList', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> unshare(String list, String account) async
+    //Future<OkResponseForEmpty> unshare(String list, String account) async
     test('test unshare', () async {
       // TODO
     });
 
-    //Future<RspDataForEmpty> updateItem(String list, int item, UpdateItemRequest updateItemRequest) async
+    //Future<OkResponseForEmpty> updateItem(String list, int item, UpdateItemRequest updateItemRequest) async
     test('test updateItem', () async {
       // TODO
     });

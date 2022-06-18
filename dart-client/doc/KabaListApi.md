@@ -34,7 +34,7 @@ Method | HTTP request | Description
 
 
 # **addList**
-> RspDataForAddToListResponse addList(id, addToListRequest)
+> OkResponseForAddToListResponse addList(id, addToListRequest)
 
 
 
@@ -69,7 +69,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForAddToListResponse**](RspDataForAddToListResponse.md)
+[**OkResponseForAddToListResponse**](OkResponseForAddToListResponse.md)
 
 ### Authorization
 
@@ -83,7 +83,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **createList**
-> RspDataForCreateListResponse createList(createListRequest)
+> OkResponseForCreateListResponse createList(createListRequest)
 
 
 
@@ -116,7 +116,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForCreateListResponse**](RspDataForCreateListResponse.md)
+[**OkResponseForCreateListResponse**](OkResponseForCreateListResponse.md)
 
 ### Authorization
 
@@ -130,7 +130,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **deleteItem**
-> RspDataForEmpty deleteItem(list, item)
+> OkResponseForEmpty deleteItem(list, item)
 
 
 
@@ -165,7 +165,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 
@@ -179,7 +179,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **deleteList**
-> RspDataForEmpty deleteList(id)
+> OkResponseForEmpty deleteList(id)
 
 
 
@@ -212,7 +212,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 
@@ -226,7 +226,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **deleteShares**
-> RspDataForEmpty deleteShares(id)
+> OkResponseForEmpty deleteShares(id)
 
 
 
@@ -259,7 +259,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 
@@ -273,7 +273,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getAccountName**
-> RspDataForGetAccountNameResponse getAccountName(id)
+> OkResponseForGetAccountNameResponse getAccountName(id)
 
 
 
@@ -306,7 +306,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForGetAccountNameResponse**](RspDataForGetAccountNameResponse.md)
+[**OkResponseForGetAccountNameResponse**](OkResponseForGetAccountNameResponse.md)
 
 ### Authorization
 
@@ -361,7 +361,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getShares**
-> RspDataForGetSharesResponse getShares(id)
+> OkResponseForGetSharesResponse getShares(id)
 
 
 
@@ -394,7 +394,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForGetSharesResponse**](RspDataForGetSharesResponse.md)
+[**OkResponseForGetSharesResponse**](OkResponseForGetSharesResponse.md)
 
 ### Authorization
 
@@ -408,7 +408,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **historySearch**
-> RspDataForGetHistoryResponse historySearch(list, search)
+> OkResponseForGetHistoryResponse historySearch(list, search)
 
 
 
@@ -443,7 +443,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForGetHistoryResponse**](RspDataForGetHistoryResponse.md)
+[**OkResponseForGetHistoryResponse**](OkResponseForGetHistoryResponse.md)
 
 ### Authorization
 
@@ -457,7 +457,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listLists**
-> RspDataForGetListsResponse listLists()
+> OkResponseForGetListsResponse listLists()
 
 
 
@@ -486,7 +486,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**RspDataForGetListsResponse**](RspDataForGetListsResponse.md)
+[**OkResponseForGetListsResponse**](OkResponseForGetListsResponse.md)
 
 ### Authorization
 
@@ -500,7 +500,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **login**
-> RspDataForLoginResponse login(loginRequest)
+> OkResponseForLoginResponse login(loginRequest)
 
 
 
@@ -527,7 +527,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForLoginResponse**](RspDataForLoginResponse.md)
+[**OkResponseForLoginResponse**](OkResponseForLoginResponse.md)
 
 ### Authorization
 
@@ -541,7 +541,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **readList**
-> RspDataForReadListResponse readList(id)
+> OkResponseForReadListResponse readList(id)
 
 
 
@@ -574,7 +574,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForReadListResponse**](RspDataForReadListResponse.md)
+[**OkResponseForReadListResponse**](OkResponseForReadListResponse.md)
 
 ### Authorization
 
@@ -588,7 +588,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **recoverPassword**
-> RspDataForEmpty recoverPassword(id, recoverPasswordRequest)
+> OkResponseForEmpty recoverPassword(id, recoverPasswordRequest)
 
 
 
@@ -617,7 +617,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 
@@ -631,7 +631,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **recoveryInfo**
-> RspDataForRecoveryInfoResponse recoveryInfo(id)
+> OkResponseForRecoveryInfoResponse recoveryInfo(id)
 
 
 
@@ -658,7 +658,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForRecoveryInfoResponse**](RspDataForRecoveryInfoResponse.md)
+[**OkResponseForRecoveryInfoResponse**](OkResponseForRecoveryInfoResponse.md)
 
 ### Authorization
 
@@ -672,7 +672,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **register**
-> RspDataForEmpty register(id, registerRequest)
+> OkResponseForEmpty register(id, registerRequest)
 
 
 
@@ -701,7 +701,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 
@@ -715,7 +715,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **removePublic**
-> RspDataForEmpty removePublic(id)
+> OkResponseForEmpty removePublic(id)
 
 
 
@@ -748,7 +748,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 
@@ -762,7 +762,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **searchAccount**
-> RspDataForSearchAccountResponse searchAccount(name)
+> OkResponseForSearchAccountResponse searchAccount(name)
 
 
 
@@ -795,7 +795,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForSearchAccountResponse**](RspDataForSearchAccountResponse.md)
+[**OkResponseForSearchAccountResponse**](OkResponseForSearchAccountResponse.md)
 
 ### Authorization
 
@@ -809,7 +809,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **searchList**
-> RspDataForGetListsResponse searchList(name)
+> OkResponseForGetListsResponse searchList(name)
 
 
 
@@ -842,7 +842,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForGetListsResponse**](RspDataForGetListsResponse.md)
+[**OkResponseForGetListsResponse**](OkResponseForGetListsResponse.md)
 
 ### Authorization
 
@@ -856,7 +856,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **setPublic**
-> RspDataForEmpty setPublic(id)
+> OkResponseForEmpty setPublic(id)
 
 
 
@@ -889,7 +889,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 
@@ -903,7 +903,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **shareList**
-> RspDataForEmpty shareList(id, shareListRequest)
+> OkResponseForEmpty shareList(id, shareListRequest)
 
 
 
@@ -938,7 +938,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 
@@ -952,7 +952,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **unshare**
-> RspDataForEmpty unshare(list, account)
+> OkResponseForEmpty unshare(list, account)
 
 
 
@@ -987,7 +987,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 
@@ -1001,7 +1001,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateItem**
-> RspDataForEmpty updateItem(list, item, updateItemRequest)
+> OkResponseForEmpty updateItem(list, item, updateItemRequest)
 
 
 
@@ -1038,7 +1038,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RspDataForEmpty**](RspDataForEmpty.md)
+[**OkResponseForEmpty**](OkResponseForEmpty.md)
 
 ### Authorization
 

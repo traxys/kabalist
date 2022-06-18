@@ -1,0 +1,111 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+// @dart=2.12
+
+// ignore_for_file: unused_element, unused_import
+// ignore_for_file: always_put_required_named_parameters_first
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: lines_longer_than_80_chars
+
+part of openapi.api;
+
+class ErrResponse {
+  /// Returns a new [ErrResponse] instance.
+  ErrResponse({
+    required this.err,
+  });
+
+  UserError err;
+
+  @override
+  bool operator ==(Object other) => identical(this, other) || other is ErrResponse &&
+     other.err == err;
+
+  @override
+  int get hashCode =>
+    // ignore: unnecessary_parenthesis
+    (err.hashCode);
+
+  @override
+  String toString() => 'ErrResponse[err=$err]';
+
+  Map<String, dynamic> toJson() {
+    final _json = <String, dynamic>{};
+      _json[r'err'] = err;
+    return _json;
+  }
+
+  /// Returns a new [ErrResponse] instance and imports its values from
+  /// [value] if it's a [Map], null otherwise.
+  // ignore: prefer_constructors_over_static_methods
+  static ErrResponse? fromJson(dynamic value) {
+    if (value is Map) {
+      final json = value.cast<String, dynamic>();
+
+      // Ensure that the map contains the required keys.
+      // Note 1: the values aren't checked for validity beyond being non-null.
+      // Note 2: this code is stripped in release mode!
+      assert(() {
+        requiredKeys.forEach((key) {
+          assert(json.containsKey(key), 'Required key "ErrResponse[$key]" is missing from JSON.');
+          assert(json[key] != null, 'Required key "ErrResponse[$key]" has a null value in JSON.');
+        });
+        return true;
+      }());
+
+      return ErrResponse(
+        err: UserError.fromJson(json[r'err'])!,
+      );
+    }
+    return null;
+  }
+
+  static List<ErrResponse>? listFromJson(dynamic json, {bool growable = false,}) {
+    final result = <ErrResponse>[];
+    if (json is List && json.isNotEmpty) {
+      for (final row in json) {
+        final value = ErrResponse.fromJson(row);
+        if (value != null) {
+          result.add(value);
+        }
+      }
+    }
+    return result.toList(growable: growable);
+  }
+
+  static Map<String, ErrResponse> mapFromJson(dynamic json) {
+    final map = <String, ErrResponse>{};
+    if (json is Map && json.isNotEmpty) {
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      for (final entry in json.entries) {
+        final value = ErrResponse.fromJson(entry.value);
+        if (value != null) {
+          map[entry.key] = value;
+        }
+      }
+    }
+    return map;
+  }
+
+  // maps a json object with a list of ErrResponse-objects as value to a dart map
+  static Map<String, List<ErrResponse>> mapListFromJson(dynamic json, {bool growable = false,}) {
+    final map = <String, List<ErrResponse>>{};
+    if (json is Map && json.isNotEmpty) {
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      for (final entry in json.entries) {
+        final value = ErrResponse.listFromJson(entry.value, growable: growable,);
+        if (value != null) {
+          map[entry.key] = value;
+        }
+      }
+    }
+    return map;
+  }
+
+  /// The list of required keys that must be present in a JSON.
+  static const requiredKeys = <String>{
+    'err',
+  };
+}
+

@@ -198,6 +198,8 @@ class ApiClient {
           return CreateListRequest.fromJson(value);
         case 'CreateListResponse':
           return CreateListResponse.fromJson(value);
+        case 'ErrResponse':
+          return ErrResponse.fromJson(value);
         case 'GetAccountNameResponse':
           return GetAccountNameResponse.fromJson(value);
         case 'GetHistoryResponse':
@@ -216,6 +218,28 @@ class ApiClient {
           return LoginRequest.fromJson(value);
         case 'LoginResponse':
           return LoginResponse.fromJson(value);
+        case 'OkResponseForAddToListResponse':
+          return OkResponseForAddToListResponse.fromJson(value);
+        case 'OkResponseForCreateListResponse':
+          return OkResponseForCreateListResponse.fromJson(value);
+        case 'OkResponseForEmpty':
+          return OkResponseForEmpty.fromJson(value);
+        case 'OkResponseForGetAccountNameResponse':
+          return OkResponseForGetAccountNameResponse.fromJson(value);
+        case 'OkResponseForGetHistoryResponse':
+          return OkResponseForGetHistoryResponse.fromJson(value);
+        case 'OkResponseForGetListsResponse':
+          return OkResponseForGetListsResponse.fromJson(value);
+        case 'OkResponseForGetSharesResponse':
+          return OkResponseForGetSharesResponse.fromJson(value);
+        case 'OkResponseForLoginResponse':
+          return OkResponseForLoginResponse.fromJson(value);
+        case 'OkResponseForReadListResponse':
+          return OkResponseForReadListResponse.fromJson(value);
+        case 'OkResponseForRecoveryInfoResponse':
+          return OkResponseForRecoveryInfoResponse.fromJson(value);
+        case 'OkResponseForSearchAccountResponse':
+          return OkResponseForSearchAccountResponse.fromJson(value);
         case 'ReadListResponse':
           return ReadListResponse.fromJson(value);
         case 'RecoverPasswordRequest':
@@ -224,60 +248,14 @@ class ApiClient {
           return RecoveryInfoResponse.fromJson(value);
         case 'RegisterRequest':
           return RegisterRequest.fromJson(value);
-        case 'RspDataForAddToListResponse':
-          return RspDataForAddToListResponse.fromJson(value);
-        case 'RspDataForAddToListResponseOneOf':
-          return RspDataForAddToListResponseOneOf.fromJson(value);
-        case 'RspDataForCreateListResponse':
-          return RspDataForCreateListResponse.fromJson(value);
-        case 'RspDataForCreateListResponseOneOf':
-          return RspDataForCreateListResponseOneOf.fromJson(value);
-        case 'RspDataForEmpty':
-          return RspDataForEmpty.fromJson(value);
-        case 'RspDataForEmptyOneOf':
-          return RspDataForEmptyOneOf.fromJson(value);
-        case 'RspDataForGetAccountNameResponse':
-          return RspDataForGetAccountNameResponse.fromJson(value);
-        case 'RspDataForGetAccountNameResponseOneOf':
-          return RspDataForGetAccountNameResponseOneOf.fromJson(value);
-        case 'RspDataForGetHistoryResponse':
-          return RspDataForGetHistoryResponse.fromJson(value);
-        case 'RspDataForGetHistoryResponseOneOf':
-          return RspDataForGetHistoryResponseOneOf.fromJson(value);
-        case 'RspDataForGetListsResponse':
-          return RspDataForGetListsResponse.fromJson(value);
-        case 'RspDataForGetListsResponseOneOf':
-          return RspDataForGetListsResponseOneOf.fromJson(value);
-        case 'RspDataForGetSharesResponse':
-          return RspDataForGetSharesResponse.fromJson(value);
-        case 'RspDataForGetSharesResponseOneOf':
-          return RspDataForGetSharesResponseOneOf.fromJson(value);
-        case 'RspDataForLoginResponse':
-          return RspDataForLoginResponse.fromJson(value);
-        case 'RspDataForLoginResponseOneOf':
-          return RspDataForLoginResponseOneOf.fromJson(value);
-        case 'RspDataForLoginResponseOneOf1':
-          return RspDataForLoginResponseOneOf1.fromJson(value);
-        case 'RspDataForReadListResponse':
-          return RspDataForReadListResponse.fromJson(value);
-        case 'RspDataForReadListResponseOneOf':
-          return RspDataForReadListResponseOneOf.fromJson(value);
-        case 'RspDataForRecoveryInfoResponse':
-          return RspDataForRecoveryInfoResponse.fromJson(value);
-        case 'RspDataForRecoveryInfoResponseOneOf':
-          return RspDataForRecoveryInfoResponseOneOf.fromJson(value);
-        case 'RspDataForSearchAccountResponse':
-          return RspDataForSearchAccountResponse.fromJson(value);
-        case 'RspDataForSearchAccountResponseOneOf':
-          return RspDataForSearchAccountResponseOneOf.fromJson(value);
-        case 'RspErr':
-          return RspErr.fromJson(value);
         case 'SearchAccountResponse':
           return SearchAccountResponse.fromJson(value);
         case 'ShareListRequest':
           return ShareListRequest.fromJson(value);
         case 'UpdateItemRequest':
           return UpdateItemRequest.fromJson(value);
+        case 'UserError':
+          return UserError.fromJson(value);
         default:
           dynamic match;
           if (value is List && (match = _regList.firstMatch(targetType)?.group(1)) != null) {
