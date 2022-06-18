@@ -10,6 +10,7 @@ use rocket::{
     http::Header,
     outcome::try_outcome,
     request::{self, FromRequest},
+    response::status::BadRequest,
     serde::{json::Json, Deserialize, Deserializer, Serialize},
     Build, Rocket, State,
 };
@@ -25,6 +26,8 @@ use rocket_okapi::{
     JsonSchema,
 };
 use rocket_okapi::{openapi, response::OpenApiResponderInner};
+use schemars::schema::{SchemaObject, NumberValidation};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use sqlx::ConnectOptions;
 
 type Db = sqlx::PgPool;
@@ -142,26 +145,54 @@ macro_rules! define_error {
         $(,)?
     }
     ) => {
-        #[derive(Clone, Copy)]
+        #[derive(Serialize_repr, Deserialize_repr, Clone, Copy)]
+        #[repr(u16)]
         pub enum Error {
             $(
-                $variant,
+                $variant = $code,
             )*
         }
 
+        impl JsonSchema for Error {
+            fn is_referenceable() -> bool {
+                false
+            }
+
+            fn schema_name() -> String {
+                "Error".into()
+            }
+
+            fn json_schema(_: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+                SchemaObject {
+                    instance_type: Some(schemars::schema::InstanceType::Integer.into()),
+                    number: Some(Box::new(NumberValidation {
+                        maximum: [$($code,)*].iter().max().map(|&x| x as f64),
+                        minimum: [$($code,)*].iter().min().map(|&x| x as f64),
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                }.into()
+            }
+        }
+
         impl Error {
-            fn description(self, description: Option<String>) -> RspErr {
+            fn into_err_with_desc(self, description: Option<String>) -> ErrResponse {
                 match self {
                 $(
                     Self::$variant => {
                         let description = description.unwrap_or_else(|| $description.into());
-                        RspErr {description, code: $code}
+                        ErrResponse {
+                            err: UserError {
+                                code: self,
+                                description,
+                            }
+                        }
                     }
                 )*
                 }
             }
-            fn default_err(self) -> RspErr {
-                self.description(None)
+            fn into_err(self) -> ErrResponse {
+                self.into_err_with_desc(None)
             }
         }
     };
@@ -204,8 +235,33 @@ define_error! {
     }
 }
 
+#[derive(Serialize, Deserialize, JsonSchema)]
+struct OkResponse<T> {
+    ok: T,
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+struct ErrResponse {
+    err: UserError,
+}
+
+impl<T> From<Error> for Rsp<T> {
+    fn from(e: Error) -> Self {
+        Rsp::Err(BadRequest(Some(Json(e.into_err()))))
+    }
+}
+
+#[derive(Serialize, Deserialize, JsonSchema)]
+struct UserError {
+    code: Error,
+    description: String,
+}
+
 #[derive(Responder)]
-struct Rsp<T>(Json<RspData<T>>);
+enum Rsp<T> {
+    Ok(Json<OkResponse<T>>),
+    Err(BadRequest<Json<ErrResponse>>),
+}
 
 impl<T> OpenApiResponderInner for Rsp<T>
 where
@@ -215,8 +271,10 @@ where
         gen: &mut rocket_okapi::gen::OpenApiGenerator,
     ) -> rocket_okapi::Result<openapi3::Responses> {
         let mut response = openapi3::Responses::default();
-        let schema = gen.json_schema::<RspData<T>>();
-        add_schema_response(&mut response, 200, "application/json", schema)?;
+        let ok_schema = gen.json_schema::<OkResponse<T>>();
+        let err_schema = gen.json_schema::<ErrResponse>();
+        add_schema_response(&mut response, 200, "application/json", ok_schema)?;
+        add_schema_response(&mut response, 400, "application/json", err_schema)?;
         Ok(response)
     }
 }
@@ -224,25 +282,19 @@ where
 impl<T: Serialize> From<sqlx::Error> for Rsp<T> {
     fn from(err: sqlx::Error) -> Self {
         error!("SQLX error: {:?}", err);
-        Rsp(RspData::Err(Error::Internal.default_err()).into())
+        Error::Internal.into()
     }
 }
 
 impl<T: Serialize> Rsp<T> {
     fn ok(value: T) -> Self {
-        Rsp(Json(RspData::Ok(value)))
+        Rsp::Ok(Json(OkResponse { ok: value }))
     }
 
     fn _internal_err<R: Into<String>>(reason: R) -> Self {
         let r = reason.into();
         error!("Internal error: {}", r);
-        Rsp(RspData::Err(Error::Internal.default_err()).into())
-    }
-}
-
-impl<T: Serialize> From<RspErr> for Rsp<T> {
-    fn from(e: RspErr) -> Self {
-        Self(RspData::Err(e).into())
+        Error::Internal.into()
     }
 }
 
@@ -269,7 +321,7 @@ async fn login(
     )
     .fetch(&**db);
     let id = match rsp.next().await {
-        None => return Ok(Error::UnknownAccount.default_err().into()),
+        None => return Ok(Error::UnknownAccount.into()),
         Some(Err(e)) => return Ok(e.into()),
         Some(Ok(id)) => id.id,
     };
@@ -311,7 +363,7 @@ async fn create_list(
 
     match fetch_lists.count {
         Some(0) | None => (),
-        _ => return Error::ListAlreadyExists.default_err().into(),
+        _ => return Error::ListAlreadyExists.into(),
     }
 
     let list_id = try_rsp!(
@@ -505,7 +557,7 @@ macro_rules! try_check_list {
     ($e:expr) => {
         match $e {
             Ok(Ok(v)) => v,
-            Ok(Err(e)) => return e.default_err().into(),
+            Ok(Err(e)) => return e.into(),
             Err(e) => return e.into(),
         }
     };
@@ -828,7 +880,7 @@ async fn register(db: &State<Db>, id: Uuid, req: Json<RegisterRequest>) -> Rsp<R
     let mut is_registered =
         sqlx::query!("SELECT id FROM registrations WHERE id = $1", id).fetch(&mut tx);
     match is_registered.next().await {
-        None => return Error::RegistrationDoesNotExist.default_err().into(),
+        None => return Error::RegistrationDoesNotExist.into(),
         Some(Err(e)) => return e.into(),
         Some(Ok(_)) => (),
     }
@@ -874,7 +926,7 @@ async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<RecoveryInfoResponse> {
 
     match username {
         Some(username) => Rsp::ok(RecoveryInfoResponse { username }),
-        None => Error::InvalidRecovery.default_err().into(),
+        None => Error::InvalidRecovery.into(),
     }
 }
 
@@ -929,7 +981,7 @@ async fn get_account_name(db: &State<Db>, _user: User, id: Uuid) -> Rsp<GetAccou
 
     match name {
         Some(username) => Rsp::ok(GetAccountNameResponse { username }),
-        None => Error::AccountNotFound.default_err().into(),
+        None => Error::AccountNotFound.into(),
     }
 }
 
