@@ -166,7 +166,6 @@ define_error! {
 }
 
 #[derive(Responder)]
-#[response(bound = "T: Serialize")]
 struct Rsp<T>(Json<RspData<T>>);
 
 impl<T: Serialize> From<sqlx::Error> for Rsp<T> {
