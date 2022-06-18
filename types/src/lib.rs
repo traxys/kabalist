@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 pub use uuid;
+use uuid::Uuid;
 
 #[derive(
     Serialize, Deserialize, thiserror::Error, Debug, PartialEq, Eq, Hash, Clone, JsonSchema,
@@ -30,226 +33,136 @@ impl<T> From<RspData<T>> for Result<T, RspErr> {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Copy, JsonSchema)]
 pub struct Empty {}
 
-pub mod login {
-    use schemars::JsonSchema;
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Request {
-        pub password: String,
-        pub username: String,
-    }
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Response {
-        pub token: String,
-    }
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct LoginRequest {
+    pub password: String,
+    pub username: String,
 }
 
-pub mod create_list {
-    use schemars::JsonSchema;
-    use serde::{Deserialize, Serialize};
-    use uuid::Uuid;
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Request {
-        pub name: String,
-    }
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Response {
-        pub id: Uuid,
-    }
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct LoginResponse {
+    pub token: String,
 }
 
-pub mod get_lists {
-    use schemars::JsonSchema;
-    use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
-    use uuid::Uuid;
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy, Hash, JsonSchema)]
-    #[serde(rename_all = "snake_case")]
-    pub enum ListStatus {
-        Owned,
-        SharedWrite,
-        SharedRead,
-    }
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash, Copy, JsonSchema)]
-    pub struct ListInfo {
-        pub id: Uuid,
-        pub status: ListStatus,
-        pub public: bool,
-    }
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, JsonSchema)]
-    pub struct Response {
-        pub results: HashMap<String, ListInfo>,
-    }
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct CreateListRequest {
+    pub name: String,
 }
 
-pub mod search_account {
-    use schemars::JsonSchema;
-    use serde::{Deserialize, Serialize};
-    use uuid::Uuid;
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy, JsonSchema)]
-    pub struct Response {
-        pub id: Uuid,
-    }
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct CreateListResponse {
+    pub id: Uuid,
 }
 
-pub mod read_list {
-    use schemars::JsonSchema;
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Item {
-        pub id: i32,
-        pub name: String,
-        pub amount: Option<String>,
-    }
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Response {
-        pub items: Vec<Item>,
-        pub readonly: bool,
-    }
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy, Hash, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ListStatus {
+    Owned,
+    SharedWrite,
+    SharedRead,
 }
 
-pub mod add_to_list {
-    use schemars::JsonSchema;
-    use serde::{Deserialize, Serialize};
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Request {
-        pub name: String,
-        pub amount: Option<String>,
-    }
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy, JsonSchema)]
-    pub struct Response {
-        pub id: i32,
-    }
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash, Copy, JsonSchema)]
+pub struct ListInfo {
+    pub id: Uuid,
+    pub status: ListStatus,
+    pub public: bool,
 }
 
-pub mod share_list {
-    use schemars::JsonSchema;
-    use serde::{Deserialize, Serialize};
-    use uuid::Uuid;
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy, JsonSchema)]
-    pub struct Request {
-        pub share_with: Uuid,
-        pub readonly: bool,
-    }
-
-    pub type Response = super::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, JsonSchema)]
+pub struct GetListsResponse {
+    pub results: HashMap<String, ListInfo>,
 }
 
-pub mod delete_item {
-    pub type Response = super::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy, JsonSchema)]
+pub struct SearchAccountResponse {
+    pub id: Uuid,
 }
 
-pub mod delete_share {
-    pub type Response = super::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct Item {
+    pub id: i32,
+    pub name: String,
+    pub amount: Option<String>,
 }
 
-pub mod delete_list {
-    pub type Response = super::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct ReadListResponse {
+    pub items: Vec<Item>,
+    pub readonly: bool,
 }
 
-pub mod register {
-    use schemars::JsonSchema;
-    pub use serde::{Deserialize, Serialize};
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Request {
-        pub username: String,
-        pub password: String,
-    }
-
-    pub type Response = super::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct AddToListRequest {
+    pub name: String,
+    pub amount: Option<String>,
 }
 
-pub mod update_item {
-    use schemars::JsonSchema;
-    pub use serde::{Deserialize, Serialize};
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Request {
-        pub name: Option<String>,
-        pub amount: Option<String>,
-    }
-
-    pub type Response = super::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy, JsonSchema)]
+pub struct AddToListResponse {
+    pub id: i32,
 }
 
-pub mod recovery_info {
-    use schemars::JsonSchema;
-    pub use serde::{Deserialize, Serialize};
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Response {
-        pub username: String,
-    }
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy, JsonSchema)]
+pub struct ShareListRequest {
+    pub share_with: Uuid,
+    pub readonly: bool,
 }
 
-pub mod recover_password {
-    use schemars::JsonSchema;
-    pub use serde::{Deserialize, Serialize};
+pub type ShareListResponse = Empty;
 
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Request {
-        pub password: String,
-    }
+pub type DeleteItemResponse = Empty;
 
-    pub type Response = super::Empty;
+pub type DeleteShareResponse = Empty;
+
+pub type DeleteListResponse = Empty;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct RegisterRequest {
+    pub username: String,
+    pub password: String,
 }
 
-pub mod get_shares {
-    use schemars::JsonSchema;
-    pub use serde::{Deserialize, Serialize};
-    use uuid::Uuid;
+pub type RegisterResponse = Empty;
 
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Response {
-        pub shared_with: Vec<(Uuid, bool)>,
-        pub public_link: Option<String>,
-    }
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct UpdateItemRequest {
+    pub name: Option<String>,
+    pub amount: Option<String>,
 }
 
-pub mod unshare {
-    pub use serde::{Deserialize, Serialize};
+pub type UpdateItemResponse = Empty;
 
-    pub type Response = super::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct RecoveryInfoResponse {
+    pub username: String,
 }
 
-pub mod get_account_name {
-    use schemars::JsonSchema;
-    pub use serde::{Deserialize, Serialize};
-
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Response {
-        pub username: String,
-    }
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct RecoverPasswordRequest {
+    pub password: String,
 }
 
-pub mod set_public {
-    pub type Response = crate::Empty;
+pub type RecoverPasswordResponse = Empty;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, JsonSchema)]
+pub struct GetSharesResponse {
+    pub shared_with: HashMap<Uuid, bool>,
+    pub public_link: Option<String>,
 }
 
-pub mod remove_public {
-    pub type Response = crate::Empty;
+pub type UnshareResponse = Empty;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct GetAccountNameResponse {
+    pub username: String,
 }
 
-pub mod get_history {
-    use schemars::JsonSchema;
-    use serde::{Deserialize, Serialize};
+pub type SetPublicResponse = crate::Empty;
 
-    #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
-    pub struct Response {
-        pub matches: Vec<String>,
-    }
+pub type RemovePublicResponse = crate::Empty;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, JsonSchema)]
+pub struct GetHistoryResponse {
+    pub matches: Vec<String>,
 }

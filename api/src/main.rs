@@ -3,7 +3,7 @@ extern crate rocket;
 use std::{collections::HashMap, str::FromStr};
 
 use jsonwebtoken::DecodingKey;
-use kabalist_types::{uuid::Uuid, RspData, RspErr};
+use kabalist_types::{uuid::Uuid, *};
 use rocket::{
     fairing::{self, AdHoc},
     futures::StreamExt,
@@ -260,11 +260,8 @@ macro_rules! try_rsp {
 async fn login(
     cfg: &State<Config>,
     db: &State<Db>,
-    request: Json<kabalist_types::login::Request>,
-) -> Result<
-    Rsp<kabalist_types::login::Response>,
-    rocket::response::Debug<jsonwebtoken::errors::Error>,
-> {
+    request: Json<LoginRequest>,
+) -> Result<Rsp<LoginResponse>, rocket::response::Debug<jsonwebtoken::errors::Error>> {
     let mut rsp = sqlx::query!(
         "SELECT id FROM accounts WHERE name = $1::text::citext AND password = crypt($2, password)",
         request.username,
@@ -292,7 +289,7 @@ async fn login(
         Ok(t) => t,
     };
 
-    Ok(Rsp::ok(kabalist_types::login::Response { token }))
+    Ok(Rsp::ok(LoginResponse { token }))
 }
 
 #[openapi(tag = "KabaList")]
@@ -300,8 +297,8 @@ async fn login(
 async fn create_list(
     db: &State<Db>,
     user: User,
-    list: Json<kabalist_types::create_list::Request>,
-) -> Rsp<kabalist_types::create_list::Response> {
+    list: Json<CreateListRequest>,
+) -> Rsp<CreateListResponse> {
     let fetch_lists = try_rsp!(
         sqlx::query!(
             "SELECT COUNT(*) FROM lists WHERE owner = $1 AND name = $2",
@@ -327,16 +324,12 @@ async fn create_list(
         .await
     );
 
-    Rsp::ok(kabalist_types::create_list::Response { id: list_id.id })
+    Rsp::ok(CreateListResponse { id: list_id.id })
 }
 
 #[openapi(tag = "KabaList")]
 #[get("/search/list/<name>")]
-async fn search_list(
-    db: &State<Db>,
-    user: User,
-    name: String,
-) -> Rsp<kabalist_types::get_lists::Response> {
+async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<GetListsResponse> {
     let results_owned = try_rsp!(
         sqlx::query!(
             "SELECT name, id, pub FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
@@ -360,15 +353,15 @@ async fn search_list(
         .await
     );
 
-    Rsp::ok(kabalist_types::get_lists::Response {
+    Rsp::ok(GetListsResponse {
         results: results_owned
             .into_iter()
             .map(|row| {
                 (
                     row.name,
-                    kabalist_types::get_lists::ListInfo {
+                    ListInfo {
                         id: row.id,
-                        status: kabalist_types::get_lists::ListStatus::Owned,
+                        status: ListStatus::Owned,
                         public: row.r#pub.unwrap_or(false),
                     },
                 )
@@ -376,12 +369,12 @@ async fn search_list(
             .chain(results_shared.into_iter().map(|row| {
                 (
                     row.name,
-                    kabalist_types::get_lists::ListInfo {
+                    ListInfo {
                         id: row.id,
                         status: if row.readonly {
-                            kabalist_types::get_lists::ListStatus::SharedRead
+                            ListStatus::SharedRead
                         } else {
-                            kabalist_types::get_lists::ListStatus::SharedWrite
+                            ListStatus::SharedWrite
                         },
                         public: row.r#pub.unwrap_or(false),
                     },
@@ -393,11 +386,7 @@ async fn search_list(
 
 #[openapi(tag = "KabaList")]
 #[get("/search/account/<name>")]
-async fn search_account(
-    db: &State<Db>,
-    _user: User,
-    name: String,
-) -> Rsp<kabalist_types::search_account::Response> {
+async fn search_account(db: &State<Db>, _user: User, name: String) -> Rsp<SearchAccountResponse> {
     let result = try_rsp!(
         sqlx::query!(
             "SELECT id FROM accounts WHERE name ILIKE $1::text::citext",
@@ -407,12 +396,12 @@ async fn search_account(
         .await
     );
 
-    Rsp::ok(kabalist_types::search_account::Response { id: result.id })
+    Rsp::ok(SearchAccountResponse { id: result.id })
 }
 
 #[openapi(tag = "KabaList")]
 #[get("/list")]
-async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists::Response> {
+async fn list_lists(db: &State<Db>, user: User) -> Rsp<GetListsResponse> {
     let results_owned = try_rsp!(
         sqlx::query!(
             r#"
@@ -435,15 +424,15 @@ async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists
         .await
     );
 
-    Rsp::ok(kabalist_types::get_lists::Response {
+    Rsp::ok(GetListsResponse {
         results: results_owned
             .into_iter()
             .map(|row| {
                 (
                     row.name,
-                    kabalist_types::get_lists::ListInfo {
+                    ListInfo {
                         id: row.id,
-                        status: kabalist_types::get_lists::ListStatus::Owned,
+                        status: ListStatus::Owned,
                         public: row.r#pub.unwrap_or(false),
                     },
                 )
@@ -451,12 +440,12 @@ async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists
             .chain(results_shared.into_iter().map(|row| {
                 (
                     row.name,
-                    kabalist_types::get_lists::ListInfo {
+                    ListInfo {
                         id: row.id,
                         status: if row.readonly {
-                            kabalist_types::get_lists::ListStatus::SharedRead
+                            ListStatus::SharedRead
                         } else {
-                            kabalist_types::get_lists::ListStatus::SharedWrite
+                            ListStatus::SharedWrite
                         },
                         public: row.r#pub.unwrap_or(false),
                     },
@@ -524,11 +513,7 @@ macro_rules! try_check_list {
 
 #[openapi(tag = "KabaList")]
 #[get("/list/<id>")]
-async fn read_list(
-    db: &State<Db>,
-    user: User,
-    id: Uuid,
-) -> Rsp<kabalist_types::read_list::Response> {
+async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<ReadListResponse> {
     try_check_list!(check_list(db, &user.id, &id, false).await);
 
     let items = try_rsp!(
@@ -552,10 +537,10 @@ async fn read_list(
         None => false,
     };
 
-    Rsp::ok(kabalist_types::read_list::Response {
+    Rsp::ok(ReadListResponse {
         items: items
             .into_iter()
-            .map(|row| kabalist_types::read_list::Item {
+            .map(|row| Item {
                 id: row.id,
                 name: row.name,
                 amount: row.amount,
@@ -571,8 +556,8 @@ async fn add_list(
     db: &State<Db>,
     user: User,
     id: Uuid,
-    item: Json<kabalist_types::add_to_list::Request>,
-) -> Rsp<kabalist_types::add_to_list::Response> {
+    item: Json<AddToListRequest>,
+) -> Rsp<AddToListResponse> {
     try_check_list!(check_list(db, &user.id, &id, true).await);
 
     let mut tx = try_rsp!(db.begin().await);
@@ -604,7 +589,7 @@ async fn add_list(
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(kabalist_types::add_to_list::Response { id: item_id.id })
+    Rsp::ok(AddToListResponse { id: item_id.id })
 }
 
 #[openapi(tag = "KabaList")]
@@ -614,7 +599,7 @@ async fn history_search(
     user: User,
     list: Uuid,
     search: String,
-) -> Rsp<kabalist_types::get_history::Response> {
+) -> Rsp<GetHistoryResponse> {
     let results = try_rsp!(
         sqlx::query!(
             "SELECT name::text FROM history WHERE list = $1 AND creator = $2 AND name ILIKE '%' || $3 || '%'",
@@ -625,7 +610,7 @@ async fn history_search(
         .await
     );
 
-    Rsp::ok(kabalist_types::get_history::Response {
+    Rsp::ok(GetHistoryResponse {
         matches: results
             .into_iter()
             .map(|row| row.name)
@@ -641,8 +626,8 @@ async fn update_item(
     user: User,
     list: Uuid,
     item: i32,
-    update: Json<kabalist_types::update_item::Request>,
-) -> Rsp<kabalist_types::update_item::Response> {
+    update: Json<UpdateItemRequest>,
+) -> Rsp<UpdateItemResponse> {
     try_check_list!(check_list(db, &user.id, &list, true).await);
 
     let mut tx = try_rsp!(db.begin().await);
@@ -673,17 +658,12 @@ async fn update_item(
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(kabalist_types::update_item::Response {})
+    Rsp::ok(UpdateItemResponse {})
 }
 
 #[openapi(tag = "KabaList")]
 #[delete("/list/<list>/<item>")]
-async fn delete_item(
-    db: &State<Db>,
-    user: User,
-    list: Uuid,
-    item: i32,
-) -> Rsp<kabalist_types::delete_item::Response> {
+async fn delete_item(db: &State<Db>, user: User, list: Uuid, item: i32) -> Rsp<DeleteItemResponse> {
     try_check_list!(check_list(db, &user.id, &list, true).await);
 
     try_rsp!(
@@ -696,16 +676,12 @@ async fn delete_item(
         .await
     );
 
-    Rsp::ok(kabalist_types::delete_item::Response {})
+    Rsp::ok(DeleteItemResponse {})
 }
 
 #[openapi(tag = "KabaList")]
 #[get("/share/<id>")]
-async fn get_shares(
-    db: &State<Db>,
-    user: User,
-    id: Uuid,
-) -> Rsp<kabalist_types::get_shares::Response> {
+async fn get_shares(db: &State<Db>, user: User, id: Uuid) -> Rsp<GetSharesResponse> {
     try_check_list!(check_list(db, &user.id, &id, true).await);
 
     let shared = try_rsp!(
@@ -717,7 +693,7 @@ async fn get_shares(
         .await
     );
 
-    Rsp::ok(kabalist_types::get_shares::Response {
+    Rsp::ok(GetSharesResponse {
         public_link: None,
         shared_with: shared
             .into_iter()
@@ -732,8 +708,8 @@ async fn share_list(
     db: &State<Db>,
     user: User,
     id: Uuid,
-    request: Json<kabalist_types::share_list::Request>,
-) -> Rsp<kabalist_types::share_list::Response> {
+    request: Json<ShareListRequest>,
+) -> Rsp<ShareListResponse> {
     try_check_list!(check_list(db, &user.id, &id, true).await);
 
     try_rsp!(
@@ -749,17 +725,12 @@ async fn share_list(
         .await
     );
 
-    Rsp::ok(kabalist_types::share_list::Response {})
+    Rsp::ok(ShareListResponse {})
 }
 
 #[openapi(tag = "KabaList")]
 #[delete("/share/<list>/<account>")]
-async fn unshare(
-    db: &State<Db>,
-    user: User,
-    list: Uuid,
-    account: Uuid,
-) -> Rsp<kabalist_types::unshare::Response> {
+async fn unshare(db: &State<Db>, user: User, list: Uuid, account: Uuid) -> Rsp<UnshareResponse> {
     try_check_list!(is_owner(db, &user.id, &list).await);
 
     let mut tx = try_rsp!(db.begin().await);
@@ -786,16 +757,12 @@ async fn unshare(
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(kabalist_types::unshare::Response {})
+    Rsp::ok(UnshareResponse {})
 }
 
 #[openapi(tag = "KabaList")]
 #[delete("/share/<id>")]
-async fn delete_shares(
-    db: &State<Db>,
-    user: User,
-    id: Uuid,
-) -> Rsp<kabalist_types::delete_share::Response> {
+async fn delete_shares(db: &State<Db>, user: User, id: Uuid) -> Rsp<DeleteShareResponse> {
     try_check_list!(is_owner(db, &user.id, &id).await);
 
     let mut tx = try_rsp!(db.begin().await);
@@ -818,16 +785,12 @@ async fn delete_shares(
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(kabalist_types::delete_share::Response {})
+    Rsp::ok(DeleteShareResponse {})
 }
 
 #[openapi(tag = "KabaList")]
 #[delete("/list/<id>")]
-async fn delete_list(
-    db: &State<Db>,
-    user: User,
-    id: Uuid,
-) -> Rsp<kabalist_types::delete_list::Response> {
+async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<DeleteListResponse> {
     try_check_list!(is_owner(db, &user.id, &id).await);
     let mut tx = try_rsp!(db.begin().await);
 
@@ -854,16 +817,12 @@ async fn delete_list(
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(kabalist_types::delete_list::Response {})
+    Rsp::ok(DeleteListResponse {})
 }
 
 #[openapi(tag = "KabaList")]
 #[post("/register/<id>", data = "<req>")]
-async fn register(
-    db: &State<Db>,
-    id: Uuid,
-    req: Json<kabalist_types::register::Request>,
-) -> Rsp<kabalist_types::register::Response> {
+async fn register(db: &State<Db>, id: Uuid, req: Json<RegisterRequest>) -> Rsp<RegisterResponse> {
     let mut tx = try_rsp!(db.begin().await);
 
     let mut is_registered =
@@ -894,12 +853,12 @@ async fn register(
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(kabalist_types::register::Response {})
+    Rsp::ok(RegisterResponse {})
 }
 
 #[openapi(tag = "KabaList")]
 #[get("/recover/<id>")]
-async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<kabalist_types::recovery_info::Response> {
+async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<RecoveryInfoResponse> {
     let username = try_rsp!(
         sqlx::query!(
             r#"SELECT accounts.name::text
@@ -914,7 +873,7 @@ async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<kabalist_types::recovery
     .name;
 
     match username {
-        Some(username) => Rsp::ok(kabalist_types::recovery_info::Response { username }),
+        Some(username) => Rsp::ok(RecoveryInfoResponse { username }),
         None => Error::InvalidRecovery.default_err().into(),
     }
 }
@@ -924,8 +883,8 @@ async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<kabalist_types::recovery
 async fn recover_password(
     db: &State<Db>,
     id: Uuid,
-    request: Json<kabalist_types::recover_password::Request>,
-) -> Rsp<kabalist_types::recover_password::Response> {
+    request: Json<RecoverPasswordRequest>,
+) -> Rsp<RecoverPasswordResponse> {
     let mut tx = try_rsp!(db.begin().await);
 
     let account = try_rsp!(
@@ -955,16 +914,12 @@ async fn recover_password(
 
     try_rsp!(tx.commit().await);
 
-    Rsp::ok(kabalist_types::recover_password::Response {})
+    Rsp::ok(RecoverPasswordResponse {})
 }
 
 #[openapi(tag = "KabaList")]
 #[get("/account/<id>/name")]
-async fn get_account_name(
-    db: &State<Db>,
-    _user: User,
-    id: Uuid,
-) -> Rsp<kabalist_types::get_account_name::Response> {
+async fn get_account_name(db: &State<Db>, _user: User, id: Uuid) -> Rsp<GetAccountNameResponse> {
     let name = try_rsp!(
         sqlx::query!("SELECT name::text FROM accounts WHERE id = $1", id)
             .fetch_one(&**db)
@@ -973,18 +928,14 @@ async fn get_account_name(
     .name;
 
     match name {
-        Some(username) => Rsp::ok(kabalist_types::get_account_name::Response { username }),
+        Some(username) => Rsp::ok(GetAccountNameResponse { username }),
         None => Error::AccountNotFound.default_err().into(),
     }
 }
 
 #[openapi(tag = "KabaList")]
 #[put("/public/<id>")]
-async fn set_public(
-    db: &State<Db>,
-    id: Uuid,
-    user: User,
-) -> Rsp<kabalist_types::set_public::Response> {
+async fn set_public(db: &State<Db>, id: Uuid, user: User) -> Rsp<SetPublicResponse> {
     try_check_list!(is_owner(db, &user.id, &id).await);
 
     try_rsp!(
@@ -993,16 +944,12 @@ async fn set_public(
             .await
     );
 
-    Rsp::ok(kabalist_types::set_public::Response {})
+    Rsp::ok(SetPublicResponse {})
 }
 
 #[openapi(tag = "KabaList")]
 #[delete("/public/<id>")]
-async fn remove_public(
-    db: &State<Db>,
-    id: Uuid,
-    user: User,
-) -> Rsp<kabalist_types::remove_public::Response> {
+async fn remove_public(db: &State<Db>, id: Uuid, user: User) -> Rsp<RemovePublicResponse> {
     try_check_list!(is_owner(db, &user.id, &id).await);
 
     try_rsp!(
@@ -1011,7 +958,7 @@ async fn remove_public(
             .await
     );
 
-    Rsp::ok(kabalist_types::remove_public::Response {})
+    Rsp::ok(RemovePublicResponse {})
 }
 
 #[derive(Responder)]
