@@ -107,27 +107,29 @@ impl<'r> FromRequest<'r> for User {
 
 impl<'r> OpenApiFromRequest<'r> for User {
     fn from_request_input(
-        gen: &mut rocket_okapi::gen::OpenApiGenerator,
+        _gen: &mut rocket_okapi::gen::OpenApiGenerator,
         _name: String,
-        required: bool,
+        _required: bool,
     ) -> rocket_okapi::Result<rocket_okapi::request::RequestHeaderInput> {
-        Ok(RequestHeaderInput::Parameter(openapi3::Parameter {
-            name: "Authorization".into(),
-            location: "header".into(),
-            description: None,
-            required,
-            deprecated: false,
-            allow_empty_value: false,
-            value: openapi3::ParameterValue::Schema {
-                style: None,
-                explode: None,
-                allow_reserved: false,
-                schema: gen.json_schema::<String>(),
-                example: None,
-                examples: None,
+        let security_scheme = openapi3::SecurityScheme {
+            description: Some(
+                "Requires an Bearer token to access, token is: `mytoken`.".to_owned(),
+            ),
+            data: openapi3::SecuritySchemeData::Http {
+                scheme: "bearer".to_owned(), // `basic`, `digest`, ...
+                // Just gives use a hint to the format used
+                bearer_format: Some("bearer".to_owned()),
             },
             extensions: openapi3::Object::default(),
-        }))
+        };
+        let mut security_req = openapi3::SecurityRequirement::new();
+        security_req.insert("JWT".to_owned(), Vec::new());
+
+        Ok(RequestHeaderInput::Security(
+            "JWT".into(),
+            security_scheme,
+            security_req,
+        ))
     }
 }
 
@@ -253,7 +255,7 @@ macro_rules! try_rsp {
     };
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[post("/login", data = "<request>")]
 async fn login(
     cfg: &State<Config>,
@@ -293,7 +295,7 @@ async fn login(
     Ok(Rsp::ok(kabalist_types::login::Response { token }))
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[post("/list", data = "<list>")]
 async fn create_list(
     db: &State<Db>,
@@ -328,7 +330,7 @@ async fn create_list(
     Rsp::ok(kabalist_types::create_list::Response { id: list_id.id })
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[get("/search/list/<name>")]
 async fn search_list(
     db: &State<Db>,
@@ -389,7 +391,7 @@ async fn search_list(
     })
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[get("/search/account/<name>")]
 async fn search_account(
     db: &State<Db>,
@@ -408,7 +410,7 @@ async fn search_account(
     Rsp::ok(kabalist_types::search_account::Response { id: result.id })
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[get("/list")]
 async fn list_lists(db: &State<Db>, user: User) -> Rsp<kabalist_types::get_lists::Response> {
     let results_owned = try_rsp!(
@@ -520,7 +522,7 @@ macro_rules! try_check_list {
     };
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[get("/list/<id>")]
 async fn read_list(
     db: &State<Db>,
@@ -563,7 +565,7 @@ async fn read_list(
     })
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[post("/list/<id>", data = "<item>")]
 async fn add_list(
     db: &State<Db>,
@@ -605,7 +607,7 @@ async fn add_list(
     Rsp::ok(kabalist_types::add_to_list::Response { id: item_id.id })
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[get("/history/<list>?<search>")]
 async fn history_search(
     db: &State<Db>,
@@ -632,7 +634,7 @@ async fn history_search(
     })
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[patch("/list/<list>/<item>", data = "<update>")]
 async fn update_item(
     db: &State<Db>,
@@ -674,7 +676,7 @@ async fn update_item(
     Rsp::ok(kabalist_types::update_item::Response {})
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[delete("/list/<list>/<item>")]
 async fn delete_item(
     db: &State<Db>,
@@ -697,7 +699,7 @@ async fn delete_item(
     Rsp::ok(kabalist_types::delete_item::Response {})
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[get("/share/<id>")]
 async fn get_shares(
     db: &State<Db>,
@@ -724,7 +726,7 @@ async fn get_shares(
     })
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[put("/share/<id>", data = "<request>")]
 async fn share_list(
     db: &State<Db>,
@@ -750,7 +752,7 @@ async fn share_list(
     Rsp::ok(kabalist_types::share_list::Response {})
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[delete("/share/<list>/<account>")]
 async fn unshare(
     db: &State<Db>,
@@ -787,7 +789,7 @@ async fn unshare(
     Rsp::ok(kabalist_types::unshare::Response {})
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[delete("/share/<id>")]
 async fn delete_shares(
     db: &State<Db>,
@@ -819,7 +821,7 @@ async fn delete_shares(
     Rsp::ok(kabalist_types::delete_share::Response {})
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[delete("/list/<id>")]
 async fn delete_list(
     db: &State<Db>,
@@ -855,7 +857,7 @@ async fn delete_list(
     Rsp::ok(kabalist_types::delete_list::Response {})
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[post("/register/<id>", data = "<req>")]
 async fn register(
     db: &State<Db>,
@@ -895,7 +897,7 @@ async fn register(
     Rsp::ok(kabalist_types::register::Response {})
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[get("/recover/<id>")]
 async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<kabalist_types::recovery_info::Response> {
     let username = try_rsp!(
@@ -917,7 +919,7 @@ async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<kabalist_types::recovery
     }
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[post("/recover/<id>", data = "<request>")]
 async fn recover_password(
     db: &State<Db>,
@@ -956,7 +958,7 @@ async fn recover_password(
     Rsp::ok(kabalist_types::recover_password::Response {})
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[get("/account/<id>/name")]
 async fn get_account_name(
     db: &State<Db>,
@@ -976,7 +978,7 @@ async fn get_account_name(
     }
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[put("/public/<id>")]
 async fn set_public(
     db: &State<Db>,
@@ -994,7 +996,7 @@ async fn set_public(
     Rsp::ok(kabalist_types::set_public::Response {})
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[delete("/public/<id>")]
 async fn remove_public(
     db: &State<Db>,
@@ -1036,7 +1038,7 @@ struct PublicResponseCtx {
     items: Vec<(String, Option<String>)>,
 }
 
-#[openapi(tag = "TODO")]
+#[openapi(tag = "KabaList")]
 #[get("/public/<id>")]
 async fn get_public_list(db: &State<Db>, id: Uuid) -> PublicResponse {
     let pb = match sqlx::query!("SELECT pub FROM lists WHERE id = $1", id)
