@@ -1,28 +1,4 @@
-use kabalist_types::RspData;
-pub use kabalist_types::{
-    add_to_list::Response as AddItemResponse,
-    create_list::Response as CreateListResponse,
-    delete_item::Response as DeleteItemResponse,
-    delete_share::Response as DeleteShareResponse,
-    get_account_name::Response as AccountNameResponse,
-    get_history::Response as SearchHistoryResponse,
-    get_lists::{ListInfo, ListStatus, Response as ListsResponse},
-    get_shares::Response as GetSharesResponse,
-    login::Response as LoginResponse,
-    read_list::{Item, Response as ReadResponse},
-    recover_password::Response as RecoverPasswordResponse,
-    recovery_info::Response as RecoveryInfoResponse,
-    register::Response as RegisterResponse,
-    remove_public::Response as RemovePublicResponse,
-    search_account::Response as SearchAccountResponse,
-    set_public::Response as SetPublicResponse,
-    share_list::Response as ShareResponse,
-    unshare::Response as UnshareResponse,
-    update_item::Response as UpdateItemResponse,
-    delete_list::Response as DeleteListResponse,
-    uuid::Uuid,
-    RspErr,
-};
+pub use kabalist_types::{uuid::Uuid, *};
 use serde::Serialize;
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
@@ -135,8 +111,8 @@ impl Client {
         }
     }
 
-    pub async fn lists(&self) -> Result<ListsResponse> {
-        let lists: RspData<kabalist_types::get_lists::Response> = self
+    pub async fn lists(&self) -> Result<GetListsResponse> {
+        let lists: RspData<GetListsResponse> = self
             .client
             .get(&format!("{}/list", self.url))
             .bearer_auth(&self.token)
@@ -148,8 +124,8 @@ impl Client {
         map_res(lists)
     }
 
-    pub async fn search(&self, name: &str) -> Result<ListsResponse> {
-        let lists: RspData<kabalist_types::get_lists::Response> = self
+    pub async fn search(&self, name: &str) -> Result<GetListsResponse> {
+        let lists: RspData<GetListsResponse> = self
             .client
             .get(&format!("{}/search/list/{}", self.url, name))
             .bearer_auth(&self.token)
@@ -161,8 +137,8 @@ impl Client {
         map_res(lists)
     }
 
-    pub async fn read(&self, id: &Uuid) -> Result<ReadResponse> {
-        let rsp: RspData<ReadResponse> = self
+    pub async fn read(&self, id: &Uuid) -> Result<ReadListResponse> {
+        let rsp: RspData<ReadListResponse> = self
             .client
             .get(&format!("{}/list/{}", self.url, id))
             .bearer_auth(&self.token)
@@ -192,14 +168,14 @@ impl Client {
         list: &Uuid,
         name: &str,
         amount: Option<&str>,
-    ) -> Result<AddItemResponse> {
+    ) -> Result<AddToListResponse> {
         #[derive(Serialize)]
         struct Request<'a> {
             name: &'a str,
             amount: Option<&'a str>,
         }
 
-        let rsp: RspData<AddItemResponse> = self
+        let rsp: RspData<AddToListResponse> = self
             .client
             .post(&format!("{}/list/{}", self.url, list))
             .bearer_auth(&self.token)
@@ -230,14 +206,14 @@ impl Client {
         list: &Uuid,
         share_with: &Uuid,
         readonly: bool,
-    ) -> Result<ShareResponse> {
+    ) -> Result<ShareListResponse> {
         #[derive(Serialize)]
         struct Request<'a> {
             share_with: &'a Uuid,
             readonly: bool,
         }
 
-        let rsp: RspData<ShareResponse> = self
+        let rsp: RspData<ShareListResponse> = self
             .client
             .put(&format!("{}/share/{}", self.url, list))
             .bearer_auth(&self.token)
@@ -350,8 +326,8 @@ impl Client {
         map_res(rsp)
     }
 
-    pub async fn account_name(&self, account: &Uuid) -> Result<AccountNameResponse> {
-        let rsp: RspData<AccountNameResponse> = self
+    pub async fn account_name(&self, account: &Uuid) -> Result<GetAccountNameResponse> {
+        let rsp: RspData<GetAccountNameResponse> = self
             .client
             .get(&format!("{}/account/{}/name", self.url, account))
             .bearer_auth(&self.token)
@@ -389,8 +365,8 @@ impl Client {
         map_res(rsp)
     }
 
-    pub async fn search_history(&self, list: &Uuid, search: &str) -> Result<SearchHistoryResponse> {
-        let rsp: RspData<SearchHistoryResponse> = self
+    pub async fn search_history(&self, list: &Uuid, search: &str) -> Result<GetHistoryResponse> {
+        let rsp: RspData<GetHistoryResponse> = self
             .client
             .get(&format!("{}/history/{}", self.url, list))
             .query(&[("search", search)])
