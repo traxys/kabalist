@@ -48,6 +48,7 @@ Right now the target instance is *not* configurable. The instance is determined 
  - PostgreSQL
  - sqlx cli
  - trunk (only for the web app)
+ - flutter (only for the android application)
 
 ### Database
 
