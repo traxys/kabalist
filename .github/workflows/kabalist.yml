@@ -6,6 +6,50 @@ on:
       - master
 
 jobs:
+  cli:
+    name: CLI binary
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            bin: target/release/kabalist_cli
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bin: target/release/kabalist_cli.exe
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cli-${{ hashFiles('Cargo.lock') }}
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --bin kabalist_cli
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: kabalist-cli-${{ matrix.target }}
+          path: ${{ matrix.bin }}
+
+
   server:
     name: Server Binaries (API & admin)
     runs-on: ubuntu-20.04
