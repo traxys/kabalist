@@ -1,0 +1,82 @@
+name: KabaList
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  server:
+    name: Server Binaries (API & admin)
+    runs-on: ubuntu-20.04
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-server-${{ hashFiles('Cargo.lock') }}
+
+      - name: Install postgres extensions
+        run: >
+          psql -h localhost -p 5432 -U postgres -d postgres
+          -c '
+            CREATE EXTENSION IF NOT EXISTS citext;
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+            CREATE EXTENSION IF NOT EXISTS pgcrypto;
+          '
+        env:
+          PGPASSWORD: password
+
+      - name: Install sqlx
+        run: cargo install sqlx-cli --no-default-features --features postgres,rustls
+
+      - name: Run migrations
+        run: |
+          cd api/sqlx
+          sqlx migrate run
+        env:
+          DATABASE_URL: postgres://postgres:password@localhost:5432/postgres
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --bin kb_admin --bin kabalist_api
+        env:
+          DATABASE_URL: postgres://postgres:password@localhost:5432/postgres
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: kabalist-api-server
+          path: target/release/kabalist_api
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: kabalist-admin
+          path: target/release/kb_admin
+
