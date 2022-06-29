@@ -1,7 +1,8 @@
 use crate::{
     button_redirect::RedirectButton,
+    endpoint,
     text_input::{self, TextInput},
-    AccountInfo, ENDPOINT, Route,
+    AccountInfo, Route,
 };
 use gloo::storage::Storage;
 use yew::prelude::*;
@@ -57,7 +58,7 @@ impl Component for Login {
                 let remember_me = self.remember_me;
 
                 ctx.link().send_future(async move {
-                    let resp = match kabalist_client::login(ENDPOINT, &username, &password).await {
+                    let resp = match kabalist_client::login(&endpoint(), &username, &password).await {
                         Ok(r) => Ok(r.token),
                         Err(kabalist_client::Error::Api(e)) => Err(format!("{}", e)),
                         Err(kabalist_client::Error::Http(e)) => {
@@ -144,7 +145,7 @@ impl Component for Login {
                       {"Sign in"}
                     </button>
                   </div>
-                    
+
               </form>
             </main>
           </div>

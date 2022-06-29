@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use crate::{
     modal::Modal,
     text_input::{self, TextInput},
-    ENDPOINT,
+    endpoint,
 };
 use kabalist_client::Uuid;
 use yew::prelude::*;
@@ -74,7 +74,7 @@ impl Component for ListSharing {
     type Properties = ListSharingProps;
 
     fn create(ctx: &Context<Self>) -> Self {
-        let client = kabalist_client::Client::new(ENDPOINT.to_string(), ctx.props().token.clone());
+        let client = kabalist_client::Client::new(endpoint(), ctx.props().token.clone());
 
         let c = client.clone();
         let id = ctx.props().id;
@@ -90,7 +90,7 @@ impl Component for ListSharing {
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        self.client = kabalist_client::Client::new(ENDPOINT.to_string(), ctx.props().token.clone());
+        self.client = kabalist_client::Client::new(endpoint(), ctx.props().token.clone());
         let c = self.client.clone();
         let id = ctx.props().id;
         ctx.link().send_future(get_shares(c, id));

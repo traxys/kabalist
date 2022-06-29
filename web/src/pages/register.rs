@@ -1,6 +1,6 @@
 use crate::{
     text_input::{self, TextInput},
-    ENDPOINT,
+    endpoint,
 };
 use yew::prelude::*;
 
@@ -66,7 +66,7 @@ impl Component for Register {
 
                 ctx.link().send_future(async move {
                     let resp =
-                        match kabalist_client::register(ENDPOINT, id, &username, &password).await {
+                        match kabalist_client::register(&endpoint(), id, &username, &password).await {
                             Ok(_) => Ok(()),
                             Err(kabalist_client::Error::Api(e)) => Err(format!("{}", e)),
                             Err(kabalist_client::Error::Http(e)) => {

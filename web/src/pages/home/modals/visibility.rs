@@ -1,4 +1,4 @@
-use crate::{modal::Modal, ENDPOINT};
+use crate::{modal::Modal, endpoint};
 use kabalist_client::Uuid;
 use yew::prelude::*;
 
@@ -25,7 +25,7 @@ impl Component for ListVisibility {
     type Properties = ListVisibilityProps;
 
     fn create(ctx: &Context<Self>) -> Self {
-        let client = kabalist_client::Client::new(ENDPOINT.to_string(), ctx.props().token.clone());
+        let client = kabalist_client::Client::new(endpoint(), ctx.props().token.clone());
 
         Self {
             client,
@@ -34,7 +34,7 @@ impl Component for ListVisibility {
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        self.client = kabalist_client::Client::new(ENDPOINT.to_string(), ctx.props().token.clone());
+        self.client = kabalist_client::Client::new(endpoint(), ctx.props().token.clone());
         self.public = ctx.props().public;
         true
     }
@@ -74,7 +74,7 @@ impl Component for ListVisibility {
             if public {
                 <p>
                   {"Public link is: "}
-                  <a>{format!("{}/public/{}", crate::ENDPOINT.trim(), id)}</a>
+                  <a>{format!("{}/public/{}", crate::endpoint().trim(), id)}</a>
                 </p>
             }
             <label>

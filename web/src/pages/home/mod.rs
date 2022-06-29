@@ -50,7 +50,7 @@ impl Component for Home {
     fn create(ctx: &Context<Self>) -> Self {
         let home = Home {
             client: kabalist_client::Client::new(
-                crate::ENDPOINT.to_string(),
+                crate::endpoint(),
                 ctx.props().token.clone(),
             ),
             lists: HashMap::new(),

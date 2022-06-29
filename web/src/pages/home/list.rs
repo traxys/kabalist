@@ -3,7 +3,7 @@ use kabalist_client::{Item, Uuid};
 use std::borrow::Cow;
 use yew::prelude::*;
 
-use crate::ENDPOINT;
+use crate::endpoint;
 
 pub struct List {
     client: kabalist_client::Client,
@@ -27,7 +27,7 @@ impl Component for List {
     type Properties = Props;
 
     fn create(ctx: &Context<Self>) -> Self {
-        let client = kabalist_client::Client::new(ENDPOINT.to_string(), ctx.props().token.clone());
+        let client = kabalist_client::Client::new(endpoint(), ctx.props().token.clone());
 
         let c = client.clone();
         let id = ctx.props().uuid;

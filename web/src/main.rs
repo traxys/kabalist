@@ -5,16 +5,16 @@ use yew_router::prelude::*;
 
 use pages::{home::Home, login::Login, register::Register};
 
-pub const ENDPOINT: &str = include_str!("../../endpoint.url");
+#[cfg(feature = "standalone")]
+pub(crate) fn endpoint() -> String {
+    include_str!("../../endpoint.url").into()
+}
 
-#[macro_export]
-macro_rules! api_route {
-    ($route:literal) => {
-        #[allow(clippy::double_parens)]
-        {
-            const_format::concatcp!(crate::ENDPOINT, $route)
-        }
-    };
+#[cfg(not(feature = "standalone"))]
+pub(crate) fn endpoint() -> String {
+    let mut root = web_sys::window().unwrap().location().origin().unwrap();
+    root += "/api";
+    root
 }
 
 #[derive(Clone, Copy, Routable, PartialEq)]

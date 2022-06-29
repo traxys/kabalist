@@ -62,6 +62,11 @@ You will then need to apply the migrations using `sqlx migrate run` in the [api/
 
 You will need to edit the endpoint definition file [endpoint definition](endpoint.url).
 
+This is only needed for:
+ 
+ - The android application
+ - The Web Application if it is not served from the same domain as the API Server
+
 ### Building the API server
 
 You can then run a `cargo build --release` to generate the CLI, API Server and Admin Tool. This will _require_ the `DATABASE_URL` variable, as SQL queries are checked against the DB at compile time.
