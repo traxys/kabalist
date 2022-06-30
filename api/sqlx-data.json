@@ -1,0 +1,728 @@
+{
+  "db": "PostgreSQL",
+  "0582e4826278d95602b745682ffedc20734c8de04345fe67d3ca725dc643f9da": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "amount",
+          "ordinal": 2,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT id, name, amount FROM lists_content WHERE list = $1"
+  },
+  "09cfd82b3acff441d180a990e38285054df59571aafc023ad17409fab2f73ec7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT id FROM accounts WHERE name ILIKE $1::text::citext"
+  },
+  "1285a06ee2eeb53eb71ab468f3d84c41eb3c3ec88b951d3ad5b0272204834b58": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT accounts.name::text\n               FROM password_reset,accounts\n               WHERE password_reset.id = $1\n                AND password_reset.account = accounts.id"
+  },
+  "19d68ce5e25f93a3ed15603b34ae2b17ff7d82f68985a25fd49071c348d69e13": {
+    "describe": {
+      "columns": [
+        {
+          "name": "shared",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "readonly",
+          "ordinal": 1,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT shared, readonly FROM list_sharing WHERE list = $1"
+  },
+  "1c332a0afee1d11eea4c903d1c6c60065ef7d1d7dedc3852dbaeb1cac365c58a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "UPDATE lists SET pub = true WHERE id = $1"
+  },
+  "20b4d05623342220ba73a506d40c07b3ebf51627bc2670cf382c044c06d24930": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO history (list, creator, name, last_used)\n               VALUES ($1, $2, $3::text::citext, now())\n               ON CONFLICT (list, creator, name) DO\n               UPDATE SET last_used = now()"
+  },
+  "28fdfbb6b061b741d6905bfa6b33448b56654de6dc93ab050ea5989c2352fb3d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM list_sharing WHERE list = $1 AND shared = $2"
+  },
+  "465991e893dfb7e1f48aff0470765dcf5ad4f3aced62e5d830c559efa2126ff1": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM history WHERE list = $1 AND creator != $2"
+  },
+  "48fe63ee807711c94fe94371ac5579b04c219dad33fd562771e968439a847d0f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM lists_content WHERE list = $1"
+  },
+  "5ce4886ef0ca21d36ba47f1d5ad06942a49e13b961a462f8543ebcee7c03fbe2": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT name::text FROM accounts WHERE id = $1"
+  },
+  "5e1896c8bf775a2206cb0fd81ac6a3de6b34ac14ba4bb3accb5c936d03441a75": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT COUNT(*) FROM lists WHERE owner = $1 AND id = $2"
+  },
+  "5fbc05a14dad108efea961ba288fba68d6984afda0ab74b1662ea85e198e84c7": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE lists_content SET name = $1 WHERE list = $2 AND id = $3"
+  },
+  "6d8c551e8ad07f6482c8bb86ada8a5ffaeab0626f9d9f2f61ba92b042de264cc": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "UPDATE lists SET pub = false WHERE id = $1"
+  },
+  "79686d18b2cf100e560172b308cbc416ecdb2bf2d52959034e651ee352b7972d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "UPDATE accounts SET password = crypt($2, gen_salt('bf')) WHERE id = $1"
+  },
+  "8051a5886b6233ee244b0ed1625c025fd4bb9a26a8a1998b1217531315664ba3": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM password_reset WHERE id = $1"
+  },
+  "85c4c2d46b862ad72be8dfea58cbf8193a5aef9f3b9e60d6984db92fc3277207": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "pub",
+          "ordinal": 2,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT name, id, pub FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'"
+  },
+  "8d0ecf8ca182b271a1fe7853ad5d3b06d0a70ad2e60c0b5f573596d7651007a5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT id FROM accounts WHERE name = $1::text::citext AND password = crypt($2, password)"
+  },
+  "924db410c66a4ce1176c9e8597bda543521f7dbfa4cb8d409569a79f02aea60b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM history WHERE list = $1 AND creator = $2"
+  },
+  "92e50c19145544141cef079331ea983e6e75961e88fa9302b0d9c766c1fd66ca": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT name::text FROM history WHERE list = $1 AND creator = $2 AND name ILIKE '%' || $3 || '%'"
+  },
+  "a1cfb48b3222c1f3a87255a10c40e92bf75a0d232d70118f209f86e28b00694e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "account",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT password_reset.account FROM password_reset WHERE id = $1"
+  },
+  "ab1a6ce8cecaea9ad7d661fedc964dcadfd1dbaed3a374e2669363c53d0b95c4": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM list_sharing WHERE list = $1"
+  },
+  "b22c8c901799af21ecfb32f3a14ee950cb4bdf75bf27929e37b59752c00b1e51": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO accounts (id, name, password)\n               VALUES (uuid_generate_v4(), $1::text::citext, crypt($2, gen_salt('bf')))"
+  },
+  "bd494a4a836837f5b02cde9870f4622ccc3270a4425a896d06ee146687bddea7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "amount",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT name,amount FROM lists_content WHERE list = $1"
+  },
+  "be52a21240bea1723e56f0abfcc8bb0dd9e0eaa3740ae3e02f4a466287f24a5e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "pub",
+          "ordinal": 2,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\n        SELECT name, id, pub\n        FROM lists WHERE owner = $1"
+  },
+  "bee1b17c59954b1ab7509c987b2f1d06d3d3dd01fd4828303c872bcba4f3c170": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "readonly",
+          "ordinal": 2,
+          "type_info": "Bool"
+        },
+        {
+          "name": "pub",
+          "ordinal": 3,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT name, id, readonly, pub\n               FROM lists, list_sharing\n               WHERE (lists.id = list_sharing.list)\n                   AND shared = $1\n                   AND name ILIKE '%' || $2 || '%'"
+  },
+  "c4dab9b17e8b96242f9869f5e8fc553c8b901676e1dc6e23de1d584dd7017a94": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO lists_content (list, name, amount) VALUES ($1, $2, $3) RETURNING id"
+  },
+  "cf76f8489544f639d541ef7683363fa01fbdb9e4c0fdd37b9183d9fd194b2fc0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "pub",
+          "ordinal": 0,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT pub FROM lists WHERE id = $1"
+  },
+  "d19902a40b35ca460778a8cb9e4cce2fdfc4011d08cdfdd27a449800460d8540": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM lists WHERE id = $1"
+  },
+  "d47e7dbe9a69ed3544124876e4ba11327c34ff351ecda8fd3ac7327506e4d9a1": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM registrations WHERE id = $1"
+  },
+  "d613ac0b18323bfe8f12ce0e00753613c9ae270472437a25ba661fcdb59629dd": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Bool"
+        ]
+      }
+    },
+    "query": "\n            INSERT INTO list_sharing (list, shared, readonly)\n            VALUES ($1, $2, $3) ON CONFLICT DO NOTHING"
+  },
+  "e69859a7b02e51d66b5e58bd96e9e3fa7e37302dad7d1b354dbd331e39e8f050": {
+    "describe": {
+      "columns": [
+        {
+          "name": "readonly",
+          "ordinal": 0,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT readonly FROM list_sharing WHERE list = $1 AND shared = $2"
+  },
+  "e771ba9438ce4bc3fb9a5f07c6f164fbe9e09e45c2ca03fc91f2be5521f41740": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "readonly",
+          "ordinal": 2,
+          "type_info": "Bool"
+        },
+        {
+          "name": "pub",
+          "ordinal": 3,
+          "type_info": "Bool"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT name, id, readonly, pub\n               FROM lists, list_sharing\n               WHERE (lists.id = list_sharing.list)\n                   AND shared = $1 "
+  },
+  "e816dc4bc47fbec737ecc7c28d9f4aab875bd4ab50f197f505cdd9f47f7f12a6": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE lists_content SET amount = $1 WHERE list = $2 AND id = $3"
+  },
+  "eab7120df4a4ed94cc6de1f590b1c220c50c75ac19b1fab0313cd22513e2bf8f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Int4"
+        ]
+      }
+    },
+    "query": "DELETE FROM lists_content WHERE list = $1 AND id = $2"
+  },
+  "f7086d8f58568aa4fbfb4a254cdb808b1b66a618135f8b84437b36c293a1ef8f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM history WHERE list = $1"
+  },
+  "f934598bc3283efca04cc8dd4dca6d10a48339303fb301342911aa1b856e39e5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO lists (id, owner, name) VALUES (uuid_generate_v4(), $1, $2) RETURNING id"
+  },
+  "fb6f6682f0cfafd76c7bb1bc5c18b76b243888086512cdadf21bc47a5fa4fdc7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT id FROM registrations WHERE id = $1"
+  },
+  "feaffd622519b39495814b5161e633a8478aa44b59914be62c29a05328acbe64": {
+    "describe": {
+      "columns": [
+        {
+          "name": "count",
+          "ordinal": 0,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT COUNT(*) FROM lists WHERE owner = $1 AND name = $2"
+  }
+}
