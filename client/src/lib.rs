@@ -25,7 +25,7 @@ pub async fn login(url: &str, username: &str, password: &str) -> Result<LoginRes
 
     let client = reqwest::Client::new();
     let token: RspData<LoginResponse> = client
-        .post(format!("{}/login", url))
+        .post(format!("{}/account/login", url))
         .json(&LoginRequest { username, password })
         .send()
         .await?
@@ -49,7 +49,7 @@ pub async fn register(
 
     let client = reqwest::Client::new();
     let rsp: RspData<RegisterResponse> = client
-        .post(&format!("{}/register/{}", url, token))
+        .post(&format!("{}/account/register/{}", url, token))
         .json(&RegisterRequest { username, password })
         .send()
         .await?
@@ -62,7 +62,7 @@ pub async fn register(
 pub async fn recover_info(url: &str, recovery_id: &Uuid) -> Result<RecoveryInfoResponse> {
     let client = reqwest::Client::new();
     let rsp: RspData<RecoveryInfoResponse> = client
-        .get(&format!("{}/recover/{}", url, recovery_id))
+        .get(&format!("{}/account/recover/{}", url, recovery_id))
         .send()
         .await?
         .json()
@@ -83,7 +83,7 @@ pub async fn recover_password(
 
     let client = reqwest::Client::new();
     let rsp: RspData<RecoverPasswordResponse> = client
-        .post(&format!("{}/recover/{}", url, recovery_id))
+        .post(&format!("{}/account/recover/{}", url, recovery_id))
         .json(&Request {
             password: new_password,
         })
@@ -342,7 +342,7 @@ impl Client {
     pub async fn set_public(&self, list: &Uuid) -> Result<SetPublicResponse> {
         let rsp: RspData<SetPublicResponse> = self
             .client
-            .put(&format!("{}/public/{}", self.url, list))
+            .put(&format!("{}/list/{}/public", self.url, list))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -355,7 +355,7 @@ impl Client {
     pub async fn remove_public(&self, list: &Uuid) -> Result<RemovePublicResponse> {
         let rsp: RspData<RemovePublicResponse> = self
             .client
-            .delete(&format!("{}/public/{}", self.url, list))
+            .delete(&format!("{}/list/{}/public", self.url, list))
             .bearer_auth(&self.token)
             .send()
             .await?

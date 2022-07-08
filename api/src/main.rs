@@ -1,146 +1,39 @@
-#[macro_use]
-extern crate rocket;
-use std::{collections::HashMap, str::FromStr};
+use std::{net::SocketAddr, sync::Arc};
 
-use jsonwebtoken::DecodingKey;
+use axum::{
+    extract::{self, Query},
+    http::StatusCode,
+    response::IntoResponse,
+    routing::get,
+    Extension, Json, Router,
+};
+use figment::{
+    providers::{self, Format},
+    Figment,
+};
 use kabalist_types::{uuid::Uuid, *};
-use rocket::{
-    fairing::{self, AdHoc},
-    futures::StreamExt,
-    http::Header,
-    outcome::try_outcome,
-    request::{self, FromRequest},
-    response::status::BadRequest,
-    serde::{json::Json, Deserialize, Deserializer, Serialize},
-    Build, Rocket, State,
-};
-use rocket_dyn_templates::Template;
-use rocket_okapi::{
-    okapi::openapi3,
-    openapi_get_routes,
-    rapidoc::{self, make_rapidoc, RapiDocConfig},
-    request::{OpenApiFromRequest, RequestHeaderInput},
-    settings::UrlObject,
-    swagger_ui::{make_swagger_ui, SwaggerUIConfig},
-    util::{add_schema_response, produce_any_responses},
-    JsonSchema,
-};
-use rocket_okapi::{openapi, response::OpenApiResponderInner};
-use schemars::schema::{SchemaObject, NumberValidation};
+use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use sqlx::ConnectOptions;
+use sqlx::{postgres::PgPoolOptions, PgPool};
+use tokio_stream::StreamExt;
+use utoipa::{
+    openapi::security::{self, SecurityScheme},
+    Component, Modify, OpenApi,
+};
+use utoipa_swagger_ui::SwaggerUi;
 
-type Db = sqlx::PgPool;
+mod account;
+mod config;
+mod list;
+mod share;
 
-#[derive(Debug)]
-enum AuthError {
-    GuardFetch,
-    InvalidAuthorization,
-    TokenExpired,
-}
-
-#[derive(Debug)]
-struct User {
-    id: Uuid,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: Uuid,
-    exp: usize,
-    iat: chrono::DateTime<chrono::Utc>,
-}
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for User {
-    type Error = AuthError;
-
-    async fn from_request(
-        request: &'r request::Request<'_>,
-    ) -> request::Outcome<Self, Self::Error> {
-        let secret = try_outcome!(request
-            .guard::<&State<Config>>()
-            .await
-            .map_failure(|(s, _)| (s, AuthError::GuardFetch)));
-
-        let auth = match request.headers().get_one("Authorization") {
-            Some(a) => a,
-            None => {
-                return request::Outcome::Failure((
-                    rocket::http::Status::BadRequest,
-                    AuthError::InvalidAuthorization,
-                ))
-            }
-        };
-        if !auth.starts_with("Bearer") {
-            error!("Authorization does not start with Bearer");
-            return request::Outcome::Failure((
-                rocket::http::Status::BadRequest,
-                AuthError::InvalidAuthorization,
-            ));
-        }
-        let auth = auth.trim_start_matches("Bearer").trim_start();
-        let decoded = match jsonwebtoken::decode::<Claims>(
-            auth,
-            &DecodingKey::from_secret(&secret.jwt_secret),
-            &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256),
-        ) {
-            Err(e) => {
-                error!("Could not decode JWT: {:?}", e);
-                return request::Outcome::Failure((
-                    rocket::http::Status::BadRequest,
-                    AuthError::InvalidAuthorization,
-                ));
-            }
-            Ok(d) => d,
-        };
-        if decoded.claims.iat + chrono::Duration::seconds(decoded.claims.exp as i64)
-            < chrono::Utc::now()
-        {
-            return request::Outcome::Failure((
-                rocket::http::Status::Unauthorized,
-                AuthError::TokenExpired,
-            ));
-        }
-        request::Outcome::Success(User {
-            id: decoded.claims.sub,
-        })
-    }
-}
-
-impl<'r> OpenApiFromRequest<'r> for User {
-    fn from_request_input(
-        _gen: &mut rocket_okapi::gen::OpenApiGenerator,
-        _name: String,
-        _required: bool,
-    ) -> rocket_okapi::Result<rocket_okapi::request::RequestHeaderInput> {
-        let security_scheme = openapi3::SecurityScheme {
-            description: Some(
-                "Requires an Bearer token to access, token is: `mytoken`.".to_owned(),
-            ),
-            data: openapi3::SecuritySchemeData::Http {
-                scheme: "bearer".to_owned(), // `basic`, `digest`, ...
-                // Just gives use a hint to the format used
-                bearer_format: Some("bearer".to_owned()),
-            },
-            extensions: openapi3::Object::default(),
-        };
-        let mut security_req = openapi3::SecurityRequirement::new();
-        security_req.insert("JWT".to_owned(), Vec::new());
-
-        Ok(RequestHeaderInput::Security(
-            "JWT".into(),
-            security_scheme,
-            security_req,
-        ))
-    }
-}
+pub(crate) use account::User;
 
 macro_rules! define_error {
     (
     pub enum Error {
         $(
-            $variant:ident = { description: $description:literal, code: $code:literal $(,)?}
+            $variant:ident = { description: $description:literal, code: $code:literal, status: $status:expr $(,)?}
         ),*
         $(,)?
     }
@@ -153,26 +46,14 @@ macro_rules! define_error {
             )*
         }
 
-        impl JsonSchema for Error {
-            fn is_referenceable() -> bool {
-                false
-            }
-
-            fn schema_name() -> String {
-                "Error".into()
-            }
-
-            fn json_schema(_: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-                SchemaObject {
-                    instance_type: Some(schemars::schema::InstanceType::Integer.into()),
-                    number: Some(Box::new(NumberValidation {
-                        maximum: [$($code,)*].iter().max().map(|&x| x as f64),
-                        minimum: [$($code,)*].iter().min().map(|&x| x as f64),
-                        ..Default::default()
-                    })),
-                    ..Default::default()
-                }.into()
-            }
+        impl Component for Error {
+           fn component() -> utoipa::openapi::schema::Component {
+               utoipa::openapi::PropertyBuilder::new()
+                   .component_type(utoipa::openapi::ComponentType::Number)
+                   .enum_values(Some([$(stringify!($code),)*]))
+                   .build()
+                   .into()
+           }
         }
 
         impl Error {
@@ -194,6 +75,13 @@ macro_rules! define_error {
             fn into_err(self) -> ErrResponse {
                 self.into_err_with_desc(None)
             }
+            fn status(&self) -> StatusCode {
+                match self {
+                $(
+                    Self::$variant => $status,
+                )*
+                }
+            }
         }
     };
 }
@@ -203,335 +91,145 @@ define_error! {
         Internal = {
             description: "internal error",
             code: 0,
+            status: StatusCode::INTERNAL_SERVER_ERROR,
         },
         ListAlreadyExists = {
             description: "list already exists",
             code: 1,
+            status: StatusCode::BAD_REQUEST,
         },
         UnknownAccount = {
             description: "unkown account",
             code: 2,
+            status: StatusCode::NOT_FOUND,
         },
         NoSuchList = {
             description: "no such list",
             code: 3,
+            status: StatusCode::NOT_FOUND,
         },
         NotWritable = {
             description: "list is not writable",
             code: 4,
+            status: StatusCode::BAD_REQUEST,
         },
         RegistrationDoesNotExist = {
             description: "registration does not exist",
             code: 5,
+            status: StatusCode::NOT_FOUND,
         },
         InvalidRecovery = {
             description: "recovery does not exists",
             code: 6,
+            status: StatusCode::NOT_FOUND,
         },
         AccountNotFound = {
             description: "account not found",
             code: 7,
+            status: StatusCode::NOT_FOUND,
+        },
+        MissingAuthorization = {
+            description: "token is missing",
+            code: 8,
+            status: StatusCode::BAD_REQUEST,
+        },
+        InvalidToken = {
+            description: "token is invalid",
+            code: 10,
+            status: StatusCode::BAD_REQUEST,
+        },
+        TokenExpired = {
+            description: "token has expired",
+            code: 9,
+            status: StatusCode::UNAUTHORIZED,
         },
     }
 }
 
-#[derive(Serialize, Deserialize, JsonSchema)]
+impl From<sqlx::Error> for Error {
+    fn from(e: sqlx::Error) -> Self {
+        tracing::error!("Database error: {:?}", e);
+        Error::Internal
+    }
+}
+
+impl From<jsonwebtoken::errors::Error> for Error {
+    fn from(e: jsonwebtoken::errors::Error) -> Self {
+        tracing::error!("Could not create JWT: {:?}", e);
+        Error::Internal
+    }
+}
+
+#[derive(Serialize, Deserialize, Component)]
+#[aliases(
+    OkLoginResponse = OkResponse<LoginResponse>,
+    OkCreateListResponse = OkResponse<CreateListResponse>,
+    OkGetListsResponse = OkResponse<GetListsResponse>,
+    OkSearchAccountResponse = OkResponse<SearchAccountResponse>,
+    OkReadListResponse = OkResponse<ReadListResponse>,
+    OkAddToListResponse = OkResponse<AddToListResponse>,
+    OkGetHistoryResponse = OkResponse<GetHistoryResponse>,
+    OkUpdateItemResponse = OkResponse<UpdateItemResponse>,
+    OkDeleteItemResponse = OkResponse<DeleteItemResponse>,
+    OkDeleteListResponse = OkResponse<DeleteListResponse>,
+    OkUnshareResponse = OkResponse<UnshareResponse>,
+    OkGetSharesResponse = OkResponse<GetSharesResponse>,
+    OkShareListResponse = OkResponse<ShareListResponse>,
+    OkDeleteShareResponse = OkResponse<DeleteShareResponse>,
+    OkRecoveryInfoResponse = OkResponse<RecoveryInfoResponse>,
+    OkRecoverPasswordResponse = OkResponse<RecoverPasswordResponse>,
+    OkRegisterResponse = OkResponse<RegisterResponse>,
+    OkGetAccountNameResponse = OkResponse<GetAccountNameResponse>,
+    OkSetPublicResponse = OkResponse<SetPublicResponse>,
+    OkRemovePublicResponse = OkResponse<RemovePublicResponse>,
+)]
 struct OkResponse<T> {
     ok: T,
 }
 
-#[derive(Serialize, Deserialize, JsonSchema)]
+impl<T> OkResponse<T> {
+    fn ok(v: T) -> Rsp<T> {
+        Ok(Json(Self { ok: v }))
+    }
+}
+
+#[derive(Serialize, Deserialize, Component)]
 struct ErrResponse {
     err: UserError,
 }
 
-impl<T> From<Error> for Rsp<T> {
-    fn from(e: Error) -> Self {
-        Rsp::Err(BadRequest(Some(Json(e.into_err()))))
-    }
-}
+type Rsp<T> = Result<Json<OkResponse<T>>, Error>;
 
-#[derive(Serialize, Deserialize, JsonSchema)]
+#[derive(Serialize, Deserialize, Component)]
 struct UserError {
     code: Error,
     description: String,
 }
 
-#[derive(Responder)]
-enum Rsp<T> {
-    Ok(Json<OkResponse<T>>),
-    Err(BadRequest<Json<ErrResponse>>),
-}
-
-impl<T> OpenApiResponderInner for Rsp<T>
-where
-    T: JsonSchema,
-{
-    fn responses(
-        gen: &mut rocket_okapi::gen::OpenApiGenerator,
-    ) -> rocket_okapi::Result<openapi3::Responses> {
-        let mut response = openapi3::Responses::default();
-        let ok_schema = gen.json_schema::<OkResponse<T>>();
-        let err_schema = gen.json_schema::<ErrResponse>();
-        add_schema_response(&mut response, 200, "application/json", ok_schema)?;
-        add_schema_response(&mut response, 400, "application/json", err_schema)?;
-        Ok(response)
+impl IntoResponse for Error {
+    fn into_response(self) -> axum::response::Response {
+        (self.status(), Json(self.into_err())).into_response()
     }
 }
 
-impl<T: Serialize> From<sqlx::Error> for Rsp<T> {
-    fn from(err: sqlx::Error) -> Self {
-        error!("SQLX error: {:?}", err);
-        Error::Internal.into()
-    }
-}
-
-impl<T: Serialize> Rsp<T> {
-    fn ok(value: T) -> Self {
-        Rsp::Ok(Json(OkResponse { ok: value }))
-    }
-
-    fn _internal_err<R: Into<String>>(reason: R) -> Self {
-        let r = reason.into();
-        error!("Internal error: {}", r);
-        Error::Internal.into()
-    }
-}
-
-macro_rules! try_rsp {
-    ($e:expr) => {
-        match $e {
-            Ok(x) => x,
-            Err(e) => return e.into(),
-        }
-    };
-}
-
-#[openapi(tag = "KabaList")]
-#[post("/login", data = "<request>")]
-async fn login(
-    cfg: &State<Config>,
-    db: &State<Db>,
-    request: Json<LoginRequest>,
-) -> Result<Rsp<LoginResponse>, rocket::response::Debug<jsonwebtoken::errors::Error>> {
-    let mut rsp = sqlx::query!(
-        "SELECT id FROM accounts WHERE name = $1::text::citext AND password = crypt($2, password)",
-        request.username,
-        request.password
-    )
-    .fetch(&**db);
-    let id = match rsp.next().await {
-        None => return Ok(Error::UnknownAccount.into()),
-        Some(Err(e)) => return Ok(e.into()),
-        Some(Ok(id)) => id.id,
-    };
-
-    let claims = Claims {
-        sub: id,
-        exp: cfg.exp,
-        iat: chrono::Utc::now(),
-    };
-
-    let token = match jsonwebtoken::encode(
-        &jsonwebtoken::Header::default(),
-        &claims,
-        &jsonwebtoken::EncodingKey::from_secret(&cfg.jwt_secret),
-    ) {
-        Err(e) => return Err(e.into()),
-        Ok(t) => t,
-    };
-
-    Ok(Rsp::ok(LoginResponse { token }))
-}
-
-#[openapi(tag = "KabaList")]
-#[post("/list", data = "<list>")]
-async fn create_list(
-    db: &State<Db>,
-    user: User,
-    list: Json<CreateListRequest>,
-) -> Rsp<CreateListResponse> {
-    let fetch_lists = try_rsp!(
-        sqlx::query!(
-            "SELECT COUNT(*) FROM lists WHERE owner = $1 AND name = $2",
-            user.id,
-            list.name
-        )
-        .fetch_one(&**db)
-        .await
-    );
-
-    match fetch_lists.count {
-        Some(0) | None => (),
-        _ => return Error::ListAlreadyExists.into(),
-    }
-
-    let list_id = try_rsp!(
-        sqlx::query!(
-            "INSERT INTO lists (id, owner, name) VALUES (uuid_generate_v4(), $1, $2) RETURNING id",
-            user.id,
-            list.name
-        )
-        .fetch_one(&**db)
-        .await
-    );
-
-    Rsp::ok(CreateListResponse { id: list_id.id })
-}
-
-#[openapi(tag = "KabaList")]
-#[get("/search/list/<name>")]
-async fn search_list(db: &State<Db>, user: User, name: String) -> Rsp<GetListsResponse> {
-    let results_owned = try_rsp!(
-        sqlx::query!(
-            "SELECT name, id, pub FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
-            user.id,
-            name
-        )
-        .fetch_all(&**db)
-        .await
-    );
-    let results_shared = try_rsp!(
-        sqlx::query!(
-            r#"SELECT name, id, readonly, pub
-               FROM lists, list_sharing
-               WHERE (lists.id = list_sharing.list)
-                   AND shared = $1
-                   AND name ILIKE '%' || $2 || '%'"#,
-            user.id,
-            name
-        )
-        .fetch_all(&**db)
-        .await
-    );
-
-    Rsp::ok(GetListsResponse {
-        results: results_owned
-            .into_iter()
-            .map(|row| {
-                (
-                    row.name,
-                    ListInfo {
-                        id: row.id,
-                        status: ListStatus::Owned,
-                        public: row.r#pub.unwrap_or(false),
-                    },
-                )
-            })
-            .chain(results_shared.into_iter().map(|row| {
-                (
-                    row.name,
-                    ListInfo {
-                        id: row.id,
-                        status: if row.readonly {
-                            ListStatus::SharedRead
-                        } else {
-                            ListStatus::SharedWrite
-                        },
-                        public: row.r#pub.unwrap_or(false),
-                    },
-                )
-            }))
-            .collect(),
-    })
-}
-
-#[openapi(tag = "KabaList")]
-#[get("/search/account/<name>")]
-async fn search_account(db: &State<Db>, _user: User, name: String) -> Rsp<SearchAccountResponse> {
-    let result = try_rsp!(
-        sqlx::query!(
-            "SELECT id FROM accounts WHERE name ILIKE $1::text::citext",
-            name
-        )
-        .fetch_one(&**db)
-        .await
-    );
-
-    Rsp::ok(SearchAccountResponse { id: result.id })
-}
-
-#[openapi(tag = "KabaList")]
-#[get("/list")]
-async fn list_lists(db: &State<Db>, user: User) -> Rsp<GetListsResponse> {
-    let results_owned = try_rsp!(
-        sqlx::query!(
-            r#"
-        SELECT name, id, pub
-        FROM lists WHERE owner = $1"#,
-            user.id
-        )
-        .fetch_all(&**db)
-        .await
-    );
-    let results_shared = try_rsp!(
-        sqlx::query!(
-            r#"SELECT name, id, readonly, pub
-               FROM lists, list_sharing
-               WHERE (lists.id = list_sharing.list)
-                   AND shared = $1 "#,
-            user.id
-        )
-        .fetch_all(&**db)
-        .await
-    );
-
-    Rsp::ok(GetListsResponse {
-        results: results_owned
-            .into_iter()
-            .map(|row| {
-                (
-                    row.name,
-                    ListInfo {
-                        id: row.id,
-                        status: ListStatus::Owned,
-                        public: row.r#pub.unwrap_or(false),
-                    },
-                )
-            })
-            .chain(results_shared.into_iter().map(|row| {
-                (
-                    row.name,
-                    ListInfo {
-                        id: row.id,
-                        status: if row.readonly {
-                            ListStatus::SharedRead
-                        } else {
-                            ListStatus::SharedWrite
-                        },
-                        public: row.r#pub.unwrap_or(false),
-                    },
-                )
-            }))
-            .collect(),
-    })
-}
-
-type CheckListResult = Result<Result<(), Error>, sqlx::Error>;
-
-async fn is_owner(db: &State<Db>, user_id: &Uuid, list_id: &Uuid) -> CheckListResult {
+async fn is_owner(db: &PgPool, user_id: Uuid, list_id: Uuid) -> Result<(), Error> {
     let has_list = sqlx::query!(
         "SELECT COUNT(*) FROM lists WHERE owner = $1 AND id = $2",
         user_id,
         list_id
     )
-    .fetch_one(&**db)
+    .fetch_one(db)
     .await?;
 
     match has_list.count {
-        Some(0) | None => Ok(Err(Error::NoSuchList)),
-        _ => return Ok(Ok(())),
+        Some(0) | None => Err(Error::NoSuchList),
+        _ => Ok(()),
     }
 }
 
-async fn check_list(
-    db: &State<Db>,
-    user_id: &Uuid,
-    list_id: &Uuid,
-    write: bool,
-) -> CheckListResult {
-    if let Ok(_) = is_owner(db, user_id, list_id).await? {
-        return Ok(Ok(()));
+async fn check_list(db: &PgPool, user_id: Uuid, list_id: Uuid, write: bool) -> Result<(), Error> {
+    if is_owner(db, user_id, list_id).await.is_ok() {
+        return Ok(());
     }
 
     let mut shared_status = sqlx::query!(
@@ -539,726 +237,281 @@ async fn check_list(
         list_id,
         user_id
     )
-    .fetch(&**db);
+    .fetch(db);
 
     match shared_status
         .next()
         .await
         .map(|r| r.map(|row| row.readonly))
     {
-        Some(Ok(true)) if write => Ok(Err(Error::NotWritable)),
-        Some(Ok(_)) => Ok(Ok(())),
-        Some(Err(e)) => Err(e),
-        None => Ok(Err(Error::NoSuchList)),
+        Some(Ok(true)) if write => Err(Error::NotWritable),
+        Some(Ok(_)) => Ok(()),
+        Some(Err(e)) => Err(e.into()),
+        None => Err(Error::NoSuchList),
     }
 }
 
-macro_rules! try_check_list {
-    ($e:expr) => {
-        match $e {
-            Ok(Ok(v)) => v,
-            Ok(Err(e)) => return e.into(),
-            Err(e) => return e.into(),
-        }
-    };
-}
-
-#[openapi(tag = "KabaList")]
-#[get("/list/<id>")]
-async fn read_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<ReadListResponse> {
-    try_check_list!(check_list(db, &user.id, &id, false).await);
-
-    let items = try_rsp!(
-        sqlx::query!(
-            "SELECT id, name, amount FROM lists_content WHERE list = $1",
-            id
-        )
-        .fetch_all(&**db)
-        .await
-    );
-    let mut readonly_result = sqlx::query!(
-        "SELECT readonly FROM list_sharing WHERE list = $1 AND shared = $2",
-        id,
-        user.id,
+#[utoipa::path(
+    get,
+    path = "/search/list/{name}",
+    responses(
+        (status = 200, description = "Lists", body = OkGetListsResponse),
+        (status = 400, description = "Invalid request", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    params(
+        ("name" = String, Path, description = "Part of the list name"),
+    ),
+    security(
+        ("token" = [])
     )
-    .fetch(&**db);
+)]
+#[tracing::instrument(skip(db))]
+async fn search_list(
+    Extension(db): Extension<PgPool>,
+    user: User,
+    extract::Path(name): extract::Path<String>,
+) -> Rsp<GetListsResponse> {
+    let results_owned = sqlx::query!(
+        "SELECT name, id, pub FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
+        user.id,
+        name
+    )
+    .fetch_all(&db)
+    .await?;
 
-    let readonly = match readonly_result.next().await {
-        Some(Ok(v)) => v.readonly,
-        Some(Err(e)) => return e.into(),
-        None => false,
-    };
+    let results_shared = sqlx::query!(
+        r#"SELECT name, id, readonly, pub
+               FROM lists, list_sharing
+               WHERE (lists.id = list_sharing.list)
+                   AND shared = $1
+                   AND name ILIKE '%' || $2 || '%'"#,
+        user.id,
+        name
+    )
+    .fetch_all(&db)
+    .await?;
 
-    Rsp::ok(ReadListResponse {
-        items: items
+    OkResponse::ok(GetListsResponse {
+        results: results_owned
             .into_iter()
-            .map(|row| Item {
-                id: row.id,
-                name: row.name,
-                amount: row.amount,
+            .map(|row| {
+                (
+                    row.name,
+                    ListInfo {
+                        id: row.id,
+                        status: ListStatus::Owned,
+                        public: row.r#pub.unwrap_or(false),
+                    },
+                )
             })
+            .chain(results_shared.into_iter().map(|row| {
+                (
+                    row.name,
+                    ListInfo {
+                        id: row.id,
+                        status: if row.readonly {
+                            ListStatus::SharedRead
+                        } else {
+                            ListStatus::SharedWrite
+                        },
+                        public: row.r#pub.unwrap_or(false),
+                    },
+                )
+            }))
             .collect(),
-        readonly,
     })
 }
 
-#[openapi(tag = "KabaList")]
-#[post("/list/<id>", data = "<item>")]
-async fn add_list(
-    db: &State<Db>,
-    user: User,
-    id: Uuid,
-    item: Json<AddToListRequest>,
-) -> Rsp<AddToListResponse> {
-    try_check_list!(check_list(db, &user.id, &id, true).await);
+#[utoipa::path(
+    get,
+    path = "/search/account/{name}",
+    responses(
+        (status = 200, description = "Account ID", body = OkSearchAccountResponse),
+        (status = 400, description = "Invalid request", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    params(
+        ("name" = String, Path, description = "Account name"),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
+#[tracing::instrument(skip(db))]
+async fn search_account(
+    Extension(db): Extension<PgPool>,
+    _user: User,
+    extract::Path(name): extract::Path<String>,
+) -> Rsp<SearchAccountResponse> {
+    let result = sqlx::query!(
+        "SELECT id FROM accounts WHERE name ILIKE $1::text::citext",
+        name
+    )
+    .fetch_one(&db)
+    .await?;
 
-    let mut tx = try_rsp!(db.begin().await);
-
-    let item_id = try_rsp!(
-        sqlx::query!(
-            "INSERT INTO lists_content (list, name, amount) VALUES ($1, $2, $3) RETURNING id",
-            id,
-            item.name,
-            item.amount
-        )
-        .fetch_one(&mut tx)
-        .await
-    );
-
-    try_rsp!(
-        sqlx::query!(
-            r#"INSERT INTO history (list, creator, name, last_used)
-               VALUES ($1, $2, $3::text::citext, now())
-               ON CONFLICT (list, creator, name) DO
-               UPDATE SET last_used = now()"#,
-            id,
-            user.id,
-            item.name
-        )
-        .execute(&mut tx)
-        .await
-    );
-
-    try_rsp!(tx.commit().await);
-
-    Rsp::ok(AddToListResponse { id: item_id.id })
+    OkResponse::ok(SearchAccountResponse { id: result.id })
 }
 
-#[openapi(tag = "KabaList")]
-#[get("/history/<list>?<search>")]
-async fn history_search(
-    db: &State<Db>,
-    user: User,
-    list: Uuid,
+#[derive(Deserialize, Component, Debug)]
+struct SearchQuery {
     search: String,
+}
+
+#[utoipa::path(
+    get,
+    path = "/history/{list}",
+    responses(
+        (status = 200, description = "Account ID", body = OkGetHistoryResponse),
+        (status = 400, description = "Invalid request", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    params(
+        ("list" = Uuid, Path, description = "List ID"),
+        ("search" = Option<String>, Query, description = "Substring Search")
+    ),
+    security(
+        ("token" = [])
+    )
+)]
+#[tracing::instrument(skip(db))]
+async fn history_search(
+    Extension(db): Extension<PgPool>,
+    user: User,
+    extract::Path(list): extract::Path<Uuid>,
+    search: Option<Query<SearchQuery>>,
 ) -> Rsp<GetHistoryResponse> {
-    let results = try_rsp!(
+    let results =
         sqlx::query!(
             "SELECT name::text FROM history WHERE list = $1 AND creator = $2 AND name ILIKE '%' || $3 || '%'",
             list,
-            user.id, search
-        )
-        .fetch_all(&**db)
-        .await
-    );
-
-    Rsp::ok(GetHistoryResponse {
-        matches: results
-            .into_iter()
-            .map(|row| row.name)
-            .filter_map(|x| x)
-            .collect(),
-    })
-}
-
-#[openapi(tag = "KabaList")]
-#[patch("/list/<list>/<item>", data = "<update>")]
-async fn update_item(
-    db: &State<Db>,
-    user: User,
-    list: Uuid,
-    item: i32,
-    update: Json<UpdateItemRequest>,
-) -> Rsp<UpdateItemResponse> {
-    try_check_list!(check_list(db, &user.id, &list, true).await);
-
-    let mut tx = try_rsp!(db.begin().await);
-    if let Some(name) = &update.name {
-        try_rsp!(
-            sqlx::query!(
-                "UPDATE lists_content SET name = $1 WHERE list = $2 AND id = $3",
-                name,
-                list,
-                item
-            )
-            .execute(&mut tx)
-            .await
-        );
-    }
-    if let Some(amount) = &update.amount {
-        try_rsp!(
-            sqlx::query!(
-                "UPDATE lists_content SET amount = $1 WHERE list = $2 AND id = $3",
-                amount,
-                list,
-                item
-            )
-            .execute(&mut tx)
-            .await
-        );
-    }
-
-    try_rsp!(tx.commit().await);
-
-    Rsp::ok(UpdateItemResponse {})
-}
-
-#[openapi(tag = "KabaList")]
-#[delete("/list/<list>/<item>")]
-async fn delete_item(db: &State<Db>, user: User, list: Uuid, item: i32) -> Rsp<DeleteItemResponse> {
-    try_check_list!(check_list(db, &user.id, &list, true).await);
-
-    try_rsp!(
-        sqlx::query!(
-            "DELETE FROM lists_content WHERE list = $1 AND id = $2",
-            list,
-            item
-        )
-        .execute(&**db)
-        .await
-    );
-
-    Rsp::ok(DeleteItemResponse {})
-}
-
-#[openapi(tag = "KabaList")]
-#[get("/share/<id>")]
-async fn get_shares(db: &State<Db>, user: User, id: Uuid) -> Rsp<GetSharesResponse> {
-    try_check_list!(check_list(db, &user.id, &id, true).await);
-
-    let shared = try_rsp!(
-        sqlx::query!(
-            "SELECT shared, readonly FROM list_sharing WHERE list = $1",
-            id
-        )
-        .fetch_all(&**db)
-        .await
-    );
-
-    Rsp::ok(GetSharesResponse {
-        public_link: None,
-        shared_with: shared
-            .into_iter()
-            .map(|row| (row.shared, row.readonly))
-            .collect(),
-    })
-}
-
-#[openapi(tag = "KabaList")]
-#[put("/share/<id>", data = "<request>")]
-async fn share_list(
-    db: &State<Db>,
-    user: User,
-    id: Uuid,
-    request: Json<ShareListRequest>,
-) -> Rsp<ShareListResponse> {
-    try_check_list!(check_list(db, &user.id, &id, true).await);
-
-    try_rsp!(
-        sqlx::query!(
-            r#"
-            INSERT INTO list_sharing (list, shared, readonly)
-            VALUES ($1, $2, $3) ON CONFLICT DO NOTHING"#,
-            id,
-            request.share_with,
-            request.readonly
-        )
-        .execute(&**db)
-        .await
-    );
-
-    Rsp::ok(ShareListResponse {})
-}
-
-#[openapi(tag = "KabaList")]
-#[delete("/share/<list>/<account>")]
-async fn unshare(db: &State<Db>, user: User, list: Uuid, account: Uuid) -> Rsp<UnshareResponse> {
-    try_check_list!(is_owner(db, &user.id, &list).await);
-
-    let mut tx = try_rsp!(db.begin().await);
-
-    try_rsp!(
-        sqlx::query!(
-            "DELETE FROM list_sharing WHERE list = $1 AND shared = $2",
-            list,
-            account
-        )
-        .execute(&mut tx)
-        .await
-    );
-
-    try_rsp!(
-        sqlx::query!(
-            "DELETE FROM history WHERE list = $1 AND creator = $2",
-            list,
-            account
-        )
-        .execute(&mut tx)
-        .await
-    );
-
-    try_rsp!(tx.commit().await);
-
-    Rsp::ok(UnshareResponse {})
-}
-
-#[openapi(tag = "KabaList")]
-#[delete("/share/<id>")]
-async fn delete_shares(db: &State<Db>, user: User, id: Uuid) -> Rsp<DeleteShareResponse> {
-    try_check_list!(is_owner(db, &user.id, &id).await);
-
-    let mut tx = try_rsp!(db.begin().await);
-
-    try_rsp!(
-        sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
-            .execute(&mut tx)
-            .await
-    );
-
-    try_rsp!(
-        sqlx::query!(
-            "DELETE FROM history WHERE list = $1 AND creator != $2",
-            id,
             user.id,
+            search.as_ref().map(|Query(q)| -> &str { &q.search }).unwrap_or(""),
         )
-        .execute(&mut tx)
-        .await
+        .fetch_all(&db)
+        .await?;
+
+    OkResponse::ok(GetHistoryResponse {
+        matches: results.into_iter().filter_map(|row| row.name).collect(),
+    })
+}
+
+#[tokio::main]
+async fn main() -> color_eyre::Result<()> {
+    color_eyre::install()?;
+    tracing_subscriber::fmt::init();
+
+    let config: Arc<config::Config> = Arc::new(
+        Figment::from(providers::Serialized::defaults(config::Config::default()))
+            .merge(providers::Toml::file("KabaList.toml"))
+            .merge(providers::Env::prefixed("KABALIST_"))
+            .extract()?,
     );
 
-    try_rsp!(tx.commit().await);
+    tracing::info!("Starting with config: {:#?}", config);
 
-    Rsp::ok(DeleteShareResponse {})
-}
+    let addr = SocketAddr::from((config.listen_addr, config.port));
 
-#[openapi(tag = "KabaList")]
-#[delete("/list/<id>")]
-async fn delete_list(db: &State<Db>, user: User, id: Uuid) -> Rsp<DeleteListResponse> {
-    try_check_list!(is_owner(db, &user.id, &id).await);
-    let mut tx = try_rsp!(db.begin().await);
+    #[derive(OpenApi)]
+    #[openapi(
+        handlers(
+            search_list,
+            search_account,
+            history_search,
+            list::create_list,
+            list::update_item,
+            list::delete_item,
+            list::list_lists,
+            list::read_list,
+            list::add_list,
+            list::delete_list,
+            list::set_public,
+            list::remove_public,
+            list::get_public_list,
+            account::login,
+            account::register,
+            account::recovery_info,
+            account::recover_password,
+            account::get_account_name,
+            share::delete_shares,
+            share::unshare,
+            share::get_shares,
+            share::share_list,
+        ),
+        components(
+            ErrResponse,
+            UserError,
+            Error,
+            SecretString,
+            LoginRequest,
+            LoginResponse,
+            OkLoginResponse, // Imports all other OkResponses
+            CreateListRequest,
+            CreateListResponse,
+            OkCreateListResponse,
+            GetListsResponse,
+            ListInfo,
+            ListStatus,
+            SearchAccountResponse,
+            Item,
+            ReadListResponse,
+            AddToListResponse,
+            AddToListRequest,
+            GetHistoryResponse,
+            UpdateItemRequest,
+            UpdateItemResponse,
+            DeleteItemResponse,
+            DeleteListResponse,
+            UnshareResponse,
+            GetSharesResponse,
+            ShareListRequest,
+            ShareListResponse,
+            DeleteShareResponse,
+            RecoveryInfoResponse,
+            RecoverPasswordRequest,
+            RecoverPasswordResponse,
+            RegisterRequest,
+            RegisterResponse,
+            GetAccountNameResponse,
+            RemovePublicResponse,
+            SetPublicResponse,
+        ),
+        modifiers(&SecurityKey),
+    )]
+    struct ApiDoc;
 
-    try_rsp!(
-        sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
-            .execute(&mut tx)
-            .await
-    );
-    try_rsp!(
-        sqlx::query!("DELETE FROM lists_content WHERE list = $1", id)
-            .execute(&mut tx)
-            .await
-    );
-    try_rsp!(
-        sqlx::query!("DELETE FROM history WHERE list = $1", id)
-            .execute(&mut tx)
-            .await
-    );
-    try_rsp!(
-        sqlx::query!("DELETE FROM lists WHERE id = $1", id)
-            .execute(&mut tx)
-            .await
-    );
+    struct SecurityKey;
 
-    try_rsp!(tx.commit().await);
-
-    Rsp::ok(DeleteListResponse {})
-}
-
-#[openapi(tag = "KabaList")]
-#[post("/register/<id>", data = "<req>")]
-async fn register(db: &State<Db>, id: Uuid, req: Json<RegisterRequest>) -> Rsp<RegisterResponse> {
-    let mut tx = try_rsp!(db.begin().await);
-
-    let mut is_registered =
-        sqlx::query!("SELECT id FROM registrations WHERE id = $1", id).fetch(&mut tx);
-    match is_registered.next().await {
-        None => return Error::RegistrationDoesNotExist.into(),
-        Some(Err(e)) => return e.into(),
-        Some(Ok(_)) => (),
-    }
-    drop(is_registered);
-
-    try_rsp!(
-        sqlx::query!(
-            r#"INSERT INTO accounts (id, name, password)
-               VALUES (uuid_generate_v4(), $1::text::citext, crypt($2, gen_salt('bf')))"#,
-            req.username,
-            req.password
-        )
-        .execute(&mut tx)
-        .await
-    );
-
-    try_rsp!(
-        sqlx::query!("DELETE FROM registrations WHERE id = $1", id)
-            .execute(&mut tx)
-            .await
-    );
-
-    try_rsp!(tx.commit().await);
-
-    Rsp::ok(RegisterResponse {})
-}
-
-#[openapi(tag = "KabaList")]
-#[get("/recover/<id>")]
-async fn recovery_info(db: &State<Db>, id: Uuid) -> Rsp<RecoveryInfoResponse> {
-    let username = try_rsp!(
-        sqlx::query!(
-            r#"SELECT accounts.name::text
-               FROM password_reset,accounts
-               WHERE password_reset.id = $1
-                AND password_reset.account = accounts.id"#,
-            id
-        )
-        .fetch_one(&**db)
-        .await
-    )
-    .name;
-
-    match username {
-        Some(username) => Rsp::ok(RecoveryInfoResponse { username }),
-        None => Error::InvalidRecovery.into(),
-    }
-}
-
-#[openapi(tag = "KabaList")]
-#[post("/recover/<id>", data = "<request>")]
-async fn recover_password(
-    db: &State<Db>,
-    id: Uuid,
-    request: Json<RecoverPasswordRequest>,
-) -> Rsp<RecoverPasswordResponse> {
-    let mut tx = try_rsp!(db.begin().await);
-
-    let account = try_rsp!(
-        sqlx::query!(
-            "SELECT password_reset.account FROM password_reset WHERE id = $1",
-            id
-        )
-        .fetch_one(&mut tx)
-        .await
-    )
-    .account;
-
-    try_rsp!(
-        sqlx::query!("DELETE FROM password_reset WHERE id = $1", id)
-            .execute(&mut tx)
-            .await
-    );
-    try_rsp!(
-        sqlx::query!(
-            "UPDATE accounts SET password = crypt($2, gen_salt('bf')) WHERE id = $1",
-            account,
-            request.password
-        )
-        .execute(&mut tx)
-        .await
-    );
-
-    try_rsp!(tx.commit().await);
-
-    Rsp::ok(RecoverPasswordResponse {})
-}
-
-#[openapi(tag = "KabaList")]
-#[get("/account/<id>/name")]
-async fn get_account_name(db: &State<Db>, _user: User, id: Uuid) -> Rsp<GetAccountNameResponse> {
-    let name = try_rsp!(
-        sqlx::query!("SELECT name::text FROM accounts WHERE id = $1", id)
-            .fetch_one(&**db)
-            .await
-    )
-    .name;
-
-    match name {
-        Some(username) => Rsp::ok(GetAccountNameResponse { username }),
-        None => Error::AccountNotFound.into(),
-    }
-}
-
-#[openapi(tag = "KabaList")]
-#[put("/public/<id>")]
-async fn set_public(db: &State<Db>, id: Uuid, user: User) -> Rsp<SetPublicResponse> {
-    try_check_list!(is_owner(db, &user.id, &id).await);
-
-    try_rsp!(
-        sqlx::query!("UPDATE lists SET pub = true WHERE id = $1", id)
-            .execute(&**db)
-            .await
-    );
-
-    Rsp::ok(SetPublicResponse {})
-}
-
-#[openapi(tag = "KabaList")]
-#[delete("/public/<id>")]
-async fn remove_public(db: &State<Db>, id: Uuid, user: User) -> Rsp<RemovePublicResponse> {
-    try_check_list!(is_owner(db, &user.id, &id).await);
-
-    try_rsp!(
-        sqlx::query!("UPDATE lists SET pub = false WHERE id = $1", id)
-            .execute(&**db)
-            .await
-    );
-
-    Rsp::ok(RemovePublicResponse {})
-}
-
-#[derive(Responder)]
-enum PublicResponse {
-    SqlxError(rocket::response::Debug<sqlx::Error>),
-    NotFound(rocket::response::status::NotFound<()>),
-    Ok(Template),
-}
-
-impl OpenApiResponderInner for PublicResponse {
-    fn responses(
-        gen: &mut rocket_okapi::gen::OpenApiGenerator,
-    ) -> rocket_okapi::Result<openapi3::Responses> {
-        let err = rocket::response::Debug::<sqlx::Error>::responses(gen)?;
-        let not_found = rocket::response::status::NotFound::<()>::responses(gen)?;
-        let template = Template::responses(gen)?;
-
-        produce_any_responses(produce_any_responses(err, not_found)?, template)
-    }
-}
-
-#[derive(Serialize)]
-struct PublicResponseCtx {
-    items: Vec<(String, Option<String>)>,
-}
-
-#[openapi(tag = "KabaList")]
-#[get("/public/<id>")]
-async fn get_public_list(db: &State<Db>, id: Uuid) -> PublicResponse {
-    let pb = match sqlx::query!("SELECT pub FROM lists WHERE id = $1", id)
-        .fetch_one(&**db)
-        .await
-    {
-        Ok(v) => v,
-        Err(e) => return PublicResponse::SqlxError(e.into()),
-    };
-    if !pb.r#pub.unwrap_or(false) {
-        return PublicResponse::NotFound(rocket::response::status::NotFound(()));
-    }
-
-    let contents = match sqlx::query!("SELECT name,amount FROM lists_content WHERE list = $1", id)
-        .fetch_all(&**db)
-        .await
-    {
-        Ok(v) => v,
-        Err(e) => return PublicResponse::SqlxError(e.into()),
-    };
-    let contents = PublicResponseCtx {
-        items: contents
-            .into_iter()
-            .map(|row| (row.name, row.amount))
-            .collect(),
-    };
-
-    PublicResponse::Ok(Template::render("public_list", &contents))
-}
-
-async fn init_db(rocket: Rocket<Build>) -> fairing::Result {
-    use rocket_sync_db_pools::Config;
-
-    let config = match Config::from("sqlx", &rocket) {
-        Ok(config) => config,
-        Err(e) => {
-            error!("Failed to read SQLx config: {}", e);
-            return Err(rocket);
-        }
-    };
-
-    let mut opts = match sqlx::postgres::PgConnectOptions::from_str(&config.url) {
-        Ok(opts) => opts,
-        Err(e) => {
-            error!("Failed to parse pg url: {}", e);
-            return Err(rocket);
-        }
-    };
-
-    opts.disable_statement_logging();
-    let db = match Db::connect_with(opts).await {
-        Ok(db) => db,
-        Err(e) => {
-            error!("Failed to connect to SQLx database: {}", e);
-            return Err(rocket);
-        }
-    };
-
-    /*
-       if let Err(e) = sqlx::migrate!("sqlx/migrations").run(&db).await {
-           error!("Failed to initialize SQLx database: {}", e);
-           return Err(rocket);
-       }
-    */
-
-    Ok(rocket.manage(db))
-}
-
-pub fn deserialize_base64<'de, D>(de: D) -> Result<Vec<u8>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    use rocket::serde::de::Visitor;
-
-    struct DecodingVisitor;
-    impl<'de> Visitor<'de> for DecodingVisitor {
-        type Value = Vec<u8>;
-
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("must be a base 64 string")
-        }
-
-        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
-        {
-            base64::decode(v).map_err(E::custom)
-        }
-    }
-
-    de.deserialize_str(DecodingVisitor)
-}
-
-#[derive(Deserialize, Debug)]
-struct Config {
-    #[serde(deserialize_with = "deserialize_base64")]
-    jwt_secret: Vec<u8>,
-    exp: usize,
-}
-
-struct CORS;
-
-#[rocket::async_trait]
-impl fairing::Fairing for CORS {
-    fn info(&self) -> fairing::Info {
-        fairing::Info {
-            name: "CORS headers",
-            kind: fairing::Kind::Response,
-        }
-    }
-
-    async fn on_response<'r>(&self, _req: &'r rocket::Request<'_>, res: &mut rocket::Response<'r>) {
-        res.adjoin_header(Header::new("Access-Control-Allow-Origin", "*"));
-        res.adjoin_header(Header::new(
-            "Access-Control-Allow-Methods",
-            "POST, GET, DELETE, PUT, OPTIONS, PATCH",
-        ));
-        res.adjoin_header(Header::new("Access-Control-Allow-Headers", "*"));
-        res.adjoin_header(Header::new("Access-Control-Allow-Credentials", "true"));
-    }
-}
-
-struct Options;
-
-#[derive(Clone, Copy)]
-struct OptionsHandler;
-
-#[rocket::async_trait]
-impl rocket::route::Handler for OptionsHandler {
-    async fn handle<'r>(
-        &self,
-        request: &'r rocket::Request<'_>,
-        _data: rocket::Data<'r>,
-    ) -> rocket::route::Outcome<'r> {
-        rocket::route::Outcome::from(request, "")
-    }
-}
-
-#[rocket::async_trait]
-impl fairing::Fairing for Options {
-    fn info(&self) -> fairing::Info {
-        fairing::Info {
-            name: "OPTIONS routes",
-            kind: fairing::Kind::Ignite,
-        }
-    }
-
-    async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
-        let mut routes = HashMap::new();
-        for route in rocket.routes() {
-            if !routes.contains_key(route.uri.as_str()) {
-                let key = route.uri.as_str().to_owned();
-                let mut value = route.clone();
-                value.method = rocket::http::Method::Options;
-                value.handler = Box::new(OptionsHandler);
-                if let Some(name) = &value.name {
-                    value.name = Some(("options_".to_string() + name).into());
-                }
-                routes.insert(key, value);
+    impl Modify for SecurityKey {
+        fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+            if let Some(components) = openapi.components.as_mut() {
+                components.add_security_scheme(
+                    "token",
+                    SecurityScheme::Http(security::Http::new(security::HttpAuthScheme::Bearer)),
+                )
             }
         }
-
-        Ok(rocket.mount("/", routes.into_iter().map(|(_, v)| v).collect::<Vec<_>>()))
     }
-}
 
-#[launch]
-fn rocket() -> _ {
-    rocket::build()
-        .attach(AdHoc::try_on_ignite("SQLx", init_db))
-        .attach(AdHoc::config::<Config>())
-        .attach(CORS)
-        .attach(Options)
-        .attach(Template::fairing())
-        .mount(
-            "/",
-            openapi_get_routes![
-                login,
-                list_lists,
-                create_list,
-                search_list,
-                read_list,
-                add_list,
-                share_list,
-                search_account,
-                delete_shares,
-                delete_item,
-                delete_list,
-                update_item,
-                register,
-                recovery_info,
-                recover_password,
-                unshare,
-                get_shares,
-                get_account_name,
-                set_public,
-                get_public_list,
-                remove_public,
-                history_search,
-            ],
-        )
-        .mount(
-            "/swagger_ui/",
-            make_swagger_ui(&SwaggerUIConfig {
-                url: "../openapi.json".into(),
-                ..Default::default()
-            }),
-        )
-        .mount(
-            "/rapidoc/",
-            make_rapidoc(&RapiDocConfig {
-                general: rapidoc::GeneralConfig {
-                    spec_urls: vec![UrlObject::new("General", "../openapi.json")],
-                    ..Default::default()
-                },
-                hide_show: rapidoc::HideShowConfig {
-                    allow_spec_url_load: false,
-                    allow_spec_file_load: false,
-                    ..Default::default()
-                },
-                ..Default::default()
-            }),
-        )
+    let db = PgPoolOptions::new().connect(&config.database_url).await?;
+
+    let templates = tera::Tera::new("public/*.tera")?;
+
+    let app = Router::new()
+        .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
+        .route("/search/list/:name", get(search_list))
+        .route("/search/account/:name", get(search_account))
+        .route("/history/:id", get(history_search))
+        .nest("/list", list::router())
+        .nest("/share", share::router())
+        .nest("/account", account::router())
+        .layer(Extension(templates))
+        .layer(Extension(config))
+        .layer(Extension(db));
+
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .map_err(Into::into)
 }

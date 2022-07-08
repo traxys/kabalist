@@ -1,0 +1,289 @@
+use std::sync::Arc;
+
+use axum::{
+    async_trait,
+    extract::{self, FromRequest, RequestParts},
+    headers::{authorization::Bearer, Authorization},
+    routing::{get, post},
+    Extension, Json, Router, TypedHeader,
+};
+use jsonwebtoken::DecodingKey;
+use kabalist_types::{
+    GetAccountNameResponse, LoginRequest, LoginResponse, RecoverPasswordRequest,
+    RecoverPasswordResponse, RecoveryInfoResponse, RegisterRequest, RegisterResponse,
+};
+use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
+use tokio_stream::StreamExt;
+use uuid::Uuid;
+
+use crate::{config::Config, Error, OkResponse, Rsp};
+
+#[derive(Debug)]
+pub(crate) struct User {
+    pub id: Uuid,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    sub: Uuid,
+    exp: usize,
+    iat: chrono::DateTime<chrono::Utc>,
+}
+
+#[async_trait]
+impl<B> FromRequest<B> for User
+where
+    B: Send,
+{
+    type Rejection = Error;
+
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        let Extension(config) = Extension::<Arc<Config>>::from_request(req)
+            .await
+            .map_err(|e| {
+                tracing::error!("Could not fetch config extension: {:?}", e);
+                Error::Internal
+            })?;
+
+        let TypedHeader(Authorization(bearer)) =
+            TypedHeader::<Authorization<Bearer>>::from_request(req)
+                .await
+                .map_err(|_| Error::MissingAuthorization)?;
+
+        let decoded = match jsonwebtoken::decode::<Claims>(
+            bearer.token(),
+            &DecodingKey::from_secret(&config.jwt_secret.0),
+            &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256),
+        ) {
+            Err(e) => {
+                tracing::error!("Could not decode JWT: {:?}", e);
+                return Err(Error::InvalidToken);
+            }
+            Ok(d) => d,
+        };
+
+        if decoded.claims.iat + chrono::Duration::seconds(decoded.claims.exp as i64)
+            < chrono::Utc::now()
+        {
+            return Err(Error::TokenExpired);
+        }
+
+        Ok(User {
+            id: decoded.claims.sub,
+        })
+    }
+}
+
+pub(crate) fn router() -> Router {
+    Router::new()
+        .route("/login", post(login))
+        .route("/register/:id", post(register))
+        .route("/recover/:id", get(recovery_info).post(recover_password))
+        .route("/:id/name", get(get_account_name))
+}
+
+/// Generate a JWT in order to use the other routes
+#[utoipa::path(
+    post,
+    path = "/account/login",
+    responses(
+        (status = 200, description = "JWT", body = OkLoginResponse),
+        (status = 404, description = "Unknown Account", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    request_body = LoginRequest,
+)]
+#[tracing::instrument(skip(config, db))]
+async fn login(
+    Extension(config): Extension<Arc<Config>>,
+    Extension(db): Extension<PgPool>,
+    Json(request): Json<LoginRequest>,
+) -> Rsp<LoginResponse> {
+    let mut rsp = sqlx::query!(
+        "SELECT id FROM accounts WHERE name = $1::text::citext AND password = crypt($2, password)",
+        request.username,
+        request.password.0,
+    )
+    .fetch(&db);
+
+    let id = match rsp.next().await {
+        None => return Err(Error::UnknownAccount),
+        Some(Err(e)) => return Err(e.into()),
+        Some(Ok(id)) => id.id,
+    };
+
+    let claims = Claims {
+        sub: id,
+        exp: config.exp,
+        iat: chrono::Utc::now(),
+    };
+
+    let token = match jsonwebtoken::encode(
+        &jsonwebtoken::Header::default(),
+        &claims,
+        &jsonwebtoken::EncodingKey::from_secret(&config.jwt_secret.0),
+    ) {
+        Err(e) => return Err(e.into()),
+        Ok(t) => t,
+    };
+
+    OkResponse::ok(LoginResponse { token })
+}
+
+#[utoipa::path(
+    post,
+    path = "/account/register/{id}",
+    responses(
+        (status = 200, description = "Register Information", body = OkRegisterResponse),
+        (status = 404, description = "Unknown Account", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    params(
+        ("id" = Uuid, Path, description = "Registration ID"),
+    ),
+    request_body = RegisterRequest,
+)]
+#[tracing::instrument(skip(db))]
+async fn register(
+    Extension(db): Extension<PgPool>,
+    extract::Path(id): extract::Path<Uuid>,
+    Json(req): Json<RegisterRequest>,
+) -> Rsp<RegisterResponse> {
+    let mut tx = db.begin().await?;
+
+    let mut is_registered =
+        sqlx::query!("SELECT id FROM registrations WHERE id = $1", id).fetch(&mut tx);
+    match is_registered.next().await {
+        None => return Err(Error::RegistrationDoesNotExist),
+        Some(Err(e)) => return Err(e.into()),
+        Some(Ok(_)) => (),
+    }
+    drop(is_registered);
+
+    sqlx::query!(
+        r#"INSERT INTO accounts (id, name, password)
+               VALUES (uuid_generate_v4(), $1::text::citext, crypt($2, gen_salt('bf')))"#,
+        req.username,
+        req.password
+    )
+    .execute(&mut tx)
+    .await?;
+
+    sqlx::query!("DELETE FROM registrations WHERE id = $1", id)
+        .execute(&mut tx)
+        .await?;
+
+    tx.commit().await?;
+
+    OkResponse::ok(RegisterResponse {})
+}
+
+#[utoipa::path(
+    get,
+    path = "/account/recover/{id}",
+    responses(
+        (status = 200, description = "Recovery Information", body = OkRecoveryInfoResponse),
+        (status = 404, description = "Unknown Account", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    params(
+        ("id" = Uuid, Path, description = "Recovery ID"),
+    ),
+)]
+#[tracing::instrument(skip(db))]
+async fn recovery_info(
+    Extension(db): Extension<PgPool>,
+    extract::Path(id): extract::Path<Uuid>,
+) -> Rsp<RecoveryInfoResponse> {
+    let username = sqlx::query!(
+        r#"SELECT accounts.name::text
+               FROM password_reset,accounts
+               WHERE password_reset.id = $1
+                AND password_reset.account = accounts.id"#,
+        id
+    )
+    .fetch_one(&db)
+    .await?
+    .name;
+
+    match username {
+        Some(username) => OkResponse::ok(RecoveryInfoResponse { username }),
+        None => Err(Error::InvalidRecovery),
+    }
+}
+
+#[utoipa::path(
+    post,
+    path = "/account/recover/{id}",
+    responses(
+        (status = 200, description = "Recovery Information", body = OkRecoverPasswordResponse),
+        (status = 404, description = "Unknown Account", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    params(
+        ("id" = Uuid, Path, description = "Recovery ID"),
+    ),
+    request_body = RecoverPasswordRequest
+)]
+async fn recover_password(
+    Extension(db): Extension<PgPool>,
+    extract::Path(id): extract::Path<Uuid>,
+    Json(request): Json<RecoverPasswordRequest>,
+) -> Rsp<RecoverPasswordResponse> {
+    let mut tx = db.begin().await?;
+
+    let account = sqlx::query!(
+        "SELECT password_reset.account FROM password_reset WHERE id = $1",
+        id
+    )
+    .fetch_one(&mut tx)
+    .await?
+    .account;
+
+    sqlx::query!("DELETE FROM password_reset WHERE id = $1", id)
+        .execute(&mut tx)
+        .await?;
+    sqlx::query!(
+        "UPDATE accounts SET password = crypt($2, gen_salt('bf')) WHERE id = $1",
+        account,
+        request.password
+    )
+    .execute(&mut tx)
+    .await?;
+
+    tx.commit().await?;
+
+    OkResponse::ok(RecoverPasswordResponse {})
+}
+
+#[utoipa::path(
+    get,
+    path = "/account/{id}/name",
+    responses(
+        (status = 200, description = "Account Name", body = OkGetAccountNameResponse),
+        (status = 404, description = "Unknown Account", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    params(
+        ("id" = Uuid, Path, description = "Account ID"),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
+async fn get_account_name(
+    Extension(db): Extension<PgPool>,
+    _user: User,
+    extract::Path(id): extract::Path<Uuid>,
+) -> Rsp<GetAccountNameResponse> {
+    let name = sqlx::query!("SELECT name::text FROM accounts WHERE id = $1", id)
+        .fetch_one(&db)
+        .await?
+        .name;
+
+    match name {
+        Some(username) => OkResponse::ok(GetAccountNameResponse { username }),
+        None => Err(Error::AccountNotFound),
+    }
+}
