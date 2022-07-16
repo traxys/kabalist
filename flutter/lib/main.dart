@@ -1,25 +1,35 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'endpoint.dart';
-import 'package:kabalist_client/api.dart';
+import 'package:kabalist_client/api.dart' as kb;
 
 void main() {
   runApp(MyApp());
 }
 
-KabaListApi apiClient(String? token) {
-	if (token == null) {
-		return KabaListApi(ApiClient(basePath: ENDPOINT));
-	} else {
-		final auth = HttpBearerAuth();
-		auth.accessToken = token;
-		return KabaListApi(ApiClient(authentication: auth, basePath: ENDPOINT));
-	}
+kb.ListApi listApiClient(String token) {
+	final auth = kb.HttpBearerAuth();
+	auth.accessToken = token;
+	return kb.ListApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
+}
+
+kb.AccountApi accountApiClient() {
+	return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT));
+}
+
+kb.CrateApi miscApiClient(String token) {
+	final auth = kb.HttpBearerAuth();
+	auth.accessToken = token;
+	return kb.CrateApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
+}
+
+kb.ShareApi shareApiClient(String token) {
+	final auth = kb.HttpBearerAuth();
+	auth.accessToken = token;
+	return kb.ShareApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
 class MyApp extends StatelessWidget {
@@ -179,12 +189,12 @@ class _LoginFormState extends State<LoginForm> {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
 
-					  final instance = apiClient(null);
-					  final loginRequest = LoginRequest(username: username!, password: password!);
+					  final instance = accountApiClient();
+					  final loginRequest = kb.LoginRequest(username: username!, password: password!);
                       try {
 						final response = await instance.login(loginRequest);
                         widget.getToken(response!.ok.token);
-                      } on ApiException catch (err) {
+                      } on kb.ApiException catch (err) {
                         setState(() {
                           error = err.toString();
                         });
@@ -210,7 +220,7 @@ class ListDrawer extends StatefulWidget {
 
   final void Function() logout;
   final String token;
-  final void Function(String, ListInfo) selectList;
+  final void Function(String, kb.ListInfo) selectList;
   final void Function(String) listDeleted;
   final void Function(List<String>) fetchedList;
   final VoidCallback openSettings;
@@ -220,13 +230,13 @@ class ListDrawer extends StatefulWidget {
   State<ListDrawer> createState() => _ListDrawerState();
 }
 
-String fmtStatus(ListStatus status) {
+String fmtStatus(kb.ListStatus status) {
   switch (status) {
-    case ListStatus.owned:
+    case kb.ListStatus.owned:
       return "";
-    case ListStatus.sharedRead:
+    case kb.ListStatus.sharedRead:
       return " (readonly)";
-    case ListStatus.sharedWrite:
+    case kb.ListStatus.sharedWrite:
       return " (shared)";
 	default:
 	  return "";
@@ -239,10 +249,10 @@ class _ListDrawerState extends State<ListDrawer> {
 
   late String shareName;
   bool shareReadonly = false;
-  late Future<Map<String, ListInfo>> lists;
+  late Future<Map<String, kb.ListInfo>> lists;
 
-  Future<Map<String, ListInfo>> fetchLists() async {
-	final instance = apiClient(widget.token);
+  Future<Map<String, kb.ListInfo>> fetchLists() async {
+	final instance = listApiClient(widget.token);
 	final rsp = (await instance.listLists())!.ok.results;
 
     widget.fetchedList(List.from(rsp.keys));
@@ -251,8 +261,8 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void addList(String name) async {
-	final instance = apiClient(widget.token);
-	final request = CreateListRequest(name: name);
+	final instance = listApiClient(widget.token);
+	final request = kb.CreateListRequest(name: name);
 
 	await instance.createList(request);
 
@@ -262,7 +272,7 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void deleteList(String id) async {
-	final instance = apiClient(widget.token);
+	final instance = listApiClient(widget.token);
 
 	await instance.deleteList(id);
 
@@ -273,14 +283,17 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void shareList(String listId, String shareWith, bool readonly) async {
-	final instance = apiClient(widget.token);
+	final miscInstance = miscApiClient(widget.token);
 
     try {
-	  final account = (await instance.searchAccount(shareWith))!.ok.id;
-	  final request = ShareListRequest(shareWith: account, readonly: readonly);
-	  await instance.shareList(listId, request);
+	  final account = (await miscInstance.searchAccount(shareWith))!.ok.id;
 
-    } on ApiException catch (e) {
+	  final shareInstance = shareApiClient(widget.token);
+
+	  final request = kb.ShareListRequest(shareWith: account, readonly: readonly);
+	  await shareInstance.shareList(listId, request);
+
+    } on kb.ApiException catch (e) {
       setState(() {
         shareError = e.toString();
       });
@@ -295,7 +308,7 @@ class _ListDrawerState extends State<ListDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, ListInfo>>(
+    return FutureBuilder<Map<String, kb.ListInfo>>(
         future: lists,
         builder: (context, snapshots) {
           final names;
@@ -321,7 +334,7 @@ class _ListDrawerState extends State<ListDrawer> {
                             child: Text("Delete List"),
                           )
                         ];
-                        if (entry.value.status != ListStatus.sharedRead) {
+                        if (entry.value.status != kb.ListStatus.sharedRead) {
                           actions.add(SimpleDialogOption(
                             onPressed: () {
                               Navigator.pop(ctx, ListAction.Share);
@@ -413,9 +426,9 @@ class _ListDrawerState extends State<ListDrawer> {
                 })));
           } else if (snapshots.hasError) {
             final error;
-            if (snapshots.error is ApiException) {
+            if (snapshots.error is kb.ApiException) {
               error =
-                  "An error occured: ${(snapshots.error as ApiException).toString()}";
+                  "An error occured: ${(snapshots.error as kb.ApiException).toString()}";
             } else if (snapshots.error is Error) {
 			  print((snapshots.error as Error).stackTrace);
               error = "An unexpected error occured: ${snapshots.error}";
@@ -643,7 +656,7 @@ class ListDesc {
 
   final String id;
   final String name;
-  final ListStatus status;
+  final kb.ListStatus status;
 }
 
 class AddedItemNotifier extends ChangeNotifier {
@@ -772,7 +785,7 @@ class _AuthListsState extends State<AuthLists> {
     final status = lastUsed["status"]!;
     return ListDesc(
         name: lastUsed["name"]!,
-        status: ListStatus.values.firstWhere((e) => e.toString() == status),
+        status: kb.ListStatus.values.firstWhere((e) => e.toString() == status),
         id: lastUsed["id"]!);
   }
 
@@ -799,8 +812,8 @@ class _AuthListsState extends State<AuthLists> {
     } else {
       amt = amount;
     }
-	final instance = apiClient(widget.token);
-	final request = AddToListRequest(name: name, amount: amt);
+	final instance = listApiClient(widget.token);
+	final request = kb.AddToListRequest(name: name, amount: amt);
 
 	await instance.addList(selectedList.value!.id, request);
 
@@ -815,7 +828,7 @@ class _AuthListsState extends State<AuthLists> {
       });
     } else {
       final addItemFn;
-      if (list.status == ListStatus.sharedRead) {
+      if (list.status == kb.ListStatus.sharedRead) {
         addItemFn = null;
       } else {
         addItemFn = () {
@@ -945,9 +958,9 @@ class ItemInput extends StatelessWidget {
 
   // TODO: Maybe not fetch everything, but use the query to narrow instead of doing it client side
   static Future<List<String>> fetchHistory(String listId, String token) async {
-	final instance = apiClient(token);
+	final instance = miscApiClient(token);
 
-	final matches = (await instance.historySearch(listId, ""))!.ok.matches;
+	final matches = (await instance.historySearch(listId, search: null))!.ok.matches;
 
 	return matches.map((String value) => value.toLowerCase()).toList();
   }
@@ -1029,7 +1042,7 @@ class ListContent extends StatefulWidget {
   State<ListContent> createState() => _ListContentState();
 }
 
-Widget renderItem(Item item, bool stricken) {
+Widget renderItem(kb.Item item, bool stricken) {
   return Text("${item.name} ${item.amount == null ? '' : '(${item.amount})'}",
       style: TextStyle(
           decoration: stricken ? TextDecoration.lineThrough : null));
@@ -1039,7 +1052,7 @@ class Contents {
   Contents({required this.items, required this.readonly});
 
   bool readonly;
-  List<Item> items;
+  List<kb.Item> items;
 }
 
 class OptionalContents {
@@ -1071,7 +1084,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       info = widget.list.value!;
     }
 
-	final instance = apiClient(widget.token);
+	final instance = listApiClient(widget.token);
 	final response = (await instance.readList(info.id))!.ok;
 
     setState(() {
@@ -1093,7 +1106,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       });
     } catch (e) {
       final widget;
-      if (e is ApiException) {
+      if (e is kb.ApiException) {
         widget = Text(
             "An error occured while fetching the contents: ${e.toString()}",
             style: TextStyle(color: Colors.red));
@@ -1131,7 +1144,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     updateContents();
 
     this.strickedItems.forEach((itemId) async {
-	  final instance = apiClient(widget.token);
+	  final instance = listApiClient(widget.token);
 	  await instance.deleteItem(info.id, itemId);
 
       setState(() {
@@ -1207,14 +1220,14 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       jsonAmount = editAmount;
     }
 
-	final instance = apiClient(widget.token);
-	final request = UpdateItemRequest(name: jsonName, amount: jsonAmount);
+	final instance = listApiClient(widget.token);
+	final request = kb.UpdateItemRequest(name: jsonName, amount: jsonAmount);
 	await instance.updateItem(info.id, itemId, request);
 
     updateContents();
   }
 
-  void editItem(Item item) {
+  void editItem(kb.Item item) {
     showDialog(
         context: context,
         builder: (BuildContext ctx) {
