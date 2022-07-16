@@ -3,7 +3,7 @@ use kabalist_client::Uuid;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use pages::{home::Home, login::Login, register::Register};
+use pages::{home::Home, login::Login, recover::Recover, register::Register};
 
 #[cfg(feature = "standalone")]
 pub(crate) fn endpoint() -> String {
@@ -31,6 +31,10 @@ enum Route {
     Register,
     #[at("/register/:id")]
     RegisterPrefill { id: Uuid },
+    #[at("/recover")]
+    Recover,
+    #[at("/recover/:id")]
+    RecoverPrefill { id: Uuid },
     #[at("/404")]
     #[not_found]
     NotFound,
@@ -78,6 +82,10 @@ fn route_switch(
         (Route::Register, _) => html! { <Register registration_id={""} /> },
         (Route::RegisterPrefill { id }, _) => {
             html! { <Register registration_id={id.to_string()} /> }
+        }
+        (Route::Recover, _) => html! { <Recover recovery_id={""} /> },
+        (Route::RecoverPrefill { id }, _) => {
+            html! { <Recover recovery_id={id.to_string()} /> }
         }
         (Route::Login, None) => html! { <Login {on_login}/> },
         (Route::NotFound, _) => html! { <h1>{"404"}</h1> },
