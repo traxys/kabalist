@@ -32,7 +32,7 @@ pub(crate) fn router() -> Router {
 
 #[utoipa::path(
     get,
-    path = "/list",
+    path = "/api/list",
     responses(
         (status = 200, description = "Lists", body = OkGetListsResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -98,7 +98,7 @@ pub(crate) async fn list_lists(
 
 #[utoipa::path(
     post,
-    path = "/list",
+    path = "/api/list",
     responses(
         (status = 200, description = "List ID", body = OkLoginResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -141,7 +141,7 @@ pub(crate) async fn create_list(
 
 #[utoipa::path(
     get,
-    path = "/list/{id}",
+    path = "/api/list/{id}",
     responses(
         (status = 200, description = "List Content", body = OkReadListResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -197,7 +197,7 @@ pub(crate) async fn read_list(
 
 #[utoipa::path(
     post,
-    path = "/list/{id}",
+    path = "/api/list/{id}",
     responses(
         (status = 200, description = "New Item", body = OkAddToListResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -250,7 +250,7 @@ pub(crate) async fn add_list(
 
 #[utoipa::path(
     patch,
-    path = "/list/{id}/{item}",
+    path = "/api/list/{id}/{item}",
     responses(
         (status = 200, description = "Update Item", body = OkUpdateItemResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -305,7 +305,7 @@ pub(crate) async fn update_item(
 
 #[utoipa::path(
     delete,
-    path = "/list/{id}/{item}",
+    path = "/api/list/{id}/{item}",
     responses(
         (status = 200, description = "Delete Item", body = OkDeleteItemResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -339,7 +339,7 @@ pub(crate) async fn delete_item(
 
 #[utoipa::path(
     delete,
-    path = "/list/{id}",
+    path = "/api/list/{id}",
     responses(
         (status = 200, description = "List Deleted", body = OkDeleteListResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -381,7 +381,7 @@ pub(crate) async fn delete_list(
 
 #[utoipa::path(
     put,
-    path = "/list/{id}/public",
+    path = "/api/list/{id}/public",
     responses(
         (status = 200, description = "Sucess", body = OkSetPublicResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -411,7 +411,7 @@ async fn set_public(
 
 #[utoipa::path(
     delete,
-    path = "/list/{id}/public",
+    path = "/api/list/{id}/public",
     responses(
         (status = 200, description = "Sucess", body = OkRemovePublicResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -471,7 +471,7 @@ impl IntoResponse for PublicError {
 
 #[utoipa::path(
     get,
-    path = "/list/{id}/public",
+    path = "/api/list/{id}/public",
     responses(
         (status = 200, description = "List", body = String, content_type = "text/html"),
         (status = 404, description = "List Not Found", body = String),

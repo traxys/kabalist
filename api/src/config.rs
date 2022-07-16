@@ -1,6 +1,6 @@
 use std::net::IpAddr;
 
-use serde::{Serialize, Serializer, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 pub(crate) struct Base64(pub(crate) Vec<u8>);
 
@@ -53,6 +53,8 @@ pub(crate) struct Config {
     pub(crate) exp: usize,
     pub(crate) listen_addr: IpAddr,
     pub(crate) port: u16,
+    #[cfg(feature = "frontend")]
+    pub(crate) frontend: Option<std::path::PathBuf>,
 }
 
 impl Default for Config {
@@ -63,6 +65,7 @@ impl Default for Config {
             exp: 1000000,
             listen_addr: [127, 0, 0, 1].into(),
             port: 8080,
+            frontend: None,
         }
     }
 }

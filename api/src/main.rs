@@ -254,7 +254,7 @@ async fn check_list(db: &PgPool, user_id: Uuid, list_id: Uuid, write: bool) -> R
 
 #[utoipa::path(
     get,
-    path = "/search/list/{name}",
+    path = "/api/search/list/{name}",
     responses(
         (status = 200, description = "Lists", body = OkGetListsResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -326,7 +326,7 @@ async fn search_list(
 
 #[utoipa::path(
     get,
-    path = "/search/account/{name}",
+    path = "/api/search/account/{name}",
     responses(
         (status = 200, description = "Account ID", body = OkSearchAccountResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -362,7 +362,7 @@ struct SearchQuery {
 
 #[utoipa::path(
     get,
-    path = "/history/{list}",
+    path = "/api/history/{list}",
     responses(
         (status = 200, description = "Account ID", body = OkGetHistoryResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -499,14 +499,20 @@ async fn main() -> color_eyre::Result<()> {
 
     let templates = tera::Tera::new("public/*.tera")?;
 
-    let app = Router::new()
-        .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
+    let api = Router::new()
         .route("/search/list/:name", get(search_list))
         .route("/search/account/:name", get(search_account))
         .route("/history/:id", get(history_search))
         .nest("/list", list::router())
         .nest("/share", share::router())
-        .nest("/account", account::router())
+        .nest("/account", account::router());
+
+    #[cfg(feature = "frontend")]
+    let frontend = config.frontend.clone();
+
+    let app = Router::new()
+        .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
+        .nest("/api", api)
         .layer(Extension(templates))
         .layer(Extension(config))
         .layer(Extension(db))
@@ -522,6 +528,29 @@ async fn main() -> color_eyre::Result<()> {
                     Method::PUT,
                 ]),
         );
+
+    #[cfg(feature = "frontend")]
+    let app = match frontend {
+        None => app,
+        Some(mut p) => {
+            use axum::routing::get_service;
+
+            async fn handle_error(err: std::io::Error) -> impl IntoResponse {
+                tracing::error!("File serving error: {:?}", err);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong...")
+            }
+
+            app.fallback(
+                get_service(tower_http::services::ServeDir::new(&p).fallback(
+                    tower_http::services::ServeFile::new({
+                        p.push("index.html");
+                        p
+                    }),
+                ))
+                .handle_error(handle_error),
+            )
+        }
+    };
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

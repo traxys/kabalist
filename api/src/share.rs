@@ -22,7 +22,7 @@ pub(crate) fn router() -> Router {
 
 #[utoipa::path(
     get,
-    path = "/share/{id}",
+    path = "/api/share/{id}",
     responses(
         (status = 200, description = "Shared list", body = OkGetSharesResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -61,7 +61,7 @@ async fn get_shares(
 
 #[utoipa::path(
     put,
-    path = "/share/{id}",
+    path = "/api/share/{id}",
     responses(
         (status = 200, description = "Shared list", body = OkShareListResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -100,7 +100,7 @@ async fn share_list(
 
 #[utoipa::path(
     delete,
-    path = "/share/{id}/{account}",
+    path = "/api/share/{id}/{account}",
     responses(
         (status = 200, description = "Shared list", body = OkUnshareResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
@@ -147,7 +147,7 @@ async fn unshare(
 
 #[utoipa::path(
     delete,
-    path = "/share/{id}",
+    path = "/api/share/{id}",
     responses(
         (status = 200, description = "Shared list", body = OkDeleteShareResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),

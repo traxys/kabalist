@@ -86,7 +86,7 @@ pub(crate) fn router() -> Router {
 /// Generate a JWT in order to use the other routes
 #[utoipa::path(
     post,
-    path = "/account/login",
+    path = "/api/account/login",
     responses(
         (status = 200, description = "JWT", body = OkLoginResponse),
         (status = 404, description = "Unknown Account", body = ErrResponse),
@@ -133,7 +133,7 @@ async fn login(
 
 #[utoipa::path(
     post,
-    path = "/account/register/{id}",
+    path = "/api/account/register/{id}",
     responses(
         (status = 200, description = "Register Information", body = OkRegisterResponse),
         (status = 404, description = "Unknown Account", body = ErrResponse),
@@ -181,7 +181,7 @@ async fn register(
 
 #[utoipa::path(
     get,
-    path = "/account/recover/{id}",
+    path = "/api/account/recover/{id}",
     responses(
         (status = 200, description = "Recovery Information", body = OkRecoveryInfoResponse),
         (status = 404, description = "Unknown Account", body = ErrResponse),
@@ -215,7 +215,7 @@ async fn recovery_info(
 
 #[utoipa::path(
     post,
-    path = "/account/recover/{id}",
+    path = "/api/account/recover/{id}",
     responses(
         (status = 200, description = "Recovery Information", body = OkRecoverPasswordResponse),
         (status = 404, description = "Unknown Account", body = ErrResponse),
@@ -259,7 +259,7 @@ async fn recover_password(
 
 #[utoipa::path(
     get,
-    path = "/account/{id}/name",
+    path = "/api/account/{id}/name",
     responses(
         (status = 200, description = "Account Name", body = OkGetAccountNameResponse),
         (status = 404, description = "Unknown Account", body = ErrResponse),
