@@ -2,7 +2,7 @@ use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
     extract::{self, Query},
-    http::StatusCode,
+    http::{header, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::get,
     Extension, Json, Router,
@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio_stream::StreamExt;
+use tower_http::cors::CorsLayer;
 use utoipa::{
     openapi::security::{self, SecurityScheme},
     Component, Modify, OpenApi,
@@ -508,7 +509,19 @@ async fn main() -> color_eyre::Result<()> {
         .nest("/account", account::router())
         .layer(Extension(templates))
         .layer(Extension(config))
-        .layer(Extension(db));
+        .layer(Extension(db))
+        .layer(
+            CorsLayer::new()
+                .allow_origin("*".parse::<HeaderValue>().unwrap())
+                .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
+                .allow_methods([
+                    Method::GET,
+                    Method::PATCH,
+                    Method::POST,
+                    Method::DELETE,
+                    Method::PUT,
+                ]),
+        );
 
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
