@@ -23,17 +23,17 @@ class Error {
 
   num toJson() => value;
 
-  static const n0 = Error._('0');
-  static const n1 = Error._('1');
-  static const n2 = Error._('2');
-  static const n3 = Error._('3');
-  static const n4 = Error._('4');
-  static const n5 = Error._('5');
-  static const n6 = Error._('6');
-  static const n7 = Error._('7');
-  static const n8 = Error._('8');
-  static const n10 = Error._('10');
-  static const n9 = Error._('9');
+  static const n0 = Error._(0);
+  static const n1 = Error._(1);
+  static const n2 = Error._(2);
+  static const n3 = Error._(3);
+  static const n4 = Error._(4);
+  static const n5 = Error._(5);
+  static const n6 = Error._(6);
+  static const n7 = Error._(7);
+  static const n8 = Error._(8);
+  static const n10 = Error._(10);
+  static const n9 = Error._(9);
 
   /// List of all possible values in this [enum][Error].
   static const values = <Error>[
