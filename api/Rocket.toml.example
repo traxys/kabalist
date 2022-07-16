@@ -1,8 +1,0 @@
-[default]
-jwt_secret = "<base 64 string>"
-exp = 10000000000
-address = "0.0.0.0"
-template_dir = "public"
-
-[default.databases.sqlx]
-url = "psql://user:pass@localhost/db"
