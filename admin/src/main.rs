@@ -1,6 +1,6 @@
 use clap::Parser;
 use comfy_table::Table;
-use sqlx::{Connection, PgConnection};
+use sqlx::{types::Uuid, Connection, PgConnection};
 
 struct Context {
     conn: PgConnection,
@@ -34,6 +34,8 @@ enum Actions {
     Users(UserAction),
     #[clap(subcommand)]
     Registration(RegistrationAction),
+    #[clap(subcommand)]
+    Recovery(RecoveryAction),
 }
 
 impl Actions {
@@ -41,6 +43,7 @@ impl Actions {
         match self {
             Actions::Users(a) => a.run(ctx).await,
             Actions::Registration(a) => a.run(ctx).await,
+            Actions::Recovery(a) => a.run(ctx).await,
         }
     }
 }
@@ -104,6 +107,57 @@ impl RegistrationAction {
                 .await?
                 .id;
                 println!("Id = {id}");
+            }
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(clap::Parser, Debug)]
+enum RecoveryAction {
+    New { account: Uuid },
+    List,
+}
+
+impl RecoveryAction {
+    async fn run(self, mut ctx: Context) -> color_eyre::Result<()> {
+        match self {
+            RecoveryAction::New { account } => {
+                let id = sqlx::query!(
+                    "INSERT INTO password_reset (id, account) VALUES (uuid_generate_v4(), $1) RETURNING id",
+                    account,
+                )
+                .fetch_one(&mut ctx.conn)
+                .await?
+                .id;
+                println!("Id = {id}");
+            }
+            RecoveryAction::List => {
+                let regs = sqlx::query!(
+                    "
+                    SELECT password_reset.id,password_reset.account,accounts.name::text
+                    FROM password_reset,accounts
+                    WHERE password_reset.account = accounts.id
+                    "
+                )
+                .fetch_all(&mut ctx.conn)
+                .await?;
+
+                let mut table = Table::new();
+                table.set_header(&["Id", "Account ID", "Account Name"]);
+                for row in regs {
+                    table.add_row(&[
+                        row.id.to_string(),
+                        row.account
+                            .as_ref()
+                            .map(ToString::to_string)
+                            .unwrap_or_default(),
+                        row.name.unwrap_or_default(),
+                    ]);
+                }
+
+                println!("{table}")
             }
         }
 
