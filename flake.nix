@@ -61,6 +61,9 @@
             # Web
             trunk
             wasm-bindgen-cli
+
+			# Docker
+			docker-compose
           ];
         };
     });

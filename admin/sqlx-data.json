@@ -1,0 +1,63 @@
+{
+  "db": "PostgreSQL",
+  "3cb80b81e8cc682530e5a95bb7193ff155ccb8705dde65c319c0403e8614c955": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, name::text FROM accounts"
+  },
+  "a63369bc6cd0e4f4bde2991e1474c342c3db643fcef730c65a98a22e6279a83e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT * FROM registrations"
+  },
+  "bd843e6538afb96b5cd8e91d5d58f02e62925239b81558ddd4d4c0cc42739c98": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "INSERT INTO registrations VALUES (uuid_generate_v4()) RETURNING id"
+  }
+}

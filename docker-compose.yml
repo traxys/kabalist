@@ -1,0 +1,22 @@
+---
+version: '3'
+
+services:
+  database:
+    build: 
+      context: .
+      dockerfile: docker/database/Dockerfile
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=kabalist
+      - DATABASE_URL=postgres://postgres:password@localhost/kabalist
+
+  kabalist:
+    build: 
+      context: .
+      dockerfile: docker/server/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - KABALIST_DATABASE_URL="postgres://postgres:password@database/kabalist"
+
