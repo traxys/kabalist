@@ -55,7 +55,7 @@ class GetListsResponse {
       }());
 
       return GetListsResponse(
-        results: ListInfo.mapFromJson(json[r'results']),
+        results: ListInfo.mapFromJson(json[r'results'!,
       );
     }
     return null;

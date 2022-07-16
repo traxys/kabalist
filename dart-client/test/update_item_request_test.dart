@@ -16,13 +16,13 @@ void main() {
   // final instance = UpdateItemRequest();
 
   group('test UpdateItemRequest', () {
-    // String name
-    test('to test the property `name`', () async {
+    // String amount
+    test('to test the property `amount`', () async {
       // TODO
     });
 
-    // String amount
-    test('to test the property `amount`', () async {
+    // String name
+    test('to test the property `name`', () async {
       // TODO
     });
 

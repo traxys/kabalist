@@ -13,32 +13,32 @@ part of openapi.api;
 class ShareListRequest {
   /// Returns a new [ShareListRequest] instance.
   ShareListRequest({
-    required this.shareWith,
     required this.readonly,
+    required this.shareWith,
   });
-
-  String shareWith;
 
   bool readonly;
 
+  String shareWith;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is ShareListRequest &&
-     other.shareWith == shareWith &&
-     other.readonly == readonly;
+     other.readonly == readonly &&
+     other.shareWith == shareWith;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (shareWith.hashCode) +
-    (readonly.hashCode);
+    (readonly.hashCode) +
+    (shareWith.hashCode);
 
   @override
-  String toString() => 'ShareListRequest[shareWith=$shareWith, readonly=$readonly]';
+  String toString() => 'ShareListRequest[readonly=$readonly, shareWith=$shareWith]';
 
   Map<String, dynamic> toJson() {
     final _json = <String, dynamic>{};
-      _json[r'share_with'] = shareWith;
       _json[r'readonly'] = readonly;
+      _json[r'share_with'] = shareWith;
     return _json;
   }
 
@@ -61,8 +61,8 @@ class ShareListRequest {
       }());
 
       return ShareListRequest(
-        shareWith: mapValueOfType<String>(json, r'share_with')!,
         readonly: mapValueOfType<bool>(json, r'readonly')!,
+        shareWith: mapValueOfType<String>(json, r'share_with')!,
       );
     }
     return null;
@@ -112,8 +112,8 @@ class ShareListRequest {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
-    'share_with',
     'readonly',
+    'share_with',
   };
 }
 

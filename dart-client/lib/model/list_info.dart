@@ -14,37 +14,37 @@ class ListInfo {
   /// Returns a new [ListInfo] instance.
   ListInfo({
     required this.id,
-    required this.status,
     required this.public,
+    required this.status,
   });
 
   String id;
 
-  ListStatus status;
-
   bool public;
+
+  ListStatus status;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is ListInfo &&
      other.id == id &&
-     other.status == status &&
-     other.public == public;
+     other.public == public &&
+     other.status == status;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
     (id.hashCode) +
-    (status.hashCode) +
-    (public.hashCode);
+    (public.hashCode) +
+    (status.hashCode);
 
   @override
-  String toString() => 'ListInfo[id=$id, status=$status, public=$public]';
+  String toString() => 'ListInfo[id=$id, public=$public, status=$status]';
 
   Map<String, dynamic> toJson() {
     final _json = <String, dynamic>{};
       _json[r'id'] = id;
-      _json[r'status'] = status;
       _json[r'public'] = public;
+      _json[r'status'] = status;
     return _json;
   }
 
@@ -68,8 +68,8 @@ class ListInfo {
 
       return ListInfo(
         id: mapValueOfType<String>(json, r'id')!,
-        status: ListStatus.fromJson(json[r'status'])!,
         public: mapValueOfType<bool>(json, r'public')!,
+        status: ListStatus.fromJson(json[r'status'])!,
       );
     }
     return null;
@@ -120,8 +120,8 @@ class ListInfo {
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
     'id',
-    'status',
     'public',
+    'status',
   };
 }
 

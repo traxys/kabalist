@@ -16,13 +16,13 @@ void main() {
   // final instance = RegisterRequest();
 
   group('test RegisterRequest', () {
-    // String username
-    test('to test the property `username`', () async {
+    // String password
+    test('to test the property `password`', () async {
       // TODO
     });
 
-    // String password
-    test('to test the property `password`', () async {
+    // String username
+    test('to test the property `username`', () async {
       // TODO
     });
 

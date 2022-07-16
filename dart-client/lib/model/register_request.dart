@@ -13,32 +13,32 @@ part of openapi.api;
 class RegisterRequest {
   /// Returns a new [RegisterRequest] instance.
   RegisterRequest({
-    required this.username,
     required this.password,
+    required this.username,
   });
-
-  String username;
 
   String password;
 
+  String username;
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is RegisterRequest &&
-     other.username == username &&
-     other.password == password;
+     other.password == password &&
+     other.username == username;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (username.hashCode) +
-    (password.hashCode);
+    (password.hashCode) +
+    (username.hashCode);
 
   @override
-  String toString() => 'RegisterRequest[username=$username, password=$password]';
+  String toString() => 'RegisterRequest[password=$password, username=$username]';
 
   Map<String, dynamic> toJson() {
     final _json = <String, dynamic>{};
-      _json[r'username'] = username;
       _json[r'password'] = password;
+      _json[r'username'] = username;
     return _json;
   }
 
@@ -61,8 +61,8 @@ class RegisterRequest {
       }());
 
       return RegisterRequest(
-        username: mapValueOfType<String>(json, r'username')!,
         password: mapValueOfType<String>(json, r'password')!,
+        username: mapValueOfType<String>(json, r'username')!,
       );
     }
     return null;
@@ -112,8 +112,8 @@ class RegisterRequest {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
-    'username',
     'password',
+    'username',
   };
 }
 

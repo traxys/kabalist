@@ -39,22 +39,21 @@ Please follow the [installation procedure](#installation--usage) and then run th
 ```dart
 import 'package:kabalist_client/api.dart';
 
-// TODO Configure HTTP Bearer authorization: JWT
+// TODO Configure HTTP Bearer authorization: token
 // Case 1. Use String Token
-//defaultApiClient.getAuthentication<HttpBearerAuth>('JWT').setAccessToken('YOUR_ACCESS_TOKEN');
+//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken('YOUR_ACCESS_TOKEN');
 // Case 2. Use Function which generate token.
 // String yourTokenGeneratorFunction() { ... }
-//defaultApiClient.getAuthentication<HttpBearerAuth>('JWT').setAccessToken(yourTokenGeneratorFunction);
+//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken(yourTokenGeneratorFunction);
 
-final api_instance = KabaListApi();
-final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
-final addToListRequest = AddToListRequest(); // AddToListRequest | 
+final api_instance = AccountApi();
+final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | Account ID
 
 try {
-    final result = api_instance.addList(id, addToListRequest);
+    final result = api_instance.getAccountName(id);
     print(result);
 } catch (e) {
-    print('Exception when calling KabaListApi->addList: $e\n');
+    print('Exception when calling AccountApi->getAccountName: $e\n');
 }
 
 ```
@@ -65,28 +64,28 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*KabaListApi* | [**addList**](doc//KabaListApi.md#addlist) | **POST** /list/{id} | 
-*KabaListApi* | [**createList**](doc//KabaListApi.md#createlist) | **POST** /list | 
-*KabaListApi* | [**deleteItem**](doc//KabaListApi.md#deleteitem) | **DELETE** /list/{list}/{item} | 
-*KabaListApi* | [**deleteList**](doc//KabaListApi.md#deletelist) | **DELETE** /list/{id} | 
-*KabaListApi* | [**deleteShares**](doc//KabaListApi.md#deleteshares) | **DELETE** /share/{id} | 
-*KabaListApi* | [**getAccountName**](doc//KabaListApi.md#getaccountname) | **GET** /account/{id}/name | 
-*KabaListApi* | [**getPublicList**](doc//KabaListApi.md#getpubliclist) | **GET** /public/{id} | 
-*KabaListApi* | [**getShares**](doc//KabaListApi.md#getshares) | **GET** /share/{id} | 
-*KabaListApi* | [**historySearch**](doc//KabaListApi.md#historysearch) | **GET** /history/{list} | 
-*KabaListApi* | [**listLists**](doc//KabaListApi.md#listlists) | **GET** /list | 
-*KabaListApi* | [**login**](doc//KabaListApi.md#login) | **POST** /login | 
-*KabaListApi* | [**readList**](doc//KabaListApi.md#readlist) | **GET** /list/{id} | 
-*KabaListApi* | [**recoverPassword**](doc//KabaListApi.md#recoverpassword) | **POST** /recover/{id} | 
-*KabaListApi* | [**recoveryInfo**](doc//KabaListApi.md#recoveryinfo) | **GET** /recover/{id} | 
-*KabaListApi* | [**register**](doc//KabaListApi.md#register) | **POST** /register/{id} | 
-*KabaListApi* | [**removePublic**](doc//KabaListApi.md#removepublic) | **DELETE** /public/{id} | 
-*KabaListApi* | [**searchAccount**](doc//KabaListApi.md#searchaccount) | **GET** /search/account/{name} | 
-*KabaListApi* | [**searchList**](doc//KabaListApi.md#searchlist) | **GET** /search/list/{name} | 
-*KabaListApi* | [**setPublic**](doc//KabaListApi.md#setpublic) | **PUT** /public/{id} | 
-*KabaListApi* | [**shareList**](doc//KabaListApi.md#sharelist) | **PUT** /share/{id} | 
-*KabaListApi* | [**unshare**](doc//KabaListApi.md#unshare) | **DELETE** /share/{list}/{account} | 
-*KabaListApi* | [**updateItem**](doc//KabaListApi.md#updateitem) | **PATCH** /list/{list}/{item} | 
+*AccountApi* | [**getAccountName**](doc//AccountApi.md#getaccountname) | **GET** /account/{id}/name | 
+*AccountApi* | [**login**](doc//AccountApi.md#login) | **POST** /account/login | Generate a JWT in order to use the other routes
+*AccountApi* | [**recoverPassword**](doc//AccountApi.md#recoverpassword) | **POST** /account/recover/{id} | 
+*AccountApi* | [**recoveryInfo**](doc//AccountApi.md#recoveryinfo) | **GET** /account/recover/{id} | 
+*AccountApi* | [**register**](doc//AccountApi.md#register) | **POST** /account/register/{id} | 
+*CrateApi* | [**historySearch**](doc//CrateApi.md#historysearch) | **GET** /history/{list} | 
+*CrateApi* | [**searchAccount**](doc//CrateApi.md#searchaccount) | **GET** /search/account/{name} | 
+*CrateApi* | [**searchList**](doc//CrateApi.md#searchlist) | **GET** /search/list/{name} | 
+*ListApi* | [**addList**](doc//ListApi.md#addlist) | **POST** /list/{id} | 
+*ListApi* | [**createList**](doc//ListApi.md#createlist) | **POST** /list | 
+*ListApi* | [**deleteItem**](doc//ListApi.md#deleteitem) | **DELETE** /list/{id}/{item} | 
+*ListApi* | [**deleteList**](doc//ListApi.md#deletelist) | **DELETE** /list/{id} | 
+*ListApi* | [**getPublicList**](doc//ListApi.md#getpubliclist) | **GET** /list/{id}/public | 
+*ListApi* | [**listLists**](doc//ListApi.md#listlists) | **GET** /list | 
+*ListApi* | [**readList**](doc//ListApi.md#readlist) | **GET** /list/{id} | 
+*ListApi* | [**removePublic**](doc//ListApi.md#removepublic) | **DELETE** /list/{id}/public | 
+*ListApi* | [**setPublic**](doc//ListApi.md#setpublic) | **PUT** /list/{id}/public | 
+*ListApi* | [**updateItem**](doc//ListApi.md#updateitem) | **PATCH** /list/{id}/{item} | 
+*ShareApi* | [**deleteShares**](doc//ShareApi.md#deleteshares) | **DELETE** /share/{id} | 
+*ShareApi* | [**getShares**](doc//ShareApi.md#getshares) | **GET** /share/{id} | 
+*ShareApi* | [**shareList**](doc//ShareApi.md#sharelist) | **PUT** /share/{id} | 
+*ShareApi* | [**unshare**](doc//ShareApi.md#unshare) | **DELETE** /share/{id}/{account} | 
 
 
 ## Documentation For Models
@@ -96,6 +95,7 @@ Class | Method | HTTP request | Description
  - [CreateListRequest](doc//CreateListRequest.md)
  - [CreateListResponse](doc//CreateListResponse.md)
  - [ErrResponse](doc//ErrResponse.md)
+ - [Error](doc//Error.md)
  - [GetAccountNameResponse](doc//GetAccountNameResponse.md)
  - [GetHistoryResponse](doc//GetHistoryResponse.md)
  - [GetListsResponse](doc//GetListsResponse.md)
@@ -105,17 +105,26 @@ Class | Method | HTTP request | Description
  - [ListStatus](doc//ListStatus.md)
  - [LoginRequest](doc//LoginRequest.md)
  - [LoginResponse](doc//LoginResponse.md)
- - [OkResponseForAddToListResponse](doc//OkResponseForAddToListResponse.md)
- - [OkResponseForCreateListResponse](doc//OkResponseForCreateListResponse.md)
- - [OkResponseForEmpty](doc//OkResponseForEmpty.md)
- - [OkResponseForGetAccountNameResponse](doc//OkResponseForGetAccountNameResponse.md)
- - [OkResponseForGetHistoryResponse](doc//OkResponseForGetHistoryResponse.md)
- - [OkResponseForGetListsResponse](doc//OkResponseForGetListsResponse.md)
- - [OkResponseForGetSharesResponse](doc//OkResponseForGetSharesResponse.md)
- - [OkResponseForLoginResponse](doc//OkResponseForLoginResponse.md)
- - [OkResponseForReadListResponse](doc//OkResponseForReadListResponse.md)
- - [OkResponseForRecoveryInfoResponse](doc//OkResponseForRecoveryInfoResponse.md)
- - [OkResponseForSearchAccountResponse](doc//OkResponseForSearchAccountResponse.md)
+ - [OkAddToListResponse](doc//OkAddToListResponse.md)
+ - [OkCreateListResponse](doc//OkCreateListResponse.md)
+ - [OkDeleteItemResponse](doc//OkDeleteItemResponse.md)
+ - [OkDeleteListResponse](doc//OkDeleteListResponse.md)
+ - [OkDeleteShareResponse](doc//OkDeleteShareResponse.md)
+ - [OkGetAccountNameResponse](doc//OkGetAccountNameResponse.md)
+ - [OkGetHistoryResponse](doc//OkGetHistoryResponse.md)
+ - [OkGetListsResponse](doc//OkGetListsResponse.md)
+ - [OkGetSharesResponse](doc//OkGetSharesResponse.md)
+ - [OkLoginResponse](doc//OkLoginResponse.md)
+ - [OkReadListResponse](doc//OkReadListResponse.md)
+ - [OkRecoverPasswordResponse](doc//OkRecoverPasswordResponse.md)
+ - [OkRecoveryInfoResponse](doc//OkRecoveryInfoResponse.md)
+ - [OkRegisterResponse](doc//OkRegisterResponse.md)
+ - [OkRemovePublicResponse](doc//OkRemovePublicResponse.md)
+ - [OkSearchAccountResponse](doc//OkSearchAccountResponse.md)
+ - [OkSetPublicResponse](doc//OkSetPublicResponse.md)
+ - [OkShareListResponse](doc//OkShareListResponse.md)
+ - [OkUnshareResponse](doc//OkUnshareResponse.md)
+ - [OkUpdateItemResponse](doc//OkUpdateItemResponse.md)
  - [ReadListResponse](doc//ReadListResponse.md)
  - [RecoverPasswordRequest](doc//RecoverPasswordRequest.md)
  - [RecoveryInfoResponse](doc//RecoveryInfoResponse.md)
@@ -129,7 +138,7 @@ Class | Method | HTTP request | Description
 ## Documentation For Authorization
 
 
-## JWT
+## token
 
 - **Type**: HTTP Bearer authentication
 

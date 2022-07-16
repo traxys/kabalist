@@ -13,34 +13,40 @@ part of openapi.api;
 class GetSharesResponse {
   /// Returns a new [GetSharesResponse] instance.
   GetSharesResponse({
-    this.sharedWith = const {},
     this.publicLink,
+    this.sharedWith = const {},
   });
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? publicLink;
 
   Map<String, bool> sharedWith;
 
-  String? publicLink;
-
   @override
   bool operator ==(Object other) => identical(this, other) || other is GetSharesResponse &&
-     other.sharedWith == sharedWith &&
-     other.publicLink == publicLink;
+     other.publicLink == publicLink &&
+     other.sharedWith == sharedWith;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (sharedWith.hashCode) +
-    (publicLink == null ? 0 : publicLink!.hashCode);
+    (publicLink == null ? 0 : publicLink!.hashCode) +
+    (sharedWith.hashCode);
 
   @override
-  String toString() => 'GetSharesResponse[sharedWith=$sharedWith, publicLink=$publicLink]';
+  String toString() => 'GetSharesResponse[publicLink=$publicLink, sharedWith=$sharedWith]';
 
   Map<String, dynamic> toJson() {
     final _json = <String, dynamic>{};
-      _json[r'shared_with'] = sharedWith;
     if (publicLink != null) {
       _json[r'public_link'] = publicLink;
     }
+      _json[r'shared_with'] = sharedWith;
     return _json;
   }
 
@@ -63,8 +69,8 @@ class GetSharesResponse {
       }());
 
       return GetSharesResponse(
-        sharedWith: mapCastOfType<String, bool>(json, r'shared_with')!,
         publicLink: mapValueOfType<String>(json, r'public_link'),
+        sharedWith: mapCastOfType<String, bool>(json, r'shared_with')!,
       );
     }
     return null;

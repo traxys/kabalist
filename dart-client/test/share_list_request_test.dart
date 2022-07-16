@@ -16,13 +16,13 @@ void main() {
   // final instance = ShareListRequest();
 
   group('test ShareListRequest', () {
-    // String shareWith
-    test('to test the property `shareWith`', () async {
+    // bool readonly
+    test('to test the property `readonly`', () async {
       // TODO
     });
 
-    // bool readonly
-    test('to test the property `readonly`', () async {
+    // String shareWith
+    test('to test the property `shareWith`', () async {
       // TODO
     });
 

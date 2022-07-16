@@ -13,35 +13,47 @@ part of openapi.api;
 class UpdateItemRequest {
   /// Returns a new [UpdateItemRequest] instance.
   UpdateItemRequest({
-    this.name,
     this.amount,
+    this.name,
   });
 
-  String? name;
-
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
   String? amount;
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? name;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is UpdateItemRequest &&
-     other.name == name &&
-     other.amount == amount;
+     other.amount == amount &&
+     other.name == name;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (name == null ? 0 : name!.hashCode) +
-    (amount == null ? 0 : amount!.hashCode);
+    (amount == null ? 0 : amount!.hashCode) +
+    (name == null ? 0 : name!.hashCode);
 
   @override
-  String toString() => 'UpdateItemRequest[name=$name, amount=$amount]';
+  String toString() => 'UpdateItemRequest[amount=$amount, name=$name]';
 
   Map<String, dynamic> toJson() {
     final _json = <String, dynamic>{};
-    if (name != null) {
-      _json[r'name'] = name;
-    }
     if (amount != null) {
       _json[r'amount'] = amount;
+    }
+    if (name != null) {
+      _json[r'name'] = name;
     }
     return _json;
   }
@@ -65,8 +77,8 @@ class UpdateItemRequest {
       }());
 
       return UpdateItemRequest(
-        name: mapValueOfType<String>(json, r'name'),
         amount: mapValueOfType<String>(json, r'amount'),
+        name: mapValueOfType<String>(json, r'name'),
       );
     }
     return null;

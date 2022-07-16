@@ -17,9 +17,7 @@ class UserError {
     required this.description,
   });
 
-  /// Minimum value: 0
-  /// Maximum value: 7
-  int code;
+  Error code;
 
   String description;
 
@@ -63,7 +61,7 @@ class UserError {
       }());
 
       return UserError(
-        code: mapValueOfType<int>(json, r'code')!,
+        code: Error.fromJson(json[r'code'])!,
         description: mapValueOfType<String>(json, r'description')!,
       );
     }

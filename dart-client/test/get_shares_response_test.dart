@@ -16,13 +16,13 @@ void main() {
   // final instance = GetSharesResponse();
 
   group('test GetSharesResponse', () {
-    // Map<String, bool> sharedWith (default value: const {})
-    test('to test the property `sharedWith`', () async {
+    // String publicLink
+    test('to test the property `publicLink`', () async {
       // TODO
     });
 
-    // String publicLink
-    test('to test the property `publicLink`', () async {
+    // Map<String, bool> sharedWith (default value: const {})
+    test('to test the property `sharedWith`', () async {
       // TODO
     });
 

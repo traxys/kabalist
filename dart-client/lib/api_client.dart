@@ -200,6 +200,8 @@ class ApiClient {
           return CreateListResponse.fromJson(value);
         case 'ErrResponse':
           return ErrResponse.fromJson(value);
+        case 'Error':
+          return ErrorTypeTransformer().decode(value);
         case 'GetAccountNameResponse':
           return GetAccountNameResponse.fromJson(value);
         case 'GetHistoryResponse':
@@ -218,28 +220,46 @@ class ApiClient {
           return LoginRequest.fromJson(value);
         case 'LoginResponse':
           return LoginResponse.fromJson(value);
-        case 'OkResponseForAddToListResponse':
-          return OkResponseForAddToListResponse.fromJson(value);
-        case 'OkResponseForCreateListResponse':
-          return OkResponseForCreateListResponse.fromJson(value);
-        case 'OkResponseForEmpty':
-          return OkResponseForEmpty.fromJson(value);
-        case 'OkResponseForGetAccountNameResponse':
-          return OkResponseForGetAccountNameResponse.fromJson(value);
-        case 'OkResponseForGetHistoryResponse':
-          return OkResponseForGetHistoryResponse.fromJson(value);
-        case 'OkResponseForGetListsResponse':
-          return OkResponseForGetListsResponse.fromJson(value);
-        case 'OkResponseForGetSharesResponse':
-          return OkResponseForGetSharesResponse.fromJson(value);
-        case 'OkResponseForLoginResponse':
-          return OkResponseForLoginResponse.fromJson(value);
-        case 'OkResponseForReadListResponse':
-          return OkResponseForReadListResponse.fromJson(value);
-        case 'OkResponseForRecoveryInfoResponse':
-          return OkResponseForRecoveryInfoResponse.fromJson(value);
-        case 'OkResponseForSearchAccountResponse':
-          return OkResponseForSearchAccountResponse.fromJson(value);
+        case 'OkAddToListResponse':
+          return OkAddToListResponse.fromJson(value);
+        case 'OkCreateListResponse':
+          return OkCreateListResponse.fromJson(value);
+        case 'OkDeleteItemResponse':
+          return OkDeleteItemResponse.fromJson(value);
+        case 'OkDeleteListResponse':
+          return OkDeleteListResponse.fromJson(value);
+        case 'OkDeleteShareResponse':
+          return OkDeleteShareResponse.fromJson(value);
+        case 'OkGetAccountNameResponse':
+          return OkGetAccountNameResponse.fromJson(value);
+        case 'OkGetHistoryResponse':
+          return OkGetHistoryResponse.fromJson(value);
+        case 'OkGetListsResponse':
+          return OkGetListsResponse.fromJson(value);
+        case 'OkGetSharesResponse':
+          return OkGetSharesResponse.fromJson(value);
+        case 'OkLoginResponse':
+          return OkLoginResponse.fromJson(value);
+        case 'OkReadListResponse':
+          return OkReadListResponse.fromJson(value);
+        case 'OkRecoverPasswordResponse':
+          return OkRecoverPasswordResponse.fromJson(value);
+        case 'OkRecoveryInfoResponse':
+          return OkRecoveryInfoResponse.fromJson(value);
+        case 'OkRegisterResponse':
+          return OkRegisterResponse.fromJson(value);
+        case 'OkRemovePublicResponse':
+          return OkRemovePublicResponse.fromJson(value);
+        case 'OkSearchAccountResponse':
+          return OkSearchAccountResponse.fromJson(value);
+        case 'OkSetPublicResponse':
+          return OkSetPublicResponse.fromJson(value);
+        case 'OkShareListResponse':
+          return OkShareListResponse.fromJson(value);
+        case 'OkUnshareResponse':
+          return OkUnshareResponse.fromJson(value);
+        case 'OkUpdateItemResponse':
+          return OkUpdateItemResponse.fromJson(value);
         case 'ReadListResponse':
           return ReadListResponse.fromJson(value);
         case 'RecoverPasswordRequest':

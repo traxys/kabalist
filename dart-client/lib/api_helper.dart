@@ -55,6 +55,9 @@ String parameterToString(dynamic value) {
   if (value is DateTime) {
     return value.toUtc().toIso8601String();
   }
+  if (value is Error) {
+    return ErrorTypeTransformer().encode(value).toString();
+  }
   if (value is ListStatus) {
     return ListStatusTypeTransformer().encode(value).toString();
   }

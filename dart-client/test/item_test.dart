@@ -16,6 +16,11 @@ void main() {
   // final instance = Item();
 
   group('test Item', () {
+    // String amount
+    test('to test the property `amount`', () async {
+      // TODO
+    });
+
     // int id
     test('to test the property `id`', () async {
       // TODO
@@ -23,11 +28,6 @@ void main() {
 
     // String name
     test('to test the property `name`', () async {
-      // TODO
-    });
-
-    // String amount
-    test('to test the property `amount`', () async {
       // TODO
     });
 

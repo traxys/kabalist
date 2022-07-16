@@ -21,13 +21,13 @@ void main() {
       // TODO
     });
 
-    // ListStatus status
-    test('to test the property `status`', () async {
+    // bool public
+    test('to test the property `public`', () async {
       // TODO
     });
 
-    // bool public
-    test('to test the property `public`', () async {
+    // ListStatus status
+    test('to test the property `status`', () async {
       // TODO
     });
 

@@ -13,40 +13,46 @@ part of openapi.api;
 class Item {
   /// Returns a new [Item] instance.
   Item({
+    this.amount,
     required this.id,
     required this.name,
-    this.amount,
   });
+
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
+  String? amount;
 
   int id;
 
   String name;
 
-  String? amount;
-
   @override
   bool operator ==(Object other) => identical(this, other) || other is Item &&
+     other.amount == amount &&
      other.id == id &&
-     other.name == name &&
-     other.amount == amount;
+     other.name == name;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
+    (amount == null ? 0 : amount!.hashCode) +
     (id.hashCode) +
-    (name.hashCode) +
-    (amount == null ? 0 : amount!.hashCode);
+    (name.hashCode);
 
   @override
-  String toString() => 'Item[id=$id, name=$name, amount=$amount]';
+  String toString() => 'Item[amount=$amount, id=$id, name=$name]';
 
   Map<String, dynamic> toJson() {
     final _json = <String, dynamic>{};
-      _json[r'id'] = id;
-      _json[r'name'] = name;
     if (amount != null) {
       _json[r'amount'] = amount;
     }
+      _json[r'id'] = id;
+      _json[r'name'] = name;
     return _json;
   }
 
@@ -69,9 +75,9 @@ class Item {
       }());
 
       return Item(
+        amount: mapValueOfType<String>(json, r'amount'),
         id: mapValueOfType<int>(json, r'id')!,
         name: mapValueOfType<String>(json, r'name')!,
-        amount: mapValueOfType<String>(json, r'amount'),
       );
     }
     return null;

@@ -16,7 +16,7 @@ void main() {
   // final instance = UserError();
 
   group('test UserError', () {
-    // int code
+    // Error code
     test('to test the property `code`', () async {
       // TODO
     });
