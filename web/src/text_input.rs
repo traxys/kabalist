@@ -5,6 +5,7 @@ use yew::prelude::*;
 pub enum Type {
     Password,
     Text,
+    Number,
 }
 
 impl Type {
@@ -12,6 +13,7 @@ impl Type {
         match self {
             Type::Password => "password",
             Type::Text => "text",
+            Type::Number => "number",
         }
     }
 }
