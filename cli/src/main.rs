@@ -87,6 +87,11 @@ pub enum Commands {
         list: String,
         search: String,
     },
+    Register {
+        id: Uuid,
+        username: String,
+        password: Option<String>,
+    },
 }
 
 #[derive(StructOpt, Debug)]
@@ -301,6 +306,16 @@ async fn main() -> color_eyre::Result<()> {
                 .map(Ok)
                 .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
             kabalist_client::recover_password(&args.url, &id, &password).await?;
+        }
+        Commands::Register {
+            id,
+            username,
+            password,
+        } => {
+            let password = password
+                .map(Ok)
+                .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
+            kabalist_client::register(&args.url, id, &username, &password).await?;
         }
         Commands::Shares { token, list } => {
             let client = Client::new(args.url, token);
