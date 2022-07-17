@@ -14,12 +14,13 @@ jobs:
 
       - uses: actions/cache@v2
         with:
+          key: ${{ hashFiles('Cargo.lock') }}
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
 
-      - uses: dtonlnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
         with:
           target: wasm32-unknown-unknown
 
@@ -35,7 +36,7 @@ jobs:
       - name: Bundle Server
         run: |
           mkdir kabalist_server
-          cp target/relase/kabalist_api kabalist_server
+          cp target/release/kabalist_api kabalist_server
           cp -r api/public kabalist_server
           cp -r api/sqlx kabalist_server
           cp -r web/dist kabalist_server
