@@ -1,8 +1,8 @@
+use clap::Parser;
 use kabalist_client::{Client, Uuid};
-use structopt::StructOpt;
 use yansi::Paint;
 
-#[derive(StructOpt, Debug)]
+#[derive(Parser, Debug)]
 pub enum Commands {
     Recover {
         id: Uuid,
@@ -13,76 +13,76 @@ pub enum Commands {
         password: Option<String>,
     },
     Lists {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
     },
     Read {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         name: String,
     },
     Add {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
-        #[structopt(short, long)]
+        #[clap(short, long)]
         list: String,
         name: String,
         amount: Option<String>,
     },
     Share {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
         name: String,
-        #[structopt(short, long)]
+        #[clap(short, long)]
         readonly: bool,
     },
     Shares {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
     },
     Create {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         name: String,
     },
     Unshare {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
-        #[structopt(short, long)]
+        #[clap(short, long)]
         all: bool,
         list: String,
         names: Vec<String>,
     },
     Tick {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
         item: String,
     },
     Update {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
         item: String,
-        #[structopt(short = "n", long = "name")]
+        #[clap(short = 'n', long = "name")]
         new_name: Option<String>,
-        #[structopt(short = "a", long = "amount")]
+        #[clap(short = 'a', long = "amount")]
         new_amount: Option<String>,
     },
     SetPublic {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
     },
     RemovePublic {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
     },
     SearchHistory {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
         search: String,
@@ -93,29 +93,29 @@ pub enum Commands {
         password: Option<String>,
     },
     Pantry {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
     },
     AddPantry {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
         name: String,
         target: i32,
     },
     Refill {
-        #[structopt(short, long, env = "LIST_TOKEN")]
+        #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
         list: String,
     },
 }
 
-#[derive(StructOpt, Debug)]
+#[derive(Parser, Debug)]
 pub struct Args {
-    #[structopt(short, long, env = "LIST_URL")]
+    #[clap(short, long, env = "LIST_URL")]
     url: String,
-    #[structopt(subcommand)]
+    #[clap(subcommand)]
     command: Commands,
 }
 
