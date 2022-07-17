@@ -378,4 +378,49 @@ impl Client {
 
         map_res(rsp)
     }
+
+    pub async fn pantry(&self, list: Uuid) -> Result<GetPantryResponse> {
+        let rsp: RspData<GetPantryResponse> = self
+            .client
+            .get(&format!("{}/pantry/{}", self.url, list))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn refill_pantry(&self, list: Uuid) -> Result<RefillPantryResponse> {
+        let rsp: RspData<RefillPantryResponse> = self
+            .client
+            .post(&format!("{}/pantry/{}/refill", self.url, list))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn add_to_pantry(
+        &self,
+        list: Uuid,
+        name: String,
+        target: i32,
+    ) -> Result<AddToPantryResponse> {
+        let rsp: RspData<AddToPantryResponse> = self
+            .client
+            .post(&format!("{}/pantry/{}", self.url, list))
+            .bearer_auth(&self.token)
+            .json(&AddToPantryRequest { name, target })
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
 }
