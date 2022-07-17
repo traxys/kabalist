@@ -185,3 +185,26 @@ pub type RemovePublicResponse = crate::Empty;
 pub struct GetHistoryResponse {
     pub matches: Vec<String>,
 }
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Component)]
+pub struct PantryItem {
+    pub name: String,
+    pub id: i32,
+    pub amount: i32,
+    pub target: i32,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Component)]
+pub struct GetPantryResponse {
+    pub items: Vec<PantryItem>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Component)]
+pub struct AddToPantryRequest {
+    pub name: String,
+    pub target: i32,
+}
+
+pub type AddToPantryResponse = crate::Empty;
+
+pub type RefillPantryResponse = crate::Empty;
