@@ -1,118 +1,339 @@
-use clap::Parser;
+use std::io;
+
+use clap::{Args, IntoApp, Parser, Subcommand};
+use clap_complete::{generate, Shell};
 use kabalist_client::{Client, Uuid};
 use yansi::Paint;
 
-#[derive(Parser, Debug)]
-pub enum Commands {
-    Recover {
-        id: Uuid,
-        password: Option<String>,
-    },
-    Login {
-        name: String,
-        password: Option<String>,
-    },
-    Lists {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-    },
-    Read {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        name: String,
-    },
+#[derive(Args, Debug)]
+struct ListCommands {
+    #[clap(short, long, env = "LIST_TOKEN")]
+    token: String,
+    list: String,
+    #[clap(subcommand)]
+    action: Option<ListAction>,
+}
+
+impl ListCommands {
+    async fn run(self, url: String) -> color_eyre::Result<()> {
+        let client = Client::new(url.clone(), self.token);
+        let searched = client.search(&self.list).await?.results;
+        let list = match searched.get(&self.list) {
+            None => {
+                println!("Could not read list: {}", yansi::Paint::red("No such list"));
+                return Ok(());
+            }
+            Some(info) => info.id,
+        };
+
+        match self.action {
+            None => {
+                let rsp = client.read(&list).await?;
+                println!(
+                    "Items{}:",
+                    if rsp.readonly {
+                        Paint::new(" (readonly)").italic()
+                    } else {
+                        Paint::new("")
+                    }
+                );
+                for item in rsp.items {
+                    print!("  - {}", Paint::new(&item.name).underline());
+                    if let Some(amount) = &item.amount {
+                        print!(" ({})", amount);
+                    }
+                    println!()
+                }
+            }
+            Some(ListAction::Delete) => {
+                client.delete_list(&list).await?;
+            }
+            Some(ListAction::Add { name, amount }) => {
+                client
+                    .add(&list, &name, amount.as_ref().map(|s| -> &str { s }))
+                    .await?;
+            }
+            Some(ListAction::Item { item, action }) => {
+                action.run(client, list, item).await?;
+            }
+            Some(ListAction::Share { action }) => {
+                ShareAction::run(action, client, list).await?;
+            }
+            Some(ListAction::Public(p)) => {
+                p.run(&url, client, list).await?;
+            }
+            Some(ListAction::History { search }) => {
+                let results = client
+                    .search_history(&list, search.as_ref().map(|s| -> &str { s }).unwrap_or(""))
+                    .await?;
+                for result in results.matches {
+                    println!(" - {}", result);
+                }
+            }
+            Some(ListAction::Pantry { action }) => {
+                PantryAction::run(action, client, list).await?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Subcommand, Debug)]
+enum ListAction {
+    Delete,
     Add {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        #[clap(short, long)]
-        list: String,
         name: String,
         amount: Option<String>,
     },
+    Item {
+        item: String,
+        #[clap(subcommand)]
+        action: ItemAction,
+    },
     Share {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        list: String,
+        #[clap(subcommand)]
+        action: Option<ShareAction>,
+    },
+    #[clap(subcommand)]
+    Public(PublicAction),
+    History {
+        search: Option<String>,
+    },
+    Pantry {
+        #[clap(subcommand)]
+        action: Option<PantryAction>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum ItemAction {
+    Tick,
+    Update {
+        name: Option<String>,
+        amount: Option<String>,
+    },
+}
+
+impl ItemAction {
+    async fn run(self, client: Client, list: Uuid, item: String) -> color_eyre::Result<()> {
+        let items = client.read(&list).await?;
+        let pat = item.to_lowercase();
+        let items: Vec<_> = items
+            .items
+            .iter()
+            .filter(|item| item.name.to_lowercase().contains(&pat))
+            .collect();
+        let selected: i32 = match items.len().cmp(&1) {
+            std::cmp::Ordering::Less => return Ok(()),
+            std::cmp::Ordering::Equal => items[0].id,
+            std::cmp::Ordering::Greater => {
+                println!("Multiple matches, choose item:");
+                for (id, item) in items.iter().enumerate() {
+                    println!("  {}) {}", id, item.name)
+                }
+                let idx: usize = promptly::prompt("Item")?;
+                items[idx].id
+            }
+        };
+
+        match self {
+            ItemAction::Tick => {
+                client.delete_item(&list, selected).await?;
+            }
+            ItemAction::Update { name, amount } => {
+                client
+                    .update_item(&list, selected, name.as_deref(), amount.as_deref())
+                    .await?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Subcommand, Debug)]
+enum ShareAction {
+    Add {
         name: String,
         #[clap(short, long)]
         readonly: bool,
     },
-    Shares {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        list: String,
-    },
-    Create {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        name: String,
-    },
-    Unshare {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        #[clap(short, long)]
+    Delete {
+        #[clap(long)]
         all: bool,
-        list: String,
         names: Vec<String>,
     },
-    Tick {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        list: String,
-        item: String,
+}
+
+impl ShareAction {
+    async fn run(this: Option<Self>, client: Client, list: Uuid) -> color_eyre::Result<()> {
+        match this {
+            Some(a) => match a {
+                ShareAction::Add { name, readonly } => {
+                    let account = client.search_account(&name).await?.id;
+                    client.share(&list, &account, readonly).await?;
+                }
+                ShareAction::Delete { names, all } => {
+                    if all {
+                        client.delete_share(&list).await?;
+                    } else {
+                        for name in names {
+                            let account = client.search_account(&name).await?.id;
+                            client.unshare_with(&list, &account).await?;
+                        }
+                    }
+                }
+            },
+            None => {
+                let rsp = client.get_shares(&list).await?;
+                println!(
+                    "Shares{}:",
+                    match rsp.public_link {
+                        Some(link) => format!(" (public link: {})", link),
+                        None => "".into(),
+                    }
+                );
+                for (account, readonly) in rsp.shared_with {
+                    let account_name = client.account_name(&account).await?.username;
+                    print!("  - {}", Paint::new(account_name).underline());
+                    if readonly {
+                        print!(" (readonly)");
+                    }
+                    println!()
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Subcommand, Debug)]
+enum PublicAction {
+    Set,
+    Remove,
+}
+
+impl PublicAction {
+    async fn run(self, url: &str, client: Client, list: Uuid) -> color_eyre::Result<()> {
+        match self {
+            PublicAction::Set => {
+                client.set_public(&list).await?;
+                println!("Public url is: {}/list/{}/public", url, list);
+            }
+            PublicAction::Remove => {
+                client.remove_public(&list).await?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Subcommand, Debug)]
+enum PantryAction {
+    Add { name: String, target: i32 },
+    Refill,
+}
+
+impl PantryAction {
+    async fn run(this: Option<PantryAction>, client: Client, list: Uuid) -> color_eyre::Result<()> {
+        match this {
+            None => {
+                let rsp = client.pantry(list).await?.items;
+                println!("Pantry:");
+                for item in rsp {
+                    print!("  - {}", Paint::new(&item.name).underline());
+                    println!(" ({}/{})", item.amount, item.target);
+                }
+            }
+            Some(PantryAction::Refill) => {
+                client.refill_pantry(list).await?;
+            }
+            Some(PantryAction::Add { name, target }) => {
+                client.add_to_pantry(list, name, target).await?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Subcommand, Debug)]
+enum AccountCommands {
+    Login {
+        name: String,
+        password: Option<String>,
     },
-    Update {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        list: String,
-        item: String,
-        #[clap(short = 'n', long = "name")]
-        new_name: Option<String>,
-        #[clap(short = 'a', long = "amount")]
-        new_amount: Option<String>,
-    },
-    SetPublic {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        list: String,
-    },
-    RemovePublic {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        list: String,
-    },
-    SearchHistory {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        list: String,
-        search: String,
+    Recover {
+        id: Uuid,
+        password: Option<String>,
     },
     Register {
         id: Uuid,
         username: String,
         password: Option<String>,
     },
-    Pantry {
+}
+
+impl AccountCommands {
+    async fn run(self, url: String) -> color_eyre::Result<()> {
+        match self {
+            AccountCommands::Login { name, password } => {
+                let password = password
+                    .map(Ok)
+                    .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
+                let token = kabalist_client::login(&url, &name, &password).await?;
+                println!("Token: {}", token.token);
+                println!("You can export in as LIST_TOKEN or pass it as parameters");
+            }
+            AccountCommands::Recover { id, password } => {
+                let account_name = kabalist_client::recover_info(&url, &id).await?.username;
+                println!("Recovery for {}", account_name);
+                let password = password
+                    .map(Ok)
+                    .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
+                kabalist_client::recover_password(&url, &id, &password).await?;
+            }
+            AccountCommands::Register {
+                id,
+                username,
+                password,
+            } => {
+                let password = password
+                    .map(Ok)
+                    .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
+                kabalist_client::register(&url, id, &username, &password).await?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Subcommand, Debug)]
+enum ListsActions {
+    Create { list: String },
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    #[clap(subcommand)]
+    Account(AccountCommands),
+    List(ListCommands),
+    Lists {
         #[clap(short, long, env = "LIST_TOKEN")]
         token: String,
-        list: String,
+        #[clap(subcommand)]
+        actions: Option<ListsActions>,
     },
-    AddPantry {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        list: String,
-        name: String,
-        target: i32,
-    },
-    Refill {
-        #[clap(short, long, env = "LIST_TOKEN")]
-        token: String,
-        list: String,
+    Completions {
+        shell: Shell,
     },
 }
 
 #[derive(Parser, Debug)]
-pub struct Args {
+struct Opts {
     #[clap(short, long, env = "LIST_URL")]
     url: String,
     #[clap(subcommand)]
@@ -122,333 +343,41 @@ pub struct Args {
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
-    let args = Args::from_args();
+    let args = Opts::from_args();
+
     match args.command {
-        Commands::Login { name, password } => {
-            let password = password
-                .map(Ok)
-                .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
-            let token = kabalist_client::login(&args.url, &name, &password).await?;
-            println!("Token: {}", token.token);
-            println!("You can export in as LIST_TOKEN or pass it as parameters");
+        Commands::Account(a) => {
+            a.run(args.url).await?;
         }
-        Commands::Lists { token } => {
+        Commands::List(l) => l.run(args.url).await?,
+        Commands::Lists { token, actions } => {
             let client = Client::new(args.url, token);
-            let lists = client.lists().await?;
-            println!("Lists: ");
-            let mut lists = lists.results.into_iter().collect::<Vec<_>>();
-            lists.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
-            for (list, info) in lists {
-                let status = match info.status {
-                    kabalist_client::ListStatus::Owned => "owned",
-                    kabalist_client::ListStatus::SharedWrite => "readonly",
-                    kabalist_client::ListStatus::SharedRead => "shared",
-                };
-                println!("  - {} ({})", yansi::Paint::new(list).italic(), status);
-            }
-        }
-        Commands::Read { token, name } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&name).await?.results;
-            match searched.get(&name) {
-                None => println!("Could not read list: {}", yansi::Paint::red("No such list")),
-                Some(info) => {
-                    let rsp = client.read(&info.id).await?;
-                    println!(
-                        "Items{}:",
-                        if rsp.readonly {
-                            Paint::new(" (readonly)").italic()
-                        } else {
-                            Paint::new("")
-                        }
-                    );
-                    for item in rsp.items {
-                        print!("  - {}", Paint::new(&item.name).underline());
-                        if let Some(amount) = &item.amount {
-                            print!(" ({})", amount);
-                        }
-                        println!()
+            match actions {
+                Some(ListsActions::Create { list }) => {
+                    client.create_list(&list).await?;
+                }
+                None => {
+                    let lists = client.lists().await?;
+                    println!("Lists: ");
+                    let mut lists = lists.results.into_iter().collect::<Vec<_>>();
+                    lists.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
+                    for (list, info) in lists {
+                        let status = match info.status {
+                            kabalist_client::ListStatus::Owned => "owned",
+                            kabalist_client::ListStatus::SharedWrite => "readonly",
+                            kabalist_client::ListStatus::SharedRead => "shared",
+                        };
+                        println!("  - {} ({})", yansi::Paint::new(list).italic(), status);
                     }
                 }
             }
         }
-        Commands::Add {
-            token,
-            list,
-            name,
-            amount,
-        } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!("Could add to list: {}", yansi::Paint::red("No such list")),
-                Some(info) => {
-                    client
-                        .add(&info.id, &name, amount.as_ref().map(|s| -> &str { s }))
-                        .await?;
-                }
-            }
+        Commands::Completions { shell } => {
+            let mut cmd = Opts::command();
+            let name = cmd.get_name().to_string();
+            generate(shell, &mut cmd, name, &mut io::stdout());
         }
-        Commands::Share {
-            token,
-            list,
-            name,
-            readonly,
-        } => {
-            let client = Client::new(args.url, token);
-            let account = client.search_account(&name).await?;
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!(
-                    "Could not share list: {}",
-                    yansi::Paint::red("No such list")
-                ),
-                Some(info) => {
-                    client.share(&info.id, &account.id, readonly).await?;
-                }
-            }
-        }
-        Commands::Create { token, name } => {
-            let client = Client::new(args.url, token);
-            client.create_list(&name).await?;
-        }
-        Commands::Unshare {
-            token,
-            names,
-            list,
-            all,
-        } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!(
-                    "Could not unshare list: {}",
-                    yansi::Paint::red("No such list")
-                ),
-                Some(info) => {
-                    if all {
-                        client.delete_share(&info.id).await?;
-                    } else {
-                        for name in names {
-                            let account = client.search_account(&name).await?.id;
-                            client.unshare_with(&info.id, &account).await?;
-                        }
-                    }
-                }
-            }
-        }
-        Commands::Tick { token, list, item } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!(
-                    "Could not unshare list: {}",
-                    yansi::Paint::red("No such list")
-                ),
-                Some(info) => {
-                    let items = client.read(&info.id).await?;
-                    let pat = item.to_lowercase();
-                    let items: Vec<_> = items
-                        .items
-                        .iter()
-                        .filter(|item| item.name.to_lowercase().contains(&pat))
-                        .collect();
-                    let to_delete: i32 = if items.len() == 1 {
-                        items[0].id
-                    } else if items.len() > 1 {
-                        println!("Choose item to delete:");
-                        for (id, item) in items.iter().enumerate() {
-                            println!("  {}) {}", id, item.name)
-                        }
-                        let idx: usize = promptly::prompt("Item to delete")?;
-                        items[idx].id
-                    } else {
-                        return Ok(());
-                    };
-                    client.delete_item(&info.id, to_delete).await?;
-                }
-            }
-        }
-        Commands::Update {
-            token,
-            list,
-            item,
-            new_name,
-            new_amount,
-        } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!(
-                    "Could not unshare list: {}",
-                    yansi::Paint::red("No such list")
-                ),
-                Some(info) => {
-                    let items = client.read(&info.id).await?;
-                    let pat = item.to_lowercase();
-                    let items: Vec<_> = items
-                        .items
-                        .iter()
-                        .filter(|item| item.name.to_lowercase().contains(&pat))
-                        .collect();
-                    let to_update: i32 = if items.len() == 1 {
-                        items[0].id
-                    } else if items.len() > 1 {
-                        println!("Choose item to update:");
-                        for (id, item) in items.iter().enumerate() {
-                            println!("  {}) {}", id, item.name)
-                        }
-                        let idx: usize = promptly::prompt("Item to delete")?;
-                        items[idx].id
-                    } else {
-                        return Ok(());
-                    };
-                    client
-                        .update_item(
-                            &info.id,
-                            to_update,
-                            new_name.as_deref(),
-                            new_amount.as_deref(),
-                        )
-                        .await?;
-                }
-            }
-        }
-        Commands::Recover { id, password } => {
-            let account_name = kabalist_client::recover_info(&args.url, &id)
-                .await?
-                .username;
-            println!("Recovery for {}", account_name);
-            let password = password
-                .map(Ok)
-                .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
-            kabalist_client::recover_password(&args.url, &id, &password).await?;
-        }
-        Commands::Register {
-            id,
-            username,
-            password,
-        } => {
-            let password = password
-                .map(Ok)
-                .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
-            kabalist_client::register(&args.url, id, &username, &password).await?;
-        }
-        Commands::Shares { token, list } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!(
-                    "Could not get shares for list: {}",
-                    yansi::Paint::red("No such list")
-                ),
-                Some(info) => {
-                    let rsp = client.get_shares(&info.id).await?;
-                    println!(
-                        "Shares{}:",
-                        match rsp.public_link {
-                            Some(link) => format!(" (public link: {})", link),
-                            None => "".into(),
-                        }
-                    );
-                    for (account, readonly) in rsp.shared_with {
-                        let account_name = client.account_name(&account).await?.username;
-                        print!("  - {}", Paint::new(account_name).underline());
-                        if readonly {
-                            print!(" (readonly)");
-                        }
-                        println!()
-                    }
-                }
-            }
-        }
-        Commands::SetPublic { token, list } => {
-            let client = Client::new(args.url.clone(), token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!(
-                    "Could not set list public: {}",
-                    yansi::Paint::red("No such list")
-                ),
-                Some(info) => {
-                    client.set_public(&info.id).await?;
-                    println!("Public url is: {}/public/{}", args.url, info.id);
-                }
-            }
-        }
-        Commands::RemovePublic { token, list } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!(
-                    "Could not remove public list: {}",
-                    yansi::Paint::red("No such list")
-                ),
-                Some(info) => {
-                    client.remove_public(&info.id).await?;
-                }
-            }
-        }
-        Commands::SearchHistory {
-            token,
-            list,
-            search,
-        } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!(
-                    "Could not search in list: {}",
-                    yansi::Paint::red("No such list")
-                ),
-                Some(info) => {
-                    let results = client.search_history(&info.id, &search).await?;
-                    for result in results.matches {
-                        println!(" - {}", result);
-                    }
-                }
-            }
-        }
-        Commands::Pantry { token, list } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!("Could not read list: {}", yansi::Paint::red("No such list")),
-                Some(info) => {
-                    let rsp = client.pantry(info.id).await?.items;
-                    println!("Pantry:");
-                    for item in rsp {
-                        print!("  - {}", Paint::new(&item.name).underline());
-                        println!(" ({}/{})", item.amount, item.target);
-                    }
-                }
-            }
-        }
-        Commands::AddPantry {
-            token,
-            list,
-            name,
-            target,
-        } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!("Could not read list: {}", yansi::Paint::red("No such list")),
-                Some(info) => {
-                    client.add_to_pantry(info.id, name, target).await?;
-                }
-            }
-        }
-        Commands::Refill { token, list } => {
-            let client = Client::new(args.url, token);
-            let searched = client.search(&list).await?.results;
-            match searched.get(&list) {
-                None => println!("Could not read list: {}", yansi::Paint::red("No such list")),
-                Some(info) => {
-                    client.refill_pantry(info.id).await?;
-                }
-            }
-        }
-    }
+    };
+
     Ok(())
 }
