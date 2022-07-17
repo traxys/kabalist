@@ -30,6 +30,7 @@
           nativeBuildInputs = [pkgs.bashInteractive];
 
           DATABASE_URL = "postgres://traxys:traxys@localhost/list";
+		  LIST_URL = "http://localhost:8080/api";
 
           buildInputs = [
             # Flutter
