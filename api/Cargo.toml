@@ -14,7 +14,7 @@ base64 = "0.13.0"
 chrono = { version = "0.4.19", features = ["serde"] }
 jsonwebtoken = "7.2.0"
 serde = "1.0.126"
-kabalist_types = { path = "../types" }
+kabalist_types = { path = "../types", features = ["openapi"] }
 uuid = { version = "1.1.2", features = ["serde"] }
 serde_repr = "0.1.8"
 axum = { version = "0.5", features = ["headers"] }
