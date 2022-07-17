@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+
+      - uses: dtonlnay/rust-toolchain@stable
+        with:
+          target: wasm32-unknown-unknown
+
+      - name: Install Trunk
+        run: cargo install trunk
+
+      - name: Build webapp
+        run: cd web && trunk build --release
+
+      - name: Build All Components
+        run: cargo build --release
+
+      - name: Bundle Server
+        run: |
+          mkdir kabalist_server
+          cp target/relase/kabalist_api kabalist_server
+          cp -r api/public kabalist_server
+          cp -r api/sqlx kabalist_server
+          cp -r web/dist kabalist_server
+          {
+            echo '# jwt_secret = "<base64 secret>"' 
+            echo '# database_url = "postgres:://<user>:<pass>@<host>/<db>"'
+            echo 'frontend = "dist"'
+            echo 'exp = 10000000000'
+            echo 'listen_addr = "127.0.0.1"'
+            echo 'port = 80'
+          } > kabalist_server/KabaList.toml
+          tar cvaf kabalist_server.tgz kabalist_server
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            kabalist_server.tgz
+            target/release/kabalist_cli
+            target/release/kb_admin
+
