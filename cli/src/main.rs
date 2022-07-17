@@ -92,6 +92,23 @@ pub enum Commands {
         username: String,
         password: Option<String>,
     },
+    Pantry {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        list: String,
+    },
+    AddPantry {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        list: String,
+        name: String,
+        target: i32,
+    },
+    Refill {
+        #[structopt(short, long, env = "LIST_TOKEN")]
+        token: String,
+        list: String,
+    },
 }
 
 #[derive(StructOpt, Debug)]
@@ -389,6 +406,46 @@ async fn main() -> color_eyre::Result<()> {
                     for result in results.matches {
                         println!(" - {}", result);
                     }
+                }
+            }
+        }
+        Commands::Pantry { token, list } => {
+            let client = Client::new(args.url, token);
+            let searched = client.search(&list).await?.results;
+            match searched.get(&list) {
+                None => println!("Could not read list: {}", yansi::Paint::red("No such list")),
+                Some(info) => {
+                    let rsp = client.pantry(info.id).await?.items;
+                    println!("Pantry:");
+                    for item in rsp {
+                        print!("  - {}", Paint::new(&item.name).underline());
+                        println!(" ({}/{})", item.amount, item.target);
+                    }
+                }
+            }
+        }
+        Commands::AddPantry {
+            token,
+            list,
+            name,
+            target,
+        } => {
+            let client = Client::new(args.url, token);
+            let searched = client.search(&list).await?.results;
+            match searched.get(&list) {
+                None => println!("Could not read list: {}", yansi::Paint::red("No such list")),
+                Some(info) => {
+                    client.add_to_pantry(info.id, name, target).await?;
+                }
+            }
+        }
+        Commands::Refill { token, list } => {
+            let client = Client::new(args.url, token);
+            let searched = client.search(&list).await?.results;
+            match searched.get(&list) {
+                None => println!("Could not read list: {}", yansi::Paint::red("No such list")),
+                Some(info) => {
+                    client.refill_pantry(info.id).await?;
                 }
             }
         }
