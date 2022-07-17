@@ -423,4 +423,41 @@ impl Client {
 
         map_res(rsp)
     }
+
+    pub async fn edit_pantry_item(
+        &self,
+        list: Uuid,
+        item: i32,
+        amount: Option<i32>,
+        target: Option<i32>,
+    ) -> Result<EditPantryItemResponse> {
+        let rsp: RspData<EditPantryItemResponse> = self
+            .client
+            .patch(&format!("{}/pantry/{}/{}", self.url, list, item))
+            .bearer_auth(&self.token)
+            .json(&EditPantryItemRequest { amount, target })
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
+
+    pub async fn delete_pantry_item(
+        &self,
+        list: Uuid,
+        item: i32,
+    ) -> Result<DeletePantryItemResponse> {
+        let rsp: RspData<DeletePantryItemResponse> = self
+            .client
+            .delete(&format!("{}/pantry/{}/{}", self.url, list, item))
+            .bearer_auth(&self.token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        map_res(rsp)
+    }
 }
