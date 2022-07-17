@@ -232,7 +232,20 @@ impl PublicAction {
 
 #[derive(Subcommand, Debug)]
 enum PantryAction {
-    Add { name: String, target: i32 },
+    Add {
+        name: String,
+        target: i32,
+    },
+    Edit {
+        #[clap(short, long)]
+        target: Option<i32>,
+        #[clap(short, long)]
+        amount: Option<i32>,
+        item: i32,
+    },
+    Delete {
+        item: i32,
+    },
     Refill,
 }
 
@@ -252,6 +265,16 @@ impl PantryAction {
             }
             Some(PantryAction::Add { name, target }) => {
                 client.add_to_pantry(list, name, target).await?;
+            }
+            Some(PantryAction::Delete { item }) => {
+                client.delete_pantry_item(list, item).await?;
+            }
+            Some(PantryAction::Edit {
+                target,
+                amount,
+                item,
+            }) => {
+                client.edit_pantry_item(list, item, amount, target).await?;
             }
         }
 
