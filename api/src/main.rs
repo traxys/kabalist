@@ -527,11 +527,10 @@ async fn main() -> color_eyre::Result<()> {
         .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .nest("/api", api)
         .layer(Extension(templates))
-        .layer(Extension(config))
         .layer(Extension(db))
         .layer(
             CorsLayer::new()
-                .allow_origin("*".parse::<HeaderValue>().unwrap())
+                .allow_origin(config.cors_allow_origin.parse::<HeaderValue>()?)
                 .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
                 .allow_methods([
                     Method::GET,
@@ -540,7 +539,8 @@ async fn main() -> color_eyre::Result<()> {
                     Method::DELETE,
                     Method::PUT,
                 ]),
-        );
+        )
+        .layer(Extension(config));
 
     #[cfg(feature = "frontend")]
     let app = match frontend {
