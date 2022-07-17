@@ -1,2 +1,5 @@
 /target
 .env
+admin/target
+api/target
+.direnv
