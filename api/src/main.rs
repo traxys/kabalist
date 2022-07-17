@@ -26,6 +26,7 @@ use utoipa_swagger_ui::SwaggerUi;
 mod account;
 mod config;
 mod list;
+mod pantry;
 mod share;
 
 pub(crate) use account::User;
@@ -183,6 +184,9 @@ impl From<jsonwebtoken::errors::Error> for Error {
     OkGetAccountNameResponse = OkResponse<GetAccountNameResponse>,
     OkSetPublicResponse = OkResponse<SetPublicResponse>,
     OkRemovePublicResponse = OkResponse<RemovePublicResponse>,
+    OkGetPantryResponse = OkResponse<GetPantryResponse>,
+    OkAddToPantryResponse = OkResponse<AddToPantryResponse>,
+    OkRefillPantryResponse = OkResponse<RefillPantryResponse>,
 )]
 struct OkResponse<T> {
     ok: T,
@@ -439,6 +443,9 @@ async fn main() -> color_eyre::Result<()> {
             share::unshare,
             share::get_shares,
             share::share_list,
+            pantry::get_pantry,
+            pantry::add_to_pantry,
+            pantry::refill_pantry,
         ),
         components(
             ErrResponse,
@@ -477,6 +484,11 @@ async fn main() -> color_eyre::Result<()> {
             GetAccountNameResponse,
             RemovePublicResponse,
             SetPublicResponse,
+            PantryItem,
+            GetPantryResponse,
+            AddToPantryRequest,
+            AddToPantryResponse,
+            RefillPantryResponse,
         ),
         modifiers(&SecurityKey),
     )]
@@ -505,7 +517,8 @@ async fn main() -> color_eyre::Result<()> {
         .route("/history/:id", get(history_search))
         .nest("/list", list::router())
         .nest("/share", share::router())
-        .nest("/account", account::router());
+        .nest("/account", account::router())
+        .nest("/pantry", pantry::router());
 
     #[cfg(feature = "frontend")]
     let frontend = config.frontend.clone();
