@@ -236,3 +236,14 @@ pub struct AddToPantryRequest {
 pub type AddToPantryResponse = crate::Empty;
 
 pub type RefillPantryResponse = crate::Empty;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
+#[cfg_attr(feature = "openapi", derive(Component))]
+pub struct EditPantryItemRequest {
+    pub target: Option<i32>,
+    pub amount: Option<i32>,
+}
+
+pub type EditPantryItemResponse = crate::Empty;
+
+pub type DeletePantryItemResponse = crate::Empty;
