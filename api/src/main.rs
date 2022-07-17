@@ -187,6 +187,8 @@ impl From<jsonwebtoken::errors::Error> for Error {
     OkGetPantryResponse = OkResponse<GetPantryResponse>,
     OkAddToPantryResponse = OkResponse<AddToPantryResponse>,
     OkRefillPantryResponse = OkResponse<RefillPantryResponse>,
+    OkEditPantryItemResponse = OkResponse<EditPantryItemResponse>,
+    OkDeletePantryItemResponse = OkResponse<DeletePantryItemResponse>,
 )]
 struct OkResponse<T> {
     ok: T,
@@ -446,6 +448,8 @@ async fn main() -> color_eyre::Result<()> {
             pantry::get_pantry,
             pantry::add_to_pantry,
             pantry::refill_pantry,
+            pantry::set_pantry_item,
+            pantry::delete_pantry_item,
         ),
         components(
             ErrResponse,
@@ -489,6 +493,9 @@ async fn main() -> color_eyre::Result<()> {
             AddToPantryRequest,
             AddToPantryResponse,
             RefillPantryResponse,
+            EditPantryItemResponse,
+            EditPantryItemRequest,
+            DeletePantryItemResponse,
         ),
         modifiers(&SecurityKey),
     )]

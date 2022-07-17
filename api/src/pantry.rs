@@ -1,10 +1,11 @@
 use axum::{
     extract::Path,
-    routing::{get, post},
+    routing::{get, patch, post},
     Extension, Json, Router,
 };
 use kabalist_types::{
-    AddToPantryRequest, AddToPantryResponse, GetPantryResponse, PantryItem, RefillPantryResponse,
+    AddToPantryRequest, AddToPantryResponse, DeletePantryItemResponse, EditPantryItemRequest,
+    EditPantryItemResponse, GetPantryResponse, PantryItem, RefillPantryResponse,
 };
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -15,6 +16,10 @@ pub(crate) fn router() -> Router {
     Router::new()
         .route("/:id", get(get_pantry).post(add_to_pantry))
         .route("/:id/refill", post(refill_pantry))
+        .route(
+            "/:id/:item",
+            patch(set_pantry_item).delete(delete_pantry_item),
+        )
 }
 
 #[utoipa::path(
@@ -88,6 +93,97 @@ async fn add_to_pantry(
     .await?;
 
     OkResponse::ok(AddToPantryResponse {})
+}
+
+#[utoipa::path(
+    patch,
+    path = "/api/pantry/{id}/{item}",
+    responses(
+        (status = 200, description = "Item Edited", body = OkEditPantryItemResponse),
+        (status = 400, description = "Invalid request", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    request_body = EditPantryItemRequest,
+    params(
+        ("id" = Uuid, Path, description = "List ID"),
+        ("item" = i32, Path, description = "Item ID"),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
+#[tracing::instrument(skip(db))]
+async fn set_pantry_item(
+    Extension(db): Extension<PgPool>,
+    user: User,
+    Path((list, item)): Path<(Uuid, i32)>,
+    Json(request): Json<EditPantryItemRequest>,
+) -> Rsp<EditPantryItemResponse> {
+    check_list(&db, user.id, list, true).await?;
+
+    sqlx::query!(
+        "
+        UPDATE pantry_content
+            SET amount = COALESCE($1, amount),
+                target = COALESCE($2, target)
+            WHERE
+                list = $3 AND item = $4",
+        request.amount,
+        request.target,
+        list,
+        item
+    )
+    .execute(&db)
+    .await?;
+
+    OkResponse::ok(EditPantryItemResponse {})
+}
+
+#[utoipa::path(
+    delete,
+    path = "/api/pantry/{id}/{item}",
+    responses(
+        (status = 200, description = "Item Deleted", body = OkDeletePantryItemResponse),
+        (status = 400, description = "Invalid request", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    params(
+        ("id" = Uuid, Path, description = "List ID"),
+        ("item" = i32, Path, description = "Item ID"),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
+#[tracing::instrument(skip(db))]
+async fn delete_pantry_item(
+    Extension(db): Extension<PgPool>,
+    user: User,
+    Path((list, item)): Path<(Uuid, i32)>,
+) -> Rsp<DeletePantryItemResponse> {
+    check_list(&db, user.id, list, true).await?;
+
+    let mut tx = db.begin().await?;
+
+    sqlx::query!(
+        "DELETE FROM lists_content WHERE from_pantry = $1 AND list = $2",
+        item,
+        list
+    )
+    .execute(&mut tx)
+    .await?;
+
+    sqlx::query!(
+        "DELETE FROM pantry_content WHERE item = $1 AND list = $2",
+        item,
+        list
+    )
+    .execute(&mut tx)
+    .await?;
+
+    tx.commit().await?;
+
+    OkResponse::ok(DeletePantryItemResponse {})
 }
 
 #[utoipa::path(
