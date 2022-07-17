@@ -124,6 +124,50 @@
     },
     "query": "INSERT INTO history (list, creator, name, last_used)\n               VALUES ($1, $2, $3::text::citext, now())\n               ON CONFLICT (list, creator, name) DO\n               UPDATE SET last_used = now()"
   },
+  "2381d4dd463c2526ec1f079edb77ad88089efb844c6ca5da7bc558c21126cb75": {
+    "describe": {
+      "columns": [
+        {
+          "name": "item",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "list",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "name",
+          "ordinal": 2,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "target",
+          "ordinal": 3,
+          "type_info": "Int4"
+        },
+        {
+          "name": "amount",
+          "ordinal": 4,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT * FROM pantry_content WHERE list = $1"
+  },
   "28fdfbb6b061b741d6905bfa6b33448b56654de6dc93ab050ea5989c2352fb3d": {
     "describe": {
       "columns": [],
@@ -136,6 +180,19 @@
       }
     },
     "query": "DELETE FROM list_sharing WHERE list = $1 AND shared = $2"
+  },
+  "405111d9507c468550b0875beb1a277b6be6ee1148ffd6cf3818c33cc43c408a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM lists_content WHERE from_pantry = $1 AND list = $2"
   },
   "465991e893dfb7e1f48aff0470765dcf5ad4f3aced62e5d830c559efa2126ff1": {
     "describe": {
@@ -343,6 +400,33 @@
     },
     "query": "SELECT name::text FROM history WHERE list = $1 AND creator = $2 AND name ILIKE '%' || $3 || '%'"
   },
+  "96ba74fe529ed42448627c4068cdd4f15fccc4a2294a429ac2e8eeee3d4e2482": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int4",
+          "Uuid",
+          "Int4"
+        ]
+      }
+    },
+    "query": "\n        UPDATE pantry_content\n            SET amount = COALESCE($1, amount),\n                target = COALESCE($2, target)\n            WHERE\n                list = $3 AND item = $4"
+  },
+  "9b2b858d7a9b885772a344e350a49b302dbc748dfccec802e33ccc3b037cb47d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "INSERT INTO lists_content (list,name,amount,from_pantry)\n            SELECT list,name,(target - amount) as amount,item as from_pantry\n                FROM pantry_content\n                WHERE amount < target AND list = $1"
+  },
   "a1cfb48b3222c1f3a87255a10c40e92bf75a0d232d70118f209f86e28b00694e": {
     "describe": {
       "columns": [
@@ -362,6 +446,20 @@
       }
     },
     "query": "SELECT password_reset.account FROM password_reset WHERE id = $1"
+  },
+  "a54395edd6ac3064723ae92e2d4492ef0592e757803b7046511db102810ba659": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Varchar",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO pantry_content (list, name, target) VALUES ($1, $2, $3)"
   },
   "ab1a6ce8cecaea9ad7d661fedc964dcadfd1dbaed3a374e2669363c53d0b95c4": {
     "describe": {
@@ -387,6 +485,19 @@
       }
     },
     "query": "INSERT INTO accounts (id, name, password)\n               VALUES (uuid_generate_v4(), $1::text::citext, crypt($2, gen_salt('bf')))"
+  },
+  "b45f9cb7fed7be8be7bf3f640aa051171926dd301d1174efb61f3e9186f9ba08": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE pantry_content\n        SET amount =\n            (SELECT\n                COALESCE(convert_to_integer(lists_content.amount), 0) as added\n            FROM lists_content\n            WHERE lists_content.list = $1 AND lists_content.id = $2)\n        WHERE\n            pantry_content.item =\n                (SELECT lists_content.from_pantry\n                 FROM lists_content\n                 WHERE lists_content.list = $1 AND lists_content.id = $2)"
   },
   "bd494a4a836837f5b02cde9870f4622ccc3270a4425a896d06ee146687bddea7": {
     "describe": {
@@ -703,6 +814,19 @@
       }
     },
     "query": "SELECT id FROM registrations WHERE id = $1"
+  },
+  "fc847fee7a7587795d76c97978920a6daa343113159f46c0580b025a0713ea90": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM pantry_content WHERE item = $1 AND list = $2"
   },
   "feaffd622519b39495814b5161e633a8478aa44b59914be62c29a05328acbe64": {
     "describe": {
