@@ -332,7 +332,7 @@ pub(crate) async fn delete_item(
         "UPDATE pantry_content
         SET amount =
             (SELECT
-                NULLIF(convert_to_integer(lists_content.amount), 0) as added
+                COALESCE(convert_to_integer(lists_content.amount), 0) as added
             FROM lists_content
             WHERE lists_content.list = $1 AND lists_content.id = $2)
         WHERE
