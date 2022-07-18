@@ -1127,6 +1127,22 @@ class _PantryContentState extends State<PantryContent>
     updateContents();
   }
 
+  void decrementItem(kb.PantryItem item) async {
+    ListDesc info;
+    if (widget.list.value == null) {
+      return;
+    } else {
+      info = widget.list.value!;
+    }
+
+    final instance = pantryApiClient(widget.token);
+    final request =
+        kb.EditPantryItemRequest(target: null, amount: item.amount - 1);
+    await instance.setPantryItem(info.id, item.id, request);
+
+    updateContents();
+  }
+
   void doDelete(int itemId) async {
     ListDesc info;
     if (widget.list.value == null) {
@@ -1280,7 +1296,7 @@ class _PantryContentState extends State<PantryContent>
     contents.contents?.items.forEach((item) {
       items.add(ListTile(
           title: Text("${item.name} (${item.amount}/${item.target})"),
-          onTap: () {},
+          onTap: () => decrementItem(item),
           onLongPress: () => editItem(item)));
     });
     bool readOnly = contents.contents?.readonly ?? true;
