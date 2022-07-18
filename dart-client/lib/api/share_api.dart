@@ -26,7 +26,7 @@ class ShareApi {
   ///   List ID
   Future<Response> deleteSharesWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/share/{id}'
+    final path = r'/api/share/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -81,7 +81,7 @@ class ShareApi {
   ///   List ID
   Future<Response> getSharesWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/share/{id}'
+    final path = r'/api/share/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -138,7 +138,7 @@ class ShareApi {
   /// * [ShareListRequest] shareListRequest (required):
   Future<Response> shareListWithHttpInfo(String id, ShareListRequest shareListRequest,) async {
     // ignore: prefer_const_declarations
-    final path = r'/share/{id}'
+    final path = r'/api/share/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -198,7 +198,7 @@ class ShareApi {
   ///   Account ID
   Future<Response> unshareWithHttpInfo(String id, String account,) async {
     // ignore: prefer_const_declarations
-    final path = r'/share/{id}/{account}'
+    final path = r'/api/share/{id}/{account}'
       .replaceAll('{id}', id)
       .replaceAll('{account}', account);
 

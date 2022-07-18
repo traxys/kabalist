@@ -194,10 +194,14 @@ class ApiClient {
           return AddToListRequest.fromJson(value);
         case 'AddToListResponse':
           return AddToListResponse.fromJson(value);
+        case 'AddToPantryRequest':
+          return AddToPantryRequest.fromJson(value);
         case 'CreateListRequest':
           return CreateListRequest.fromJson(value);
         case 'CreateListResponse':
           return CreateListResponse.fromJson(value);
+        case 'EditPantryItemRequest':
+          return EditPantryItemRequest.fromJson(value);
         case 'ErrResponse':
           return ErrResponse.fromJson(value);
         case 'Error':
@@ -208,6 +212,8 @@ class ApiClient {
           return GetHistoryResponse.fromJson(value);
         case 'GetListsResponse':
           return GetListsResponse.fromJson(value);
+        case 'GetPantryResponse':
+          return GetPantryResponse.fromJson(value);
         case 'GetSharesResponse':
           return GetSharesResponse.fromJson(value);
         case 'Item':
@@ -222,20 +228,28 @@ class ApiClient {
           return LoginResponse.fromJson(value);
         case 'OkAddToListResponse':
           return OkAddToListResponse.fromJson(value);
+        case 'OkAddToPantryResponse':
+          return OkAddToPantryResponse.fromJson(value);
         case 'OkCreateListResponse':
           return OkCreateListResponse.fromJson(value);
         case 'OkDeleteItemResponse':
           return OkDeleteItemResponse.fromJson(value);
         case 'OkDeleteListResponse':
           return OkDeleteListResponse.fromJson(value);
+        case 'OkDeletePantryItemResponse':
+          return OkDeletePantryItemResponse.fromJson(value);
         case 'OkDeleteShareResponse':
           return OkDeleteShareResponse.fromJson(value);
+        case 'OkEditPantryItemResponse':
+          return OkEditPantryItemResponse.fromJson(value);
         case 'OkGetAccountNameResponse':
           return OkGetAccountNameResponse.fromJson(value);
         case 'OkGetHistoryResponse':
           return OkGetHistoryResponse.fromJson(value);
         case 'OkGetListsResponse':
           return OkGetListsResponse.fromJson(value);
+        case 'OkGetPantryResponse':
+          return OkGetPantryResponse.fromJson(value);
         case 'OkGetSharesResponse':
           return OkGetSharesResponse.fromJson(value);
         case 'OkLoginResponse':
@@ -246,6 +260,8 @@ class ApiClient {
           return OkRecoverPasswordResponse.fromJson(value);
         case 'OkRecoveryInfoResponse':
           return OkRecoveryInfoResponse.fromJson(value);
+        case 'OkRefillPantryResponse':
+          return OkRefillPantryResponse.fromJson(value);
         case 'OkRegisterResponse':
           return OkRegisterResponse.fromJson(value);
         case 'OkRemovePublicResponse':
@@ -260,6 +276,8 @@ class ApiClient {
           return OkUnshareResponse.fromJson(value);
         case 'OkUpdateItemResponse':
           return OkUpdateItemResponse.fromJson(value);
+        case 'PantryItem':
+          return PantryItem.fromJson(value);
         case 'ReadListResponse':
           return ReadListResponse.fromJson(value);
         case 'RecoverPasswordRequest':

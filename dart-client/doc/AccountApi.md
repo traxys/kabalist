@@ -9,11 +9,11 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**getAccountName**](AccountApi.md#getaccountname) | **GET** /account/{id}/name | 
-[**login**](AccountApi.md#login) | **POST** /account/login | Generate a JWT in order to use the other routes
-[**recoverPassword**](AccountApi.md#recoverpassword) | **POST** /account/recover/{id} | 
-[**recoveryInfo**](AccountApi.md#recoveryinfo) | **GET** /account/recover/{id} | 
-[**register**](AccountApi.md#register) | **POST** /account/register/{id} | 
+[**getAccountName**](AccountApi.md#getaccountname) | **GET** /api/account/{id}/name | 
+[**login**](AccountApi.md#login) | **POST** /api/account/login | Generate a JWT in order to use the other routes
+[**recoverPassword**](AccountApi.md#recoverpassword) | **POST** /api/account/recover/{id} | 
+[**recoveryInfo**](AccountApi.md#recoveryinfo) | **GET** /api/account/recover/{id} | 
+[**register**](AccountApi.md#register) | **POST** /api/account/register/{id} | 
 
 
 # **getAccountName**

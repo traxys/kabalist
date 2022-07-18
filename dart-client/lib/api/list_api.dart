@@ -28,7 +28,7 @@ class ListApi {
   /// * [AddToListRequest] addToListRequest (required):
   Future<Response> addListWithHttpInfo(String id, AddToListRequest addToListRequest,) async {
     // ignore: prefer_const_declarations
-    final path = r'/list/{id}'
+    final path = r'/api/list/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -84,7 +84,7 @@ class ListApi {
   /// * [CreateListRequest] createListRequest (required):
   Future<Response> createListWithHttpInfo(CreateListRequest createListRequest,) async {
     // ignore: prefer_const_declarations
-    final path = r'/list';
+    final path = r'/api/list';
 
     // ignore: prefer_final_locals
     Object? postBody = createListRequest;
@@ -140,7 +140,7 @@ class ListApi {
   ///   Item ID
   Future<Response> deleteItemWithHttpInfo(String id, int item,) async {
     // ignore: prefer_const_declarations
-    final path = r'/list/{id}/{item}'
+    final path = r'/api/list/{id}/{item}'
       .replaceAll('{id}', id)
       .replaceAll('{item}', item.toString());
 
@@ -199,7 +199,7 @@ class ListApi {
   ///   List ID
   Future<Response> deleteListWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/list/{id}'
+    final path = r'/api/list/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -254,7 +254,7 @@ class ListApi {
   ///   List ID
   Future<Response> getPublicListWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/list/{id}/public'
+    final path = r'/api/list/{id}/public'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -304,7 +304,7 @@ class ListApi {
   /// Note: This method returns the HTTP [Response].
   Future<Response> listListsWithHttpInfo() async {
     // ignore: prefer_const_declarations
-    final path = r'/list';
+    final path = r'/api/list';
 
     // ignore: prefer_final_locals
     Object? postBody;
@@ -353,7 +353,7 @@ class ListApi {
   ///   List ID
   Future<Response> readListWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/list/{id}'
+    final path = r'/api/list/{id}'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -408,7 +408,7 @@ class ListApi {
   ///   List ID
   Future<Response> removePublicWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/list/{id}/public'
+    final path = r'/api/list/{id}/public'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -463,7 +463,7 @@ class ListApi {
   ///   List ID
   Future<Response> setPublicWithHttpInfo(String id,) async {
     // ignore: prefer_const_declarations
-    final path = r'/list/{id}/public'
+    final path = r'/api/list/{id}/public'
       .replaceAll('{id}', id);
 
     // ignore: prefer_final_locals
@@ -523,7 +523,7 @@ class ListApi {
   /// * [UpdateItemRequest] updateItemRequest (required):
   Future<Response> updateItemWithHttpInfo(String id, int item, UpdateItemRequest updateItemRequest,) async {
     // ignore: prefer_const_declarations
-    final path = r'/list/{id}/{item}'
+    final path = r'/api/list/{id}/{item}'
       .replaceAll('{id}', id)
       .replaceAll('{item}', item.toString());
 

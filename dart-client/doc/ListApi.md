@@ -9,16 +9,16 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**addList**](ListApi.md#addlist) | **POST** /list/{id} | 
-[**createList**](ListApi.md#createlist) | **POST** /list | 
-[**deleteItem**](ListApi.md#deleteitem) | **DELETE** /list/{id}/{item} | 
-[**deleteList**](ListApi.md#deletelist) | **DELETE** /list/{id} | 
-[**getPublicList**](ListApi.md#getpubliclist) | **GET** /list/{id}/public | 
-[**listLists**](ListApi.md#listlists) | **GET** /list | 
-[**readList**](ListApi.md#readlist) | **GET** /list/{id} | 
-[**removePublic**](ListApi.md#removepublic) | **DELETE** /list/{id}/public | 
-[**setPublic**](ListApi.md#setpublic) | **PUT** /list/{id}/public | 
-[**updateItem**](ListApi.md#updateitem) | **PATCH** /list/{id}/{item} | 
+[**addList**](ListApi.md#addlist) | **POST** /api/list/{id} | 
+[**createList**](ListApi.md#createlist) | **POST** /api/list | 
+[**deleteItem**](ListApi.md#deleteitem) | **DELETE** /api/list/{id}/{item} | 
+[**deleteList**](ListApi.md#deletelist) | **DELETE** /api/list/{id} | 
+[**getPublicList**](ListApi.md#getpubliclist) | **GET** /api/list/{id}/public | 
+[**listLists**](ListApi.md#listlists) | **GET** /api/list | 
+[**readList**](ListApi.md#readlist) | **GET** /api/list/{id} | 
+[**removePublic**](ListApi.md#removepublic) | **DELETE** /api/list/{id}/public | 
+[**setPublic**](ListApi.md#setpublic) | **PUT** /api/list/{id}/public | 
+[**updateItem**](ListApi.md#updateitem) | **PATCH** /api/list/{id}/{item} | 
 
 
 # **addList**

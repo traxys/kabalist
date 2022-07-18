@@ -64,41 +64,49 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*AccountApi* | [**getAccountName**](doc//AccountApi.md#getaccountname) | **GET** /account/{id}/name | 
-*AccountApi* | [**login**](doc//AccountApi.md#login) | **POST** /account/login | Generate a JWT in order to use the other routes
-*AccountApi* | [**recoverPassword**](doc//AccountApi.md#recoverpassword) | **POST** /account/recover/{id} | 
-*AccountApi* | [**recoveryInfo**](doc//AccountApi.md#recoveryinfo) | **GET** /account/recover/{id} | 
-*AccountApi* | [**register**](doc//AccountApi.md#register) | **POST** /account/register/{id} | 
-*CrateApi* | [**historySearch**](doc//CrateApi.md#historysearch) | **GET** /history/{list} | 
-*CrateApi* | [**searchAccount**](doc//CrateApi.md#searchaccount) | **GET** /search/account/{name} | 
-*CrateApi* | [**searchList**](doc//CrateApi.md#searchlist) | **GET** /search/list/{name} | 
-*ListApi* | [**addList**](doc//ListApi.md#addlist) | **POST** /list/{id} | 
-*ListApi* | [**createList**](doc//ListApi.md#createlist) | **POST** /list | 
-*ListApi* | [**deleteItem**](doc//ListApi.md#deleteitem) | **DELETE** /list/{id}/{item} | 
-*ListApi* | [**deleteList**](doc//ListApi.md#deletelist) | **DELETE** /list/{id} | 
-*ListApi* | [**getPublicList**](doc//ListApi.md#getpubliclist) | **GET** /list/{id}/public | 
-*ListApi* | [**listLists**](doc//ListApi.md#listlists) | **GET** /list | 
-*ListApi* | [**readList**](doc//ListApi.md#readlist) | **GET** /list/{id} | 
-*ListApi* | [**removePublic**](doc//ListApi.md#removepublic) | **DELETE** /list/{id}/public | 
-*ListApi* | [**setPublic**](doc//ListApi.md#setpublic) | **PUT** /list/{id}/public | 
-*ListApi* | [**updateItem**](doc//ListApi.md#updateitem) | **PATCH** /list/{id}/{item} | 
-*ShareApi* | [**deleteShares**](doc//ShareApi.md#deleteshares) | **DELETE** /share/{id} | 
-*ShareApi* | [**getShares**](doc//ShareApi.md#getshares) | **GET** /share/{id} | 
-*ShareApi* | [**shareList**](doc//ShareApi.md#sharelist) | **PUT** /share/{id} | 
-*ShareApi* | [**unshare**](doc//ShareApi.md#unshare) | **DELETE** /share/{id}/{account} | 
+*AccountApi* | [**getAccountName**](doc//AccountApi.md#getaccountname) | **GET** /api/account/{id}/name | 
+*AccountApi* | [**login**](doc//AccountApi.md#login) | **POST** /api/account/login | Generate a JWT in order to use the other routes
+*AccountApi* | [**recoverPassword**](doc//AccountApi.md#recoverpassword) | **POST** /api/account/recover/{id} | 
+*AccountApi* | [**recoveryInfo**](doc//AccountApi.md#recoveryinfo) | **GET** /api/account/recover/{id} | 
+*AccountApi* | [**register**](doc//AccountApi.md#register) | **POST** /api/account/register/{id} | 
+*CrateApi* | [**historySearch**](doc//CrateApi.md#historysearch) | **GET** /api/history/{list} | 
+*CrateApi* | [**searchAccount**](doc//CrateApi.md#searchaccount) | **GET** /api/search/account/{name} | 
+*CrateApi* | [**searchList**](doc//CrateApi.md#searchlist) | **GET** /api/search/list/{name} | 
+*ListApi* | [**addList**](doc//ListApi.md#addlist) | **POST** /api/list/{id} | 
+*ListApi* | [**createList**](doc//ListApi.md#createlist) | **POST** /api/list | 
+*ListApi* | [**deleteItem**](doc//ListApi.md#deleteitem) | **DELETE** /api/list/{id}/{item} | 
+*ListApi* | [**deleteList**](doc//ListApi.md#deletelist) | **DELETE** /api/list/{id} | 
+*ListApi* | [**getPublicList**](doc//ListApi.md#getpubliclist) | **GET** /api/list/{id}/public | 
+*ListApi* | [**listLists**](doc//ListApi.md#listlists) | **GET** /api/list | 
+*ListApi* | [**readList**](doc//ListApi.md#readlist) | **GET** /api/list/{id} | 
+*ListApi* | [**removePublic**](doc//ListApi.md#removepublic) | **DELETE** /api/list/{id}/public | 
+*ListApi* | [**setPublic**](doc//ListApi.md#setpublic) | **PUT** /api/list/{id}/public | 
+*ListApi* | [**updateItem**](doc//ListApi.md#updateitem) | **PATCH** /api/list/{id}/{item} | 
+*PantryApi* | [**addToPantry**](doc//PantryApi.md#addtopantry) | **POST** /api/pantry/{id} | 
+*PantryApi* | [**deletePantryItem**](doc//PantryApi.md#deletepantryitem) | **DELETE** /api/pantry/{id}/{item} | 
+*PantryApi* | [**getPantry**](doc//PantryApi.md#getpantry) | **GET** /api/pantry/{id} | 
+*PantryApi* | [**refillPantry**](doc//PantryApi.md#refillpantry) | **POST** /api/pantry/{id}/refill | 
+*PantryApi* | [**setPantryItem**](doc//PantryApi.md#setpantryitem) | **PATCH** /api/pantry/{id}/{item} | 
+*ShareApi* | [**deleteShares**](doc//ShareApi.md#deleteshares) | **DELETE** /api/share/{id} | 
+*ShareApi* | [**getShares**](doc//ShareApi.md#getshares) | **GET** /api/share/{id} | 
+*ShareApi* | [**shareList**](doc//ShareApi.md#sharelist) | **PUT** /api/share/{id} | 
+*ShareApi* | [**unshare**](doc//ShareApi.md#unshare) | **DELETE** /api/share/{id}/{account} | 
 
 
 ## Documentation For Models
 
  - [AddToListRequest](doc//AddToListRequest.md)
  - [AddToListResponse](doc//AddToListResponse.md)
+ - [AddToPantryRequest](doc//AddToPantryRequest.md)
  - [CreateListRequest](doc//CreateListRequest.md)
  - [CreateListResponse](doc//CreateListResponse.md)
+ - [EditPantryItemRequest](doc//EditPantryItemRequest.md)
  - [ErrResponse](doc//ErrResponse.md)
  - [Error](doc//Error.md)
  - [GetAccountNameResponse](doc//GetAccountNameResponse.md)
  - [GetHistoryResponse](doc//GetHistoryResponse.md)
  - [GetListsResponse](doc//GetListsResponse.md)
+ - [GetPantryResponse](doc//GetPantryResponse.md)
  - [GetSharesResponse](doc//GetSharesResponse.md)
  - [Item](doc//Item.md)
  - [ListInfo](doc//ListInfo.md)
@@ -106,18 +114,23 @@ Class | Method | HTTP request | Description
  - [LoginRequest](doc//LoginRequest.md)
  - [LoginResponse](doc//LoginResponse.md)
  - [OkAddToListResponse](doc//OkAddToListResponse.md)
+ - [OkAddToPantryResponse](doc//OkAddToPantryResponse.md)
  - [OkCreateListResponse](doc//OkCreateListResponse.md)
  - [OkDeleteItemResponse](doc//OkDeleteItemResponse.md)
  - [OkDeleteListResponse](doc//OkDeleteListResponse.md)
+ - [OkDeletePantryItemResponse](doc//OkDeletePantryItemResponse.md)
  - [OkDeleteShareResponse](doc//OkDeleteShareResponse.md)
+ - [OkEditPantryItemResponse](doc//OkEditPantryItemResponse.md)
  - [OkGetAccountNameResponse](doc//OkGetAccountNameResponse.md)
  - [OkGetHistoryResponse](doc//OkGetHistoryResponse.md)
  - [OkGetListsResponse](doc//OkGetListsResponse.md)
+ - [OkGetPantryResponse](doc//OkGetPantryResponse.md)
  - [OkGetSharesResponse](doc//OkGetSharesResponse.md)
  - [OkLoginResponse](doc//OkLoginResponse.md)
  - [OkReadListResponse](doc//OkReadListResponse.md)
  - [OkRecoverPasswordResponse](doc//OkRecoverPasswordResponse.md)
  - [OkRecoveryInfoResponse](doc//OkRecoveryInfoResponse.md)
+ - [OkRefillPantryResponse](doc//OkRefillPantryResponse.md)
  - [OkRegisterResponse](doc//OkRegisterResponse.md)
  - [OkRemovePublicResponse](doc//OkRemovePublicResponse.md)
  - [OkSearchAccountResponse](doc//OkSearchAccountResponse.md)
@@ -125,6 +138,7 @@ Class | Method | HTTP request | Description
  - [OkShareListResponse](doc//OkShareListResponse.md)
  - [OkUnshareResponse](doc//OkUnshareResponse.md)
  - [OkUpdateItemResponse](doc//OkUpdateItemResponse.md)
+ - [PantryItem](doc//PantryItem.md)
  - [ReadListResponse](doc//ReadListResponse.md)
  - [RecoverPasswordRequest](doc//RecoverPasswordRequest.md)
  - [RecoveryInfoResponse](doc//RecoveryInfoResponse.md)

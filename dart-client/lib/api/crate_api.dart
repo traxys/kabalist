@@ -29,7 +29,7 @@ class CrateApi {
   ///   Substring Search
   Future<Response> historySearchWithHttpInfo(String list, { String? search, }) async {
     // ignore: prefer_const_declarations
-    final path = r'/history/{list}'
+    final path = r'/api/history/{list}'
       .replaceAll('{list}', list);
 
     // ignore: prefer_final_locals
@@ -91,7 +91,7 @@ class CrateApi {
   ///   Account name
   Future<Response> searchAccountWithHttpInfo(String name,) async {
     // ignore: prefer_const_declarations
-    final path = r'/search/account/{name}'
+    final path = r'/api/search/account/{name}'
       .replaceAll('{name}', name);
 
     // ignore: prefer_final_locals
@@ -146,7 +146,7 @@ class CrateApi {
   ///   Part of the list name
   Future<Response> searchListWithHttpInfo(String name,) async {
     // ignore: prefer_const_declarations
-    final path = r'/search/list/{name}'
+    final path = r'/api/search/list/{name}'
       .replaceAll('{name}', name);
 
     // ignore: prefer_final_locals

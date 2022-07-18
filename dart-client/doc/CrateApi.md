@@ -9,9 +9,9 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**historySearch**](CrateApi.md#historysearch) | **GET** /history/{list} | 
-[**searchAccount**](CrateApi.md#searchaccount) | **GET** /search/account/{name} | 
-[**searchList**](CrateApi.md#searchlist) | **GET** /search/list/{name} | 
+[**historySearch**](CrateApi.md#historysearch) | **GET** /api/history/{list} | 
+[**searchAccount**](CrateApi.md#searchaccount) | **GET** /api/search/account/{name} | 
+[**searchList**](CrateApi.md#searchlist) | **GET** /api/search/list/{name} | 
 
 
 # **historySearch**
