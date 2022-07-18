@@ -5,31 +5,38 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'endpoint.dart';
 import 'package:kabalist_client/api.dart' as kb;
+import 'package:numberpicker/numberpicker.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 kb.ListApi listApiClient(String token) {
-	final auth = kb.HttpBearerAuth();
-	auth.accessToken = token;
-	return kb.ListApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
+  final auth = kb.HttpBearerAuth();
+  auth.accessToken = token;
+  return kb.ListApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
 kb.AccountApi accountApiClient() {
-	return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT));
+  return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT));
 }
 
 kb.CrateApi miscApiClient(String token) {
-	final auth = kb.HttpBearerAuth();
-	auth.accessToken = token;
-	return kb.CrateApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
+  final auth = kb.HttpBearerAuth();
+  auth.accessToken = token;
+  return kb.CrateApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
 kb.ShareApi shareApiClient(String token) {
-	final auth = kb.HttpBearerAuth();
-	auth.accessToken = token;
-	return kb.ShareApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
+  final auth = kb.HttpBearerAuth();
+  auth.accessToken = token;
+  return kb.ShareApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
+}
+
+kb.PantryApi pantryApiClient(String token) {
+  final auth = kb.HttpBearerAuth();
+  auth.accessToken = token;
+  return kb.PantryApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
 class MyApp extends StatelessWidget {
@@ -149,60 +156,59 @@ class _LoginFormState extends State<LoginForm> {
 
     return Form(
         key: _formKey,
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              ...errorTxt,
-              TextFormField(
-                decoration: const InputDecoration(hintText: "Username"),
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return "Username can't be empty";
-                  }
-                  return null;
-                },
-                onSaved: (String? nm) => setState(() => username = nm),
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                    hintText: "Password",
-                    suffixIcon: IconButton(
-                        icon: Icon(showPassword
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                        onPressed: () {
-                          setState(() {
-                            showPassword = !showPassword;
-                          });
-                        })),
-                obscureText: !showPassword,
-                validator: (String? value) {
-                  if (value == null || value.isEmpty) {
-                    return "Password can't be empty";
-                  }
-                  return null;
-                },
-                onSaved: (String? pass) => setState(() => password = pass),
-              ),
-              ElevatedButton(
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
+        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: <
+            Widget>[
+          ...errorTxt,
+          TextFormField(
+            decoration: const InputDecoration(hintText: "Username"),
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return "Username can't be empty";
+              }
+              return null;
+            },
+            onSaved: (String? nm) => setState(() => username = nm),
+          ),
+          TextFormField(
+            decoration: InputDecoration(
+                hintText: "Password",
+                suffixIcon: IconButton(
+                    icon: Icon(
+                        showPassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () {
+                      setState(() {
+                        showPassword = !showPassword;
+                      });
+                    })),
+            obscureText: !showPassword,
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return "Password can't be empty";
+              }
+              return null;
+            },
+            onSaved: (String? pass) => setState(() => password = pass),
+          ),
+          ElevatedButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  _formKey.currentState!.save();
 
-					  final instance = accountApiClient();
-					  final loginRequest = kb.LoginRequest(username: username!, password: password!);
-                      try {
-						final response = await instance.login(loginRequest);
-                        widget.getToken(response!.ok.token);
-                      } on kb.ApiException catch (err) {
-                        setState(() {
-                          error = err.toString();
-                        });
-                      }
-                    }
-                  },
-                  child: const Text('Login'))
-            ]));
+                  final instance = accountApiClient();
+                  final loginRequest =
+                      kb.LoginRequest(username: username!, password: password!);
+                  try {
+                    final response = await instance.login(loginRequest);
+                    widget.getToken(response!.ok.token);
+                  } on kb.ApiException catch (err) {
+                    setState(() {
+                      error = err.toString();
+                    });
+                  }
+                }
+              },
+              child: const Text('Login'))
+        ]));
   }
 }
 
@@ -238,8 +244,8 @@ String fmtStatus(kb.ListStatus status) {
       return " (readonly)";
     case kb.ListStatus.sharedWrite:
       return " (shared)";
-	default:
-	  return "";
+    default:
+      return "";
   }
 }
 
@@ -252,8 +258,8 @@ class _ListDrawerState extends State<ListDrawer> {
   late Future<Map<String, kb.ListInfo>> lists;
 
   Future<Map<String, kb.ListInfo>> fetchLists() async {
-	final instance = listApiClient(widget.token);
-	final rsp = (await instance.listLists())!.ok.results;
+    final instance = listApiClient(widget.token);
+    final rsp = (await instance.listLists())!.ok.results;
 
     widget.fetchedList(List.from(rsp.keys));
 
@@ -261,10 +267,10 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void addList(String name) async {
-	final instance = listApiClient(widget.token);
-	final request = kb.CreateListRequest(name: name);
+    final instance = listApiClient(widget.token);
+    final request = kb.CreateListRequest(name: name);
 
-	await instance.createList(request);
+    await instance.createList(request);
 
     setState(() {
       lists = fetchLists();
@@ -272,9 +278,9 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void deleteList(String id) async {
-	final instance = listApiClient(widget.token);
+    final instance = listApiClient(widget.token);
 
-	await instance.deleteList(id);
+    await instance.deleteList(id);
 
     setState(() {
       lists = fetchLists();
@@ -283,16 +289,16 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void shareList(String listId, String shareWith, bool readonly) async {
-	final miscInstance = miscApiClient(widget.token);
+    final miscInstance = miscApiClient(widget.token);
 
     try {
-	  final account = (await miscInstance.searchAccount(shareWith))!.ok.id;
+      final account = (await miscInstance.searchAccount(shareWith))!.ok.id;
 
-	  final shareInstance = shareApiClient(widget.token);
+      final shareInstance = shareApiClient(widget.token);
 
-	  final request = kb.ShareListRequest(shareWith: account, readonly: readonly);
-	  await shareInstance.shareList(listId, request);
-
+      final request =
+          kb.ShareListRequest(shareWith: account, readonly: readonly);
+      await shareInstance.shareList(listId, request);
     } on kb.ApiException catch (e) {
       setState(() {
         shareError = e.toString();
@@ -430,11 +436,11 @@ class _ListDrawerState extends State<ListDrawer> {
               error =
                   "An error occured: ${(snapshots.error as kb.ApiException).toString()}";
             } else if (snapshots.error is Error) {
-			  print((snapshots.error as Error).stackTrace);
+              print((snapshots.error as Error).stackTrace);
               error = "An unexpected error occured: ${snapshots.error}";
             } else {
               error = "An unexpected error occured: ${snapshots.error}";
-			}
+            }
             data = <Widget>[
               ListTile(title: Text(error)),
             ];
@@ -659,14 +665,6 @@ class ListDesc {
   final kb.ListStatus status;
 }
 
-class AddedItemNotifier extends ChangeNotifier {
-  AddedItemNotifier() : super();
-
-  void addedItem() {
-    notifyListeners();
-  }
-}
-
 class ListSorter {
   ListSorter({required this.kind, required this.customOrder});
 
@@ -755,11 +753,6 @@ class SettingsValue {
 
 class _AuthListsState extends State<AuthLists> {
   ValueNotifier<ListDesc?> selectedList = ValueNotifier(null);
-  AddedItemNotifier addedItem = AddedItemNotifier();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  Function()? addItem;
-  late String addItemName;
-  late String? addItemAmount;
   SettingsValue settingsValues = SettingsValue(
       listSorter: ListSorter(kind: SorterKind.ALPHABETICAL, customOrder: []));
   bool settings = false;
@@ -805,92 +798,19 @@ class _AuthListsState extends State<AuthLists> {
     setList(lastUsed);
   }
 
-  void doAddItem(String name, String? amount) async {
-    final amt;
-    if (amount == null || amount.isEmpty) {
-      amt = null;
-    } else {
-      amt = amount;
-    }
-	final instance = listApiClient(widget.token);
-	final request = kb.AddToListRequest(name: name, amount: amt);
-
-	await instance.addList(selectedList.value!.id, request);
-
-    addedItem.addedItem();
-  }
-
   void setList(ListDesc? list) {
-    if (list == null) {
-      setState(() {
-        selectedList.value = null;
-        addItem = null;
-      });
-    } else {
-      final addItemFn;
-      if (list.status == kb.ListStatus.sharedRead) {
-        addItemFn = null;
-      } else {
-        addItemFn = () {
-          showDialog(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                  title: Text("Add Item"),
-                  content: Form(
-                      key: _formKey,
-                      child: Container(
-                          margin: EdgeInsets.all(10.0),
-                          child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                ItemInput(
-                                  listId: selectedList.value!.id,
-                                  token: widget.token,
-                                  update: (String? name) {
-                                    addItemName = name!;
-                                  },
-                                ),
-                                TextFormField(
-                                  decoration:
-                                      const InputDecoration(hintText: "Amount"),
-                                  onSaved: (String? amount) async {
-                                    addItemAmount = amount;
-                                  },
-                                ),
-                                ElevatedButton(
-                                    onPressed: () async {
-                                      if (_formKey.currentState!.validate()) {
-                                        _formKey.currentState!.save();
-                                        doAddItem(addItemName, addItemAmount);
-                                        Navigator.of(context).pop();
-                                      }
-                                    },
-                                    child: const Text('Add'))
-                              ])))));
-        };
-      }
-      setState(() {
-        selectedList.value = list;
-        addItem = addItemFn;
-      });
-    }
+    setState(() {
+      selectedList.value = list;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final floatingButton;
-    if (addItem == null) {
-      floatingButton = null;
-    } else {
-      floatingButton =
-          FloatingActionButton(onPressed: addItem, child: Icon(Icons.add));
-    }
     final Widget child;
     if (!settings) {
-      child = ListContent(
+      child = SelectedList(
           list: selectedList,
           token: widget.token,
-          addedItem: addedItem,
           listExtent: settingsValues.listExtent);
     } else {
       child = Settings(
@@ -939,7 +859,6 @@ class _AuthListsState extends State<AuthLists> {
             });
           }),
       body: Center(child: child),
-      floatingActionButton: floatingButton,
     );
   }
 }
@@ -958,11 +877,12 @@ class ItemInput extends StatelessWidget {
 
   // TODO: Maybe not fetch everything, but use the query to narrow instead of doing it client side
   static Future<List<String>> fetchHistory(String listId, String token) async {
-	final instance = miscApiClient(token);
+    final instance = miscApiClient(token);
 
-	final matches = (await instance.historySearch(listId, search: null))!.ok.matches;
+    final matches =
+        (await instance.historySearch(listId, search: null))!.ok.matches;
 
-	return matches.map((String value) => value.toLowerCase()).toList();
+    return matches.map((String value) => value.toLowerCase()).toList();
   }
 
   @override
@@ -1000,7 +920,8 @@ class ItemInput extends StatelessWidget {
                   return const Iterable<String>.empty();
                 }
                 List<String> data = snapshot.data as List<String>;
-                return ([textEditingValue.text]).followedBy(data.where((String option) {
+                return ([textEditingValue.text])
+                    .followedBy(data.where((String option) {
                   return option.contains(textEditingValue.text.toLowerCase());
                 }));
               },
@@ -1024,17 +945,376 @@ class ItemInput extends StatelessWidget {
   }
 }
 
+class SelectedList extends StatelessWidget {
+  SelectedList({
+    Key? key,
+    required this.list,
+    required this.token,
+    required this.listExtent,
+  }) : super(key: key);
+
+  final ValueNotifier<ListDesc?> list;
+  final String token;
+  final double? listExtent;
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+        length: 2,
+        child: Scaffold(
+            appBar: AppBar(
+                title: Text(list.value?.name ?? "Unknown"),
+                bottom: TabBar(tabs: <Widget>[
+                  Tab(icon: Icon(Icons.assignment)),
+                  Tab(icon: Icon(Icons.home_filled))
+                ])),
+            body: TabBarView(children: <Widget>[
+              ListContent(
+                  list: this.list,
+                  token: this.token,
+                  listExtent: this.listExtent),
+              PantryContent(
+                  list: this.list,
+                  token: this.token,
+                  listExtent: this.listExtent),
+            ])));
+  }
+}
+
+class PantryContent extends StatefulWidget {
+  PantryContent({
+    Key? key,
+    required this.list,
+    required this.token,
+    required this.listExtent,
+  }) : super(key: key);
+
+  final ValueNotifier<ListDesc?> list;
+  final String token;
+  final double? listExtent;
+
+  @override
+  State<PantryContent> createState() => _PantryContentState();
+}
+
+class PantryContents {
+  PantryContents({required this.items, required this.readonly});
+
+  bool readonly;
+  List<kb.PantryItem> items;
+}
+
+class OptionalPantryContents {
+  OptionalPantryContents({this.contents});
+
+  PantryContents? contents;
+}
+
+class _PantryContentState extends State<PantryContent>
+    with WidgetsBindingObserver {
+  OptionalPantryContents contents = OptionalPantryContents(contents: null);
+  Timer? timer;
+  String? editError;
+  String addItemName = "";
+  int? editTarget;
+  int? editAmount;
+  int addItemTarget = 0;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  late VoidCallback fetchContentsCallback = () {
+    this.updateContents();
+  };
+
+  Future<OptionalPantryContents> fetchContentsFailable() async {
+    ListDesc info;
+    if (widget.list.value == null) {
+      return OptionalPantryContents(contents: null);
+    } else {
+      info = widget.list.value!;
+    }
+
+    final listInstance = listApiClient(widget.token);
+    final listResponse = (await listInstance.readList(info.id))!.ok;
+
+    final pantryInstance = pantryApiClient(widget.token);
+    final pantryResponse = (await pantryInstance.getPantry(info.id))!.ok;
+
+    return OptionalPantryContents(
+        contents: PantryContents(
+      items: pantryResponse.items,
+      readonly: listResponse.readonly,
+    ));
+  }
+
+  void updateContents() async {
+    try {
+      final newContents = await this.fetchContentsFailable();
+      setState(() {
+        contents = newContents;
+      });
+    } catch (e) {
+      final widget;
+      if (e is kb.ApiException) {
+        widget = Text(
+            "An error occured while fetching the contents: ${e.toString()}",
+            style: TextStyle(color: Colors.red));
+      } else {
+        widget = Text("An unexpected error occured: $e",
+            style: TextStyle(color: Colors.red));
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: widget,
+        duration: const Duration(milliseconds: 4000),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        width: 280.0,
+      ));
+    }
+  }
+
+  bool shouldFetch = true;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        setState(() {
+          shouldFetch = true;
+        });
+        break;
+      default:
+        setState(() {
+          shouldFetch = false;
+        });
+        break;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addObserver(this);
+    updateContents();
+    timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
+      if (shouldFetch) {
+        updateContents();
+      }
+    });
+    widget.list.addListener(fetchContentsCallback);
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    widget.list.removeListener(fetchContentsCallback);
+    WidgetsBinding.instance!.removeObserver(this);
+    super.dispose();
+  }
+
+  void doEdit(int? amount, int? target, int itemId) async {
+    ListDesc info;
+    if (widget.list.value == null) {
+      return;
+    } else {
+      info = widget.list.value!;
+    }
+
+    final instance = pantryApiClient(widget.token);
+    final request = kb.EditPantryItemRequest(target: target, amount: amount);
+    await instance.setPantryItem(info.id, itemId, request);
+
+    updateContents();
+  }
+
+  void doDelete(int itemId) async {
+    ListDesc info;
+    if (widget.list.value == null) {
+      return;
+    } else {
+      info = widget.list.value!;
+    }
+
+    final instance = pantryApiClient(widget.token);
+    await instance.deletePantryItem(info.id, itemId);
+
+    updateContents();
+  }
+
+  void editItem(kb.PantryItem item) {
+    setState(() {
+      editTarget = item.target;
+      editAmount = item.amount;
+    });
+    showDialog(
+        context: context,
+        builder: (BuildContext ctx) {
+          final errorTxt;
+          if (editError == null) {
+            errorTxt = <Widget>[];
+          } else {
+            errorTxt = <Widget>[
+              Text(editError!, style: TextStyle(color: Colors.red))
+            ];
+          }
+          return AlertDialog(
+              title: Text("Edit Item"),
+              content: StatefulBuilder(
+                  builder: (BuildContext stCtx, StateSetter setState) {
+                return Form(
+                    key: _formKey,
+                    child: Container(
+                        margin: EdgeInsets.all(10.0),
+                        child:
+                            Column(mainAxisSize: MainAxisSize.min, children: <
+                                Widget>[
+                          ...errorTxt,
+                          Text("Amount"),
+                          NumberPicker(
+                            value: editAmount ?? 0,
+                            maxValue: 1 << 31,
+                            minValue: 0,
+                            onChanged: (value) =>
+                                setState(() => editAmount = value),
+                          ),
+                          Text("Target"),
+                          NumberPicker(
+                            value: editTarget ?? 0,
+                            maxValue: 1 << 31,
+                            minValue: 0,
+                            onChanged: (value) =>
+                                setState(() => editTarget = value),
+                          ),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: <Widget>[
+                                ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        primary: Colors.red,
+                                        onPrimary: Colors.white),
+                                    onPressed: () async {
+                                      doDelete(item.id);
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Delete')),
+                                ElevatedButton(
+                                    onPressed: () async {
+                                      if (_formKey.currentState!.validate()) {
+                                        _formKey.currentState!.save();
+                                        doEdit(editAmount, editTarget, item.id);
+                                        Navigator.of(context).pop();
+                                      }
+                                    },
+                                    child: const Text('Edit'))
+                              ])
+                        ])));
+              }));
+        });
+  }
+
+  void refillList() async {
+    ListDesc info;
+    if (widget.list.value == null) {
+      return;
+    } else {
+      info = widget.list.value!;
+    }
+    final instance = pantryApiClient(widget.token);
+    await instance.refillPantry(info.id);
+  }
+
+  void doAddItem(String listId, String name, int target) async {
+    final instance = pantryApiClient(widget.token);
+    final request = kb.AddToPantryRequest(name: name, target: target);
+
+    await instance.addToPantry(listId, request);
+
+    updateContents();
+  }
+
+  void addItem(String listId) {
+    setState(() => addItemTarget = 0);
+    showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+            title: Text("Add Pantry Item"),
+            content: StatefulBuilder(
+                builder: (BuildContext stCtx, StateSetter setState) => Form(
+                    key: _formKey,
+                    child: Container(
+                        margin: EdgeInsets.all(10.0),
+                        child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              TextFormField(
+                                decoration:
+                                    const InputDecoration(hintText: "Name"),
+                                onSaved: (String? name) async {
+                                  addItemName = name!;
+                                },
+                              ),
+                              NumberPicker(
+                                value: addItemTarget,
+                                maxValue: 1 << 31,
+                                minValue: 0,
+                                onChanged: (value) =>
+                                    setState(() => addItemTarget = value),
+                              ),
+                              ElevatedButton(
+                                  onPressed: () async {
+                                    if (_formKey.currentState!.validate()) {
+                                      _formKey.currentState!.save();
+                                      doAddItem(
+                                          listId, addItemName, addItemTarget);
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                  child: const Text('Add'))
+                            ]))))));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> items = [];
+    contents.contents?.items.sort((a, b) => a.name.compareTo(b.name));
+    contents.contents?.items.forEach((item) {
+      items.add(ListTile(
+          title: Text("${item.name} (${item.amount}/${item.target})"),
+          onTap: () {},
+          onLongPress: () => editItem(item)));
+    });
+    bool readOnly = contents.contents?.readonly ?? true;
+
+    if (!readOnly) {
+      items.add(ElevatedButton(
+          onPressed: refillList, child: const Text('Refill From Pantry')));
+    }
+
+    VoidCallback? addItemFn;
+    if (widget.list.value != null && !readOnly) {
+      addItemFn = () => addItem(widget.list.value!.id);
+    }
+
+    return Scaffold(
+      body: ListView(
+          padding: const EdgeInsets.all(8),
+          itemExtent: widget.listExtent,
+          children: items),
+      floatingActionButton:
+          FloatingActionButton(onPressed: addItemFn, child: Icon(Icons.add)),
+    );
+  }
+}
+
 class ListContent extends StatefulWidget {
   ListContent({
     Key? key,
     required this.list,
     required this.token,
-    required this.addedItem,
     required this.listExtent,
   }) : super(key: key);
 
   final ValueNotifier<ListDesc?> list;
-  final AddedItemNotifier addedItem;
   final String token;
   final double? listExtent;
 
@@ -1044,8 +1324,8 @@ class ListContent extends StatefulWidget {
 
 Widget renderItem(kb.Item item, bool stricken) {
   return Text("${item.name} ${item.amount == null ? '' : '(${item.amount})'}",
-      style: TextStyle(
-          decoration: stricken ? TextDecoration.lineThrough : null));
+      style:
+          TextStyle(decoration: stricken ? TextDecoration.lineThrough : null));
 }
 
 class Contents {
@@ -1084,18 +1364,19 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       info = widget.list.value!;
     }
 
-	final instance = listApiClient(widget.token);
-	final response = (await instance.readList(info.id))!.ok;
+    final instance = listApiClient(widget.token);
+    final response = (await instance.readList(info.id))!.ok;
 
     setState(() {
       strickedItems.retainAll(response.items.map((item) => item.id));
       deletedItems.clear();
     });
 
-    return OptionalContents(contents: Contents(
-		items: response.items,
-		readonly: response.readonly,
-	));
+    return OptionalContents(
+        contents: Contents(
+      items: response.items,
+      readonly: response.readonly,
+    ));
   }
 
   void updateContents() async {
@@ -1144,8 +1425,8 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     updateContents();
 
     this.strickedItems.forEach((itemId) async {
-	  final instance = listApiClient(widget.token);
-	  await instance.deleteItem(info.id, itemId);
+      final instance = listApiClient(widget.token);
+      await instance.deleteItem(info.id, itemId);
 
       setState(() {
         deletedItems.add(itemId);
@@ -1169,14 +1450,12 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       }
     });
     widget.list.addListener(fetchContentsCallback);
-    widget.addedItem.addListener(fetchContentsCallback);
   }
 
   @override
   void dispose() {
     timer?.cancel();
     widget.list.removeListener(fetchContentsCallback);
-    widget.addedItem.removeListener(fetchContentsCallback);
     WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
   }
@@ -1220,9 +1499,9 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
       jsonAmount = editAmount;
     }
 
-	final instance = listApiClient(widget.token);
-	final request = kb.UpdateItemRequest(name: jsonName, amount: jsonAmount);
-	await instance.updateItem(info.id, itemId, request);
+    final instance = listApiClient(widget.token);
+    final request = kb.UpdateItemRequest(name: jsonName, amount: jsonAmount);
+    await instance.updateItem(info.id, itemId, request);
 
     updateContents();
   }
@@ -1281,6 +1560,62 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
         });
   }
 
+  void doAddItem(String listId, String name, String? amount) async {
+    final amt;
+    if (amount == null || amount.isEmpty) {
+      amt = null;
+    } else {
+      amt = amount;
+    }
+    final instance = listApiClient(widget.token);
+    final request = kb.AddToListRequest(name: name, amount: amt);
+
+    await instance.addList(listId, request);
+
+    updateContents();
+  }
+
+  void addItem(String listId) {
+    String addItemName = "";
+    String? addItemAmount;
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+            title: Text("Add Item"),
+            content: Form(
+                key: _formKey,
+                child: Container(
+                    margin: EdgeInsets.all(10.0),
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          ItemInput(
+                            listId: listId,
+                            token: widget.token,
+                            update: (String? name) {
+                              addItemName = name!;
+                            },
+                          ),
+                          TextFormField(
+                            decoration:
+                                const InputDecoration(hintText: "Amount"),
+                            onSaved: (String? amount) async {
+                              addItemAmount = amount;
+                            },
+                          ),
+                          ElevatedButton(
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  _formKey.currentState!.save();
+                                  doAddItem(listId, addItemName, addItemAmount);
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                              child: const Text('Add'))
+                        ])))));
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> inList = [];
@@ -1318,15 +1653,18 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
           onPressed: strikeItems,
           child: const Text('Delete Striked Items')));
     }
-    return ListView(
-        padding: const EdgeInsets.all(8),
-        itemExtent: widget.listExtent,
-        children: [
-          ListTile(
-              title: Text(
-                  "List: ${widget.list.value?.name ?? "Unkown"}${readOnly ? " (readonly)" : ""}")),
-          Divider(),
-          ...items
-        ]);
+
+    VoidCallback? addItemCallback;
+    if (widget.list.value != null && !readOnly) {
+      addItemCallback = () => addItem(widget.list.value!.id);
+    }
+
+    return Scaffold(
+        body: ListView(
+            padding: const EdgeInsets.all(8),
+            itemExtent: widget.listExtent,
+            children: items),
+        floatingActionButton: FloatingActionButton(
+            onPressed: addItemCallback, child: Icon(Icons.add)));
   }
 }
