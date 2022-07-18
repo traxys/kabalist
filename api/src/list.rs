@@ -330,7 +330,7 @@ pub(crate) async fn delete_item(
 
     sqlx::query!(
         "UPDATE pantry_content
-        SET amount =
+        SET amount = amount +
             (SELECT
                 COALESCE(convert_to_integer(lists_content.amount), 0) as added
             FROM lists_content
