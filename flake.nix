@@ -48,13 +48,17 @@
         admin = naersk'.buildPackage {
           cargoBuildOptions = opts: opts ++ ["--package=kb_admin"];
           root = ./.;
-		};
+        };
+        server = naersk'.buildPackage {
+          cargoBuildOptions = opts: opts ++ ["--package=kabalist_api"];
+          root = ./.;
+        };
       };
       devShell = with pkgs;
         mkShell {
           nativeBuildInputs = [pkgs.bashInteractive];
 
-          DATABASE_URL = "postgres://traxys:traxys@localhost/list";
+          DATABASE_URL = "postgres://traxys/list?host=/var/run/postgresql";
           LIST_URL = "http://localhost:8080/api";
 
           buildInputs = [
