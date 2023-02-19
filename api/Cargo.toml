@@ -17,7 +17,7 @@ serde = "1.0.126"
 kabalist_types = { path = "../types", features = ["openapi"] }
 uuid = { version = "1.1.2", features = ["serde"] }
 serde_repr = "0.1.8"
-axum = { version = "0.5", features = ["headers"] }
+axum = { version = "0.6", features = ["headers"] }
 tracing = "0.1.35"
 tracing-subscriber = "0.3.14"
 tokio = { version = "1.19.2", features = ["rt-multi-thread", "macros"] }

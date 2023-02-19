@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use axum::{
     async_trait,
-    extract::{self, FromRequest, RequestParts},
+    extract::{self, FromRequestParts},
     headers::{authorization::Bearer, Authorization},
     routing::{get, post},
-    Extension, Json, Router, TypedHeader,
+    Extension, Json, Router, TypedHeader, http::request::Parts,
 };
 use jsonwebtoken::DecodingKey;
 use kabalist_types::{
@@ -32,14 +32,14 @@ struct Claims {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for User
+impl<S> FromRequestParts<S> for User
 where
-    B: Send,
+    S: Send + Sync,
 {
     type Rejection = Error;
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let Extension(config) = Extension::<Arc<Config>>::from_request(req)
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let Extension(config) = Extension::<Arc<Config>>::from_request_parts(parts, state)
             .await
             .map_err(|e| {
                 tracing::error!("Could not fetch config extension: {:?}", e);
@@ -47,7 +47,7 @@ where
             })?;
 
         let TypedHeader(Authorization(bearer)) =
-            TypedHeader::<Authorization<Bearer>>::from_request(req)
+            TypedHeader::<Authorization<Bearer>>::from_request_parts(parts, state)
                 .await
                 .map_err(|_| Error::MissingAuthorization)?;
 
