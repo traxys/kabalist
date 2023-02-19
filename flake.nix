@@ -30,7 +30,7 @@
           nativeBuildInputs = [pkgs.bashInteractive];
 
           DATABASE_URL = "postgres://traxys:traxys@localhost/list";
-		  LIST_URL = "http://localhost:8080/api";
+          LIST_URL = "http://localhost:8080/api";
 
           buildInputs = [
             # Flutter
@@ -48,7 +48,7 @@
             jdk8
             dart
             (pkgs.writeShellApplication {
-			  name = "openapi-generator-cli";
+              name = "openapi-generator-cli";
               text = ''
                 ${pkgs.jdk11}/bin/java -jar ${openapi-generator-cli} "$@"
               '';
@@ -63,8 +63,8 @@
             trunk
             wasm-bindgen-cli
 
-			# Docker
-			docker-compose
+            # Docker
+            docker-compose
           ];
         };
     });
