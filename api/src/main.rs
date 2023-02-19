@@ -528,6 +528,20 @@ async fn main() -> color_eyre::Result<()> {
 
     let templates = tera::Tera::new("public/*.tera")?;
 
+    tracing::info!("Inserting extensions");
+    sqlx::query!("CREATE EXTENSION IF NOT EXISTS pgcrypto;")
+        .execute(&db)
+        .await?;
+    sqlx::query!("CREATE EXTENSION IF NOT EXISTS citext;")
+        .execute(&db)
+        .await?;
+    sqlx::query!(r#"CREATE EXTENSION IF NOT EXISTS "uuid-ossp";"#)
+        .execute(&db)
+        .await?;
+
+    tracing::info!("Running SQLx migrations");
+    sqlx::migrate!("sqlx/migrations").run(&db).await?;
+
     let api = Router::new()
         .route("/search/list/:name", get(search_list))
         .route("/search/account/:name", get(search_account))

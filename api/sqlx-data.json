@@ -365,6 +365,16 @@
     },
     "query": "SELECT id FROM accounts WHERE name = $1::text::citext AND password = crypt($2, password)"
   },
+  "8dc31f73d2de82376a3c01e942f2160323fa406ae4541637ee4a0e5a758a8c98": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+  },
   "924db410c66a4ce1176c9e8597bda543521f7dbfa4cb8d409569a79f02aea60b": {
     "describe": {
       "columns": [],
@@ -399,6 +409,16 @@
       }
     },
     "query": "SELECT name::text FROM history WHERE list = $1 AND creator = $2 AND name ILIKE '%' || $3 || '%'"
+  },
+  "9683bfd3cb60e69242e333abde9e3088104d34106a748ca85ed6840a80b35da2": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
   },
   "96ba74fe529ed42448627c4068cdd4f15fccc4a2294a429ac2e8eeee3d4e2482": {
     "describe": {
@@ -472,6 +492,16 @@
       }
     },
     "query": "DELETE FROM list_sharing WHERE list = $1"
+  },
+  "ac1034b956efa62c01ba79bff480479ba4614fa20e9fb63304173b92b3dbe01d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "CREATE EXTENSION IF NOT EXISTS citext;"
   },
   "aebf6d66930f1b51179e8865c14b4e3f610d0f50d1fd13b6dc9d71d935637c3f": {
     "describe": {
