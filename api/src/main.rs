@@ -541,7 +541,7 @@ async fn main() -> color_eyre::Result<()> {
     let frontend = config.frontend.clone();
 
     let app = Router::new()
-        .merge(SwaggerUi::new("/swagger-ui/*tail").url("/api-doc/openapi.json", ApiDoc::openapi()))
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .nest("/api", api)
         .layer(Extension(templates))
         .layer(Extension(db))
