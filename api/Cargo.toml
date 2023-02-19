@@ -38,5 +38,5 @@ rev = "baa3947"
 features = ["axum"]
 
 [dependencies.sqlx]
-version = "0.6.0"
+version = "0.6.2"
 features = ["postgres", "migrate", "runtime-tokio-rustls", "macros", "uuid", "offline"]
