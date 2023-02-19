@@ -94,7 +94,21 @@
             runHook postInstall
           '';
         };
+
+      webPkg = pkgs.callPackage web {};
+      serverPkg = naersk'.buildPackage {
+        cargoBuildOptions = opts: opts ++ ["--package=kabalist_api"];
+        root = ./.;
+        postInstall = ''
+          mkdir -p $out/share
+          cp -r api/public $out/share
+        '';
+      };
     in {
+      nixosModule = import ./nixos/kabalist.nix {
+        kabalist-web = webPkg;
+        kabalist-server = serverPkg;
+      };
       packages = {
         cli = naersk'.buildPackage {
           cargoBuildOptions = opts: opts ++ ["--package=kabalist_cli"];
@@ -108,11 +122,8 @@
           cargoBuildOptions = opts: opts ++ ["--package=kb_admin"];
           root = ./.;
         };
-        server = naersk'.buildPackage {
-          cargoBuildOptions = opts: opts ++ ["--package=kabalist_api"];
-          root = ./.;
-        };
-        web = pkgs.callPackage web {};
+        server = serverPkg;
+        web = webPkg;
       };
       devShell = with pkgs;
         mkShell {
