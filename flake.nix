@@ -48,6 +48,52 @@
         cargo = pkgs.rust-bin-wasm;
         rustc = pkgs.rust-bin-wasm;
       };
+
+      web = {
+        pkgs,
+        rustPlatformWithWasm,
+        trunk,
+        stdenv,
+        cargo,
+        wasm-bindgen-cli,
+        ...
+      }:
+        stdenv.mkDerivation {
+          pname = "kabalist-web";
+          version = "master";
+
+          cargoDeps = rustPlatformWithWasm.importCargoLock {
+            lockFile = ./Cargo.lock;
+          };
+
+          nativeBuildInputs = [
+            trunk
+            wasm-bindgen-cli
+            rustPlatformWithWasm.cargoSetupHook
+            rustPlatformWithWasm.cargoBuildHook
+          ];
+
+          src = ./.;
+          XDG_CACHE_HOME = "/build/cache";
+          TRUNK_TOOLS_WASM_BINDGEN = "0.2.84";
+
+          buildPhase = ''
+            runHook preBuild
+
+            cd web
+            trunk build --release
+
+            runHook postBuild
+          '';
+
+          installPhase = ''
+            runHook preInstall
+
+            cp -R dist $out
+
+            runHook postInstall
+          '';
+        };
     in {
       packages = {
         cli = naersk'.buildPackage {
@@ -66,6 +112,7 @@
           cargoBuildOptions = opts: opts ++ ["--package=kabalist_api"];
           root = ./.;
         };
+        web = pkgs.callPackage web {};
       };
       devShell = with pkgs;
         mkShell {
