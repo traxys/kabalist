@@ -473,6 +473,19 @@
     },
     "query": "DELETE FROM list_sharing WHERE list = $1"
   },
+  "aebf6d66930f1b51179e8865c14b4e3f610d0f50d1fd13b6dc9d71d935637c3f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE pantry_content\n        SET amount = amount +\n            (SELECT\n                COALESCE(convert_to_integer(lists_content.amount), 0) as added\n            FROM lists_content\n            WHERE lists_content.list = $1 AND lists_content.id = $2)\n        WHERE\n            pantry_content.item =\n                (SELECT lists_content.from_pantry\n                 FROM lists_content\n                 WHERE lists_content.list = $1 AND lists_content.id = $2)"
+  },
   "b22c8c901799af21ecfb32f3a14ee950cb4bdf75bf27929e37b59752c00b1e51": {
     "describe": {
       "columns": [],
@@ -485,19 +498,6 @@
       }
     },
     "query": "INSERT INTO accounts (id, name, password)\n               VALUES (uuid_generate_v4(), $1::text::citext, crypt($2, gen_salt('bf')))"
-  },
-  "b45f9cb7fed7be8be7bf3f640aa051171926dd301d1174efb61f3e9186f9ba08": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Int4"
-        ]
-      }
-    },
-    "query": "UPDATE pantry_content\n        SET amount =\n            (SELECT\n                COALESCE(convert_to_integer(lists_content.amount), 0) as added\n            FROM lists_content\n            WHERE lists_content.list = $1 AND lists_content.id = $2)\n        WHERE\n            pantry_content.item =\n                (SELECT lists_content.from_pantry\n                 FROM lists_content\n                 WHERE lists_content.list = $1 AND lists_content.id = $2)"
   },
   "bd494a4a836837f5b02cde9870f4622ccc3270a4425a896d06ee146687bddea7": {
     "describe": {
