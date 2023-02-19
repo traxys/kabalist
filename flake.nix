@@ -45,6 +45,10 @@
             mv $out/bin/kabalist_cli $out/bin/kabalist
           '';
         };
+        admin = naersk'.buildPackage {
+          cargoBuildOptions = opts: opts ++ ["--package=kb_admin"];
+          root = ./.;
+		};
       };
       devShell = with pkgs;
         mkShell {
