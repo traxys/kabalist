@@ -3,6 +3,7 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
   inputs.android-nixpkgs.url = "github:tadfisher/android-nixpkgs";
+  inputs.naersk.url = "github:nix-community/naersk";
   inputs.rust-overlay.url = "github:oxalica/rust-overlay";
 
   outputs = {
@@ -11,6 +12,7 @@
     flake-utils,
     android-nixpkgs,
     rust-overlay,
+    naersk,
   }:
     flake-utils.lib.eachDefaultSystem (system: let
       pkgs = import nixpkgs {
@@ -20,11 +22,30 @@
         };
         overlays = [(import rust-overlay)];
       };
+
       openapi-generator-cli = pkgs.fetchurl {
         url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.0.0/openapi-generator-cli-6.0.0.jar";
         sha256 = "sha256-DLimlQ/JuMag4WGysYJ/vdglNw6nu0QP7vDT66LEKT4=";
       };
+
+      rust = pkgs.rust-bin.stable.latest.default.override {
+        targets = ["wasm32-unknown-unknown"];
+      };
+      naersk' = pkgs.callPackage naersk {
+        cargo = rust;
+        rustc = rust;
+      };
     in {
+      packages = {
+        cli = naersk'.buildPackage {
+          cargoBuildOptions = opts: opts ++ ["--package=kabalist_cli"];
+          root = ./.;
+
+          postInstall = ''
+            mv $out/bin/kabalist_cli $out/bin/kabalist
+          '';
+        };
+      };
       devShell = with pkgs;
         mkShell {
           nativeBuildInputs = [pkgs.bashInteractive];
@@ -55,9 +76,7 @@
             })
 
             # Rust
-            (rust-bin.stable.latest.default.override {
-              targets = ["wasm32-unknown-unknown"];
-            })
+            rust
 
             # Web
             trunk
