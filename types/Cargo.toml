@@ -12,9 +12,4 @@ openapi = ["utoipa"]
 serde = { version = "1.0.126", features = ["derive"] }
 thiserror = "1.0.25"
 uuid = { version = "1.1.2", features = ["serde"] }
-
-[dependencies.utoipa]
-git = "https://github.com/juhaku/utoipa"
-rev = "baa3947"
-features = ["uuid"]
-optional = true
+utoipa = { version = "3.0.2", features = ["uuid"], optional = true }

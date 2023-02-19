@@ -26,16 +26,8 @@ color-eyre = "0.6.1"
 tokio-stream = "0.1.9"
 tera = "1.16.0"
 tower-http = { version = "0.3.4", features = ["cors"] }
-
-[dependencies.utoipa]
-git = "https://github.com/juhaku/utoipa"
-rev = "baa3947"
-features = ["uuid"]
-
-[dependencies.utoipa-swagger-ui]
-git = "https://github.com/juhaku/utoipa"
-rev = "baa3947"
-features = ["axum"]
+utoipa = { version = "3.0.2", features = ["uuid"] }
+utoipa-swagger-ui = { version = "3.0.2", features = ["axum"] }
 
 [dependencies.sqlx]
 version = "0.6.2"

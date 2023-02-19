@@ -18,8 +18,11 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio_stream::StreamExt;
 use tower_http::cors::CorsLayer;
 use utoipa::{
-    openapi::security::{self, SecurityScheme},
-    Component, Modify, OpenApi,
+    openapi::{
+        schema::Schema,
+        security::{self, SecurityScheme},
+    },
+    Modify, OpenApi, ToResponse, ToSchema,
 };
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -48,13 +51,16 @@ macro_rules! define_error {
             )*
         }
 
-        impl Component for Error {
-           fn component() -> utoipa::openapi::schema::Component {
-               utoipa::openapi::PropertyBuilder::new()
-                   .component_type(utoipa::openapi::ComponentType::Number)
-                   .enum_values(Some([$(stringify!($code),)*]))
-                   .build()
-                   .into()
+        impl<'s> ToSchema<'s> for Error {
+           fn schema() -> (&'s str, utoipa::openapi::RefOr<Schema>) {
+               (
+                    "Error",
+                    utoipa::openapi::ObjectBuilder::new()
+                        .schema_type(utoipa::openapi::SchemaType::Number)
+                        .enum_values(Some([$(stringify!($code),)*]))
+                        .build()
+                        .into()
+                )
            }
         }
 
@@ -162,7 +168,7 @@ impl From<jsonwebtoken::errors::Error> for Error {
     }
 }
 
-#[derive(Serialize, Deserialize, Component)]
+#[derive(Serialize, Deserialize, ToSchema)]
 #[aliases(
     OkLoginResponse = OkResponse<LoginResponse>,
     OkCreateListResponse = OkResponse<CreateListResponse>,
@@ -200,14 +206,14 @@ impl<T> OkResponse<T> {
     }
 }
 
-#[derive(Serialize, Deserialize, Component)]
+#[derive(Serialize, Deserialize, ToResponse)]
 struct ErrResponse {
     err: UserError,
 }
 
 type Rsp<T> = Result<Json<OkResponse<T>>, Error>;
 
-#[derive(Serialize, Deserialize, Component)]
+#[derive(Serialize, Deserialize, ToSchema)]
 struct UserError {
     code: Error,
     description: String,
@@ -361,7 +367,7 @@ async fn search_account(
     OkResponse::ok(SearchAccountResponse { id: result.id })
 }
 
-#[derive(Deserialize, Component, Debug)]
+#[derive(Deserialize, ToSchema, Debug)]
 struct SearchQuery {
     search: String,
 }
@@ -422,7 +428,7 @@ async fn main() -> color_eyre::Result<()> {
 
     #[derive(OpenApi)]
     #[openapi(
-        handlers(
+        paths(
             search_list,
             search_account,
             history_search,
@@ -452,50 +458,54 @@ async fn main() -> color_eyre::Result<()> {
             pantry::delete_pantry_item,
         ),
         components(
-            ErrResponse,
-            UserError,
-            Error,
-            SecretString,
-            LoginRequest,
-            LoginResponse,
-            OkLoginResponse, // Imports all other OkResponses
-            CreateListRequest,
-            CreateListResponse,
-            OkCreateListResponse,
-            GetListsResponse,
-            ListInfo,
-            ListStatus,
-            SearchAccountResponse,
-            Item,
-            ReadListResponse,
-            AddToListResponse,
-            AddToListRequest,
-            GetHistoryResponse,
-            UpdateItemRequest,
-            UpdateItemResponse,
-            DeleteItemResponse,
-            DeleteListResponse,
-            UnshareResponse,
-            GetSharesResponse,
-            ShareListRequest,
-            ShareListResponse,
-            DeleteShareResponse,
-            RecoveryInfoResponse,
-            RecoverPasswordRequest,
-            RecoverPasswordResponse,
-            RegisterRequest,
-            RegisterResponse,
-            GetAccountNameResponse,
-            RemovePublicResponse,
-            SetPublicResponse,
-            PantryItem,
-            GetPantryResponse,
-            AddToPantryRequest,
-            AddToPantryResponse,
-            RefillPantryResponse,
-            EditPantryItemResponse,
-            EditPantryItemRequest,
-            DeletePantryItemResponse,
+            schemas(
+                UserError,
+                Error,
+                SecretString,
+                CreateListRequest,
+                LoginRequest,
+                ListInfo,
+                ListStatus,
+                Item,
+                AddToListRequest,
+                UpdateItemRequest,
+                ShareListRequest,
+                RecoverPasswordRequest,
+                RegisterRequest,
+                PantryItem,
+                AddToPantryRequest,
+                EditPantryItemRequest,
+                OkLoginResponse, // Imports all other OkResponses
+                OkCreateListResponse,
+            ),
+            responses(
+                ErrResponse,
+                LoginResponse,
+                CreateListResponse,
+                GetListsResponse,
+                SearchAccountResponse,
+                ReadListResponse,
+                AddToListResponse,
+                GetHistoryResponse,
+                UpdateItemResponse,
+                DeleteItemResponse,
+                DeleteListResponse,
+                UnshareResponse,
+                GetSharesResponse,
+                ShareListResponse,
+                DeleteShareResponse,
+                RecoveryInfoResponse,
+                RecoverPasswordResponse,
+                RegisterResponse,
+                GetAccountNameResponse,
+                RemovePublicResponse,
+                SetPublicResponse,
+                GetPantryResponse,
+                AddToPantryResponse,
+                RefillPantryResponse,
+                EditPantryItemResponse,
+                DeletePantryItemResponse,
+            ),
         ),
         modifiers(&SecurityKey),
     )]
