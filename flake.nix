@@ -20,20 +20,33 @@
         config = {
           android_sdk.accept_license = true;
         };
-        overlays = [(import rust-overlay)];
+        overlays = [
+          (import rust-overlay)
+          (final: prev: {
+            rust-bin-wasm = prev.rust-bin.stable.latest.default.override {
+              targets = ["wasm32-unknown-unknown"];
+            };
+          })
+          (final: prev: {
+            rustPlatformWithWasm = prev.callPackage ({
+              makeRustPlatform,
+              rust-bin-wasm,
+            }:
+              makeRustPlatform {
+                rustc = rust-bin-wasm;
+                cargo = rust-bin-wasm;
+              }) {};
+          })
+        ];
       };
 
       openapi-generator-cli = pkgs.fetchurl {
         url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.0.0/openapi-generator-cli-6.0.0.jar";
         sha256 = "sha256-DLimlQ/JuMag4WGysYJ/vdglNw6nu0QP7vDT66LEKT4=";
       };
-
-      rust = pkgs.rust-bin.stable.latest.default.override {
-        targets = ["wasm32-unknown-unknown"];
-      };
       naersk' = pkgs.callPackage naersk {
-        cargo = rust;
-        rustc = rust;
+        cargo = pkgs.rust-bin-wasm;
+        rustc = pkgs.rust-bin-wasm;
       };
     in {
       packages = {
@@ -84,7 +97,7 @@
             })
 
             # Rust
-            rust
+            rust-bin-wasm
 
             # Web
             trunk
