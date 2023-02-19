@@ -58,6 +58,7 @@ pub(crate) struct Config {
     pub(crate) listen_addr: IpAddr,
     pub(crate) port: u16,
     pub(crate) cors_allow_origin: String,
+    pub(crate) templates: Option<String>,
     #[cfg(feature = "frontend")]
     pub(crate) frontend: Option<std::path::PathBuf>,
 }
@@ -70,8 +71,10 @@ impl Default for Config {
             exp: 1000000,
             listen_addr: [127, 0, 0, 1].into(),
             port: 8080,
+            #[cfg(feature = "frontend")]
             frontend: None,
             cors_allow_origin: "*".into(),
+            templates: None,
         }
     }
 }

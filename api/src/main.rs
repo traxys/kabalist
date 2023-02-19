@@ -423,7 +423,6 @@ async fn main() -> color_eyre::Result<()> {
     );
 
     tracing::info!("Starting with config: {:#?}", config);
-
     let addr = SocketAddr::from((config.listen_addr, config.port));
 
     #[derive(OpenApi)]
@@ -524,9 +523,14 @@ async fn main() -> color_eyre::Result<()> {
         }
     }
 
+    tracing::info!("Opening database");
     let db = PgPoolOptions::new().connect(&config.database_url).await?;
 
-    let templates = tera::Tera::new("public/*.tera")?;
+    tracing::info!("Opening templates");
+    let templates = match &config.templates {
+        None => tera::Tera::new("public/*.tera")?,
+        Some(p) => tera::Tera::new(&format!("{p}/public/*.tera"))?,
+    };
 
     tracing::info!("Inserting extensions");
     sqlx::query!("CREATE EXTENSION IF NOT EXISTS pgcrypto;")
