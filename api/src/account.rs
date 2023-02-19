@@ -1,18 +1,18 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use axum::{
     async_trait,
     extract::{self, FromRequestParts},
     headers::{authorization::Bearer, Authorization},
+    http::request::Parts,
     routing::{get, post},
-    Extension, Json, Router, TypedHeader, http::request::Parts,
+    Extension, Json, Router, TypedHeader,
 };
-use jsonwebtoken::DecodingKey;
+use jwt_simple::prelude::{Claims, MACLike, NoCustomClaims};
 use kabalist_types::{
     GetAccountNameResponse, LoginRequest, LoginResponse, RecoverPasswordRequest,
     RecoverPasswordResponse, RecoveryInfoResponse, RegisterRequest, RegisterResponse,
 };
-use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use tokio_stream::StreamExt;
 use uuid::Uuid;
@@ -22,13 +22,6 @@ use crate::{config::Config, Error, OkResponse, Rsp};
 #[derive(Debug)]
 pub(crate) struct User {
     pub id: Uuid,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: Uuid,
-    exp: usize,
-    iat: chrono::DateTime<chrono::Utc>,
 }
 
 #[async_trait]
@@ -51,26 +44,14 @@ where
                 .await
                 .map_err(|_| Error::MissingAuthorization)?;
 
-        let decoded = match jsonwebtoken::decode::<Claims>(
-            bearer.token(),
-            &DecodingKey::from_secret(&config.jwt_secret.0),
-            &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::HS256),
-        ) {
-            Err(e) => {
-                tracing::error!("Could not decode JWT: {:?}", e);
-                return Err(Error::InvalidToken);
-            }
-            Ok(d) => d,
-        };
-
-        if decoded.claims.iat + chrono::Duration::seconds(decoded.claims.exp as i64)
-            < chrono::Utc::now()
-        {
-            return Err(Error::TokenExpired);
-        }
+        let claims = config
+            .jwt_secret
+            .0
+            .verify_token::<NoCustomClaims>(bearer.token(), None)?;
 
         Ok(User {
-            id: decoded.claims.sub,
+            /* We control the subject, so we are sure that we set it to an uuid */
+            id: claims.subject.unwrap().parse().unwrap(),
         })
     }
 }
@@ -113,20 +94,10 @@ async fn login(
         Some(Ok(id)) => id.id,
     };
 
-    let claims = Claims {
-        sub: id,
-        exp: config.exp,
-        iat: chrono::Utc::now(),
-    };
+    let mut claims = Claims::create(Duration::from_millis(config.exp as _).into());
+    claims.subject = Some(id.to_string());
 
-    let token = match jsonwebtoken::encode(
-        &jsonwebtoken::Header::default(),
-        &claims,
-        &jsonwebtoken::EncodingKey::from_secret(&config.jwt_secret.0),
-    ) {
-        Err(e) => return Err(e.into()),
-        Ok(t) => t,
-    };
+    let token = config.jwt_secret.0.authenticate(claims)?;
 
     OkResponse::ok(LoginResponse { token })
 }

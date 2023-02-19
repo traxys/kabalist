@@ -161,10 +161,10 @@ impl From<sqlx::Error> for Error {
     }
 }
 
-impl From<jsonwebtoken::errors::Error> for Error {
-    fn from(e: jsonwebtoken::errors::Error) -> Self {
-        tracing::error!("Could not create JWT: {:?}", e);
-        Error::Internal
+impl From<jwt_simple::Error> for Error {
+    fn from(value: jwt_simple::Error) -> Self {
+        tracing::error!("Jwt error: {value:?}");
+        Error::InvalidToken
     }
 }
 
