@@ -21,6 +21,11 @@ void main() {
       // TODO
     });
 
+    // String owner
+    test('to test the property `owner`', () async {
+      // TODO
+    });
+
     // bool public
     test('to test the property `public`', () async {
       // TODO
