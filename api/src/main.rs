@@ -57,7 +57,7 @@ macro_rules! define_error {
                     "Error",
                     utoipa::openapi::ObjectBuilder::new()
                         .schema_type(utoipa::openapi::SchemaType::Number)
-                        .enum_values(Some([$(stringify!($code),)*]))
+                        .enum_values(Some([$($code,)*]))
                         .build()
                         .into()
                 )
