@@ -63,7 +63,7 @@ impl Component for List {
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             ListMessage::SetContent(c) => {
                 self.items = c;
@@ -78,8 +78,8 @@ impl Component for List {
                 true
             }
             ListMessage::Multiple(a, b) => {
-                self.update(ctx, *a);
-                self.update(ctx, *b);
+                self.update(_ctx, *a);
+                self.update(_ctx, *b);
                 true
             }
         }

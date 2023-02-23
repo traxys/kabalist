@@ -12,7 +12,7 @@ pub struct SidebarProps {
     pub on_logout: Callback<()>,
     pub username: String,
     pub token: String,
-    pub lists: HashMap<String, ListInfo>,
+    pub lists: HashMap<Uuid, ListInfo>,
     pub selected: Option<Uuid>,
     pub on_newlist: Callback<String>,
     pub on_delete: Callback<Uuid>,
@@ -25,25 +25,25 @@ pub fn side_bar(props: &SidebarProps) -> Html {
     let onclick_logout = Callback::from(move |_| logout.emit(()));
 
     let delete = props.on_delete.clone();
-    let selected_list = props
-        .lists
-        .iter()
-        .find(|(_, info)| Some(info.id) == props.selected)
-        .map(|(name, info)| {
-            let id = info.id;
-            ((name, info), Callback::from(move |_| delete.emit(id)))
-        });
+    let selected_list = props.selected.as_ref().and_then(|&selected| {
+        props.lists.get(&selected).map(|info| {
+            (
+                (selected, info),
+                Callback::from(move |_| delete.emit(selected)),
+            )
+        })
+    });
 
     let lists = props
         .lists
         .iter()
         .sorted_unstable_by_key(|a| a.0)
-        .map(|(name, info)| {
+        .map(|(&id, info)| {
             side_bar_list_item(
-                info.id,
-                name.to_string(),
+                id,
+                info.name.clone(),
                 info.status,
-                Some(info.id) == props.selected,
+                Some(id) == props.selected,
             )
         });
 
@@ -117,28 +117,28 @@ pub fn side_bar(props: &SidebarProps) -> Html {
                 <li><a class="dropdown-item" href="#" onclick={onclick_logout}>{"Logout"}</a></li>
                 </ul>
                 <NewList modal_id="newListModal" on_newlist={props.on_newlist.clone()} />
-                if let Some(((name, info), on_validated)) = selected_list {
+                if let Some(((id, info), on_validated)) = selected_list {
                   <ListSharing
-                      id={info.id}
+                      id={id}
                       token={props.token.clone()}
                       modal_id="listSharingModal"
                   />
                   if let ListStatus::Owned = info.status {
                      <ListVisibility
                         modal_id="visibilityModal"
-                        id={info.id}
+                        id={id}
                         token={props.token.clone()}
                         public={info.public}
                         on_toggle={props.sync_lists.clone()}
                     />
                      <Modal
                        id="deleteListModal"
-                       title={format!("Delete {name}")}
+                       title={format!("Delete {}", info.name)}
                        validate="Delete List"
                        danger=true
                        {on_validated}
                      >
-                       <p>{format!("Are you sure you want to delete {name}")}</p>
+                       <p>{format!("Are you sure you want to delete {}", info.name)}</p>
                      </Modal>
                   }
                 }

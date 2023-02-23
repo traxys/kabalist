@@ -92,10 +92,10 @@ pub enum ListStatus {
     SharedRead,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Hash)]
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
 pub struct ListInfo {
-    pub id: Uuid,
+    pub name: String,
     pub status: ListStatus,
     pub public: bool,
 }
@@ -103,7 +103,7 @@ pub struct ListInfo {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 #[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct GetListsResponse {
-    pub results: HashMap<String, ListInfo>,
+    pub results: HashMap<Uuid, ListInfo>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]

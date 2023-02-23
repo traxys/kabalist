@@ -16,8 +16,8 @@ void main() {
   // final instance = ListInfo();
 
   group('test ListInfo', () {
-    // String id
-    test('to test the property `id`', () async {
+    // String name
+    test('to test the property `name`', () async {
       // TODO
     });
 

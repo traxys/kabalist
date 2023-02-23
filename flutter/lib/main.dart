@@ -323,7 +323,7 @@ class _ListDrawerState extends State<ListDrawer> {
             names = List.from(snapshots.data!.entries);
             names.sort((a, b) => widget.listSorter(a.key, b.key));
             data = List.from(names.map((entry) => ListTile(
-                title: Text("${entry.key}${fmtStatus(entry.value.status)}"),
+                title: Text("${entry.value.name}${fmtStatus(entry.value.status)}"),
                 onTap: () {
                   widget.selectList(entry.key, entry.value);
                   Navigator.pop(context);
@@ -838,8 +838,8 @@ class _AuthListsState extends State<AuthLists> {
               clearLastUsed();
             }
           },
-          selectList: (name, data) async {
-            final info = ListDesc(id: data.id, name: name, status: data.status);
+          selectList: (id, data) async {
+            final info = ListDesc(id: id, name: data.name, status: data.status);
             setState(() {
               settings = false;
             });

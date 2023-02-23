@@ -2,6 +2,7 @@ use std::io;
 
 use clap::{Args, IntoApp, Parser, Subcommand};
 use clap_complete::{generate, Shell};
+use itertools::Itertools;
 use kabalist_client::{Client, Uuid};
 use yansi::Paint;
 
@@ -18,12 +19,19 @@ impl ListCommands {
     async fn run(self, url: String) -> color_eyre::Result<()> {
         let client = Client::new(url.clone(), self.token);
         let searched = client.search(&self.list).await?.results;
-        let list = match searched.get(&self.list) {
-            None => {
+        let list = match searched.len() {
+            0 => {
                 println!("Could not read list: {}", yansi::Paint::red("No such list"));
                 return Ok(());
             }
-            Some(info) => info.id,
+            1 => searched.into_keys().next().unwrap(),
+            _ => {
+                println!(
+                    "Multiple matches: {}",
+                    searched.into_values().map(|n| n.name).join(",")
+                );
+                return Ok(());
+            }
         };
 
         match self.action {

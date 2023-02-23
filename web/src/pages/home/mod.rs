@@ -23,12 +23,12 @@ pub struct Props {
 
 pub struct Home {
     client: kabalist_client::Client,
-    lists: HashMap<String, ListInfo>,
+    lists: HashMap<Uuid, ListInfo>,
     error: Option<String>,
 }
 
 pub enum HomeMessage {
-    SetLists(HashMap<String, ListInfo>),
+    SetLists(HashMap<Uuid, ListInfo>),
     Error(String),
     ResetError,
 }

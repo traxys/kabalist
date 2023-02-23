@@ -310,9 +310,9 @@ async fn search_list(
             .into_iter()
             .map(|row| {
                 (
-                    row.name,
+                    row.id,
                     ListInfo {
-                        id: row.id,
+                        name: row.name,
                         status: ListStatus::Owned,
                         public: row.r#pub.unwrap_or(false),
                     },
@@ -320,9 +320,9 @@ async fn search_list(
             })
             .chain(results_shared.into_iter().map(|row| {
                 (
-                    row.name,
+                    row.id,
                     ListInfo {
-                        id: row.id,
+                        name: row.name,
                         status: if row.readonly {
                             ListStatus::SharedRead
                         } else {

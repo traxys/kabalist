@@ -70,9 +70,9 @@ pub(crate) async fn list_lists(
             .into_iter()
             .map(|row| {
                 (
-                    row.name,
+                    row.id,
                     ListInfo {
-                        id: row.id,
+                        name: row.name,
                         status: ListStatus::Owned,
                         public: row.r#pub.unwrap_or(false),
                     },
@@ -80,9 +80,9 @@ pub(crate) async fn list_lists(
             })
             .chain(results_shared.into_iter().map(|row| {
                 (
-                    row.name,
+                    row.id,
                     ListInfo {
-                        id: row.id,
+                        name: row.name,
                         status: if row.readonly {
                             ListStatus::SharedRead
                         } else {

@@ -13,12 +13,12 @@ part of openapi.api;
 class ListInfo {
   /// Returns a new [ListInfo] instance.
   ListInfo({
-    required this.id,
+    required this.name,
     required this.public,
     required this.status,
   });
 
-  String id;
+  String name;
 
   bool public;
 
@@ -26,23 +26,23 @@ class ListInfo {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is ListInfo &&
-     other.id == id &&
+     other.name == name &&
      other.public == public &&
      other.status == status;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (id.hashCode) +
+    (name.hashCode) +
     (public.hashCode) +
     (status.hashCode);
 
   @override
-  String toString() => 'ListInfo[id=$id, public=$public, status=$status]';
+  String toString() => 'ListInfo[name=$name, public=$public, status=$status]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
-      json[r'id'] = this.id;
+      json[r'name'] = this.name;
       json[r'public'] = this.public;
       json[r'status'] = this.status;
     return json;
@@ -67,7 +67,7 @@ class ListInfo {
       }());
 
       return ListInfo(
-        id: mapValueOfType<String>(json, r'id')!,
+        name: mapValueOfType<String>(json, r'name')!,
         public: mapValueOfType<bool>(json, r'public')!,
         status: ListStatus.fromJson(json[r'status'])!,
       );
@@ -119,7 +119,7 @@ class ListInfo {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
-    'id',
+    'name',
     'public',
     'status',
   };
