@@ -21,6 +21,7 @@ jobs:
           channel: "stable"
 
       - run: flutter pub get
+      - run: ./prepare.sh
       - run: flutter build apk
 
   cli:
