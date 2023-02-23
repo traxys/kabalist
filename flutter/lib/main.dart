@@ -241,17 +241,24 @@ class ListDrawer extends StatefulWidget {
   State<ListDrawer> createState() => _ListDrawerState();
 }
 
-String fmtStatus(kb.ListStatus status) {
+String fmtStatus(kb.ListStatus status, String owned) {
   switch (status) {
     case kb.ListStatus.owned:
       return "";
     case kb.ListStatus.sharedRead:
-      return " (readonly)";
+      return " (readonly from $owned)";
     case kb.ListStatus.sharedWrite:
-      return " (shared)";
+      return " (shared by $owned)";
     default:
       return "";
   }
+}
+
+class ExtendedListInfo {
+  ExtendedListInfo({required this.info, required this.owner});
+
+  final kb.ListInfo info;
+  final String owner;
 }
 
 class _ListDrawerState extends State<ListDrawer> {
@@ -260,15 +267,38 @@ class _ListDrawerState extends State<ListDrawer> {
 
   late String shareName;
   bool shareReadonly = false;
-  late Future<Map<String, kb.ListInfo>> lists;
+  late Future<Map<String, ExtendedListInfo>> lists;
 
-  Future<Map<String, kb.ListInfo>> fetchLists() async {
+  Future<Map<String, ExtendedListInfo>> fetchLists() async {
     final instance = listApiClient(widget.token);
     final rsp = (await instance.listLists())!.ok.results;
 
     widget.fetchedList(List.from(rsp.keys));
 
-    return rsp;
+    final accountInfo = accountApiClient(widget.token);
+    final owners = {};
+    Map<String, ExtendedListInfo> resolvedRsp = {};
+    for (final entry in rsp.entries) {
+      var ownerInfo = owners[entry.value.owner];
+      if (ownerInfo == null) {
+        try {
+          ownerInfo = (await accountInfo.getAccountName(entry.value.owner))
+              ?.ok
+              .username;
+        } on kb.ApiException catch (e) {
+          /* Unknown Account, Should not happen but let's be conservative */
+          if (e.code == 7) {
+            ownerInfo = "<unknown>";
+          } else {
+            throw e;
+          }
+        }
+      }
+      resolvedRsp[entry.key] =
+          ExtendedListInfo(owner: ownerInfo, info: entry.value);
+    }
+
+    return resolvedRsp;
   }
 
   void addList(String name) async {
@@ -319,7 +349,7 @@ class _ListDrawerState extends State<ListDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, kb.ListInfo>>(
+    return FutureBuilder<Map<String, ExtendedListInfo>>(
         future: lists,
         builder: (context, snapshots) {
           final names;
@@ -328,9 +358,10 @@ class _ListDrawerState extends State<ListDrawer> {
             names = List.from(snapshots.data!.entries);
             names.sort((a, b) => widget.listSorter(a.key, b.key));
             data = List.from(names.map((entry) => ListTile(
-                title: Text("${entry.value.name}${fmtStatus(entry.value.status)}"),
+                title: Text(
+                    "${entry.value.info.name}${fmtStatus(entry.value.info.status, entry.value.owner)}"),
                 onTap: () {
-                  widget.selectList(entry.key, entry.value);
+                  widget.selectList(entry.key, entry.value.info);
                   Navigator.pop(context);
                 },
                 onLongPress: () async {
@@ -345,7 +376,7 @@ class _ListDrawerState extends State<ListDrawer> {
                             child: Text("Delete List"),
                           )
                         ];
-                        if (entry.value.status != kb.ListStatus.sharedRead) {
+                        if (entry.value.info.status != kb.ListStatus.sharedRead) {
                           actions.add(SimpleDialogOption(
                             onPressed: () {
                               Navigator.pop(ctx, ListAction.Share);
