@@ -6,6 +6,23 @@ on:
       - master
 
 jobs:
+  app:
+    name: Android APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+
+      - run: flutter pub get
+      - run: flutter build apk
+
   cli:
     name: CLI binary
     runs-on: ${{ matrix.os }}
@@ -48,7 +65,6 @@ jobs:
         with:
           name: kabalist-cli-${{ matrix.target }}
           path: ${{ matrix.bin }}
-
 
   server:
     name: Server Binaries (API & admin)
@@ -123,4 +139,3 @@ jobs:
         with:
           name: kabalist-admin
           path: target/release/kb_admin
-
