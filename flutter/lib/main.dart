@@ -17,8 +17,13 @@ kb.ListApi listApiClient(String token) {
   return kb.ListApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
-kb.AccountApi accountApiClient() {
-  return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT));
+kb.AccountApi accountApiClient(String? token) {
+  var auth;
+  if (token != null) {
+    auth = kb.HttpBearerAuth();
+    auth.accessToken = token;
+  }
+  return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT, authentication: auth));
 }
 
 kb.CrateApi miscApiClient(String token) {
@@ -194,7 +199,7 @@ class _LoginFormState extends State<LoginForm> {
                 if (_formKey.currentState!.validate()) {
                   _formKey.currentState!.save();
 
-                  final instance = accountApiClient();
+                  final instance = accountApiClient(null);
                   final loginRequest =
                       kb.LoginRequest(username: username!, password: password!);
                   try {
