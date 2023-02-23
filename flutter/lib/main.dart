@@ -357,7 +357,7 @@ class _ListDrawerState extends State<ListDrawer> {
                             title: Text("List Actions"), children: actions);
                       })) {
                     case ListAction.Delete:
-                      deleteList(entry.value.id);
+                      deleteList(entry.key);
                       break;
                     case ListAction.Share:
                       print("todo share");
@@ -418,7 +418,7 @@ class _ListDrawerState extends State<ListDrawer> {
                                                         _formKey.currentState!
                                                             .save();
                                                         shareList(
-                                                            entry.value.id,
+                                                            entry.key,
                                                             shareName,
                                                             shareReadonly);
                                                         Navigator.of(context)
