@@ -286,7 +286,7 @@ async fn search_list(
     extract::Path(name): extract::Path<String>,
 ) -> Rsp<GetListsResponse> {
     let results_owned = sqlx::query!(
-        "SELECT name, id, pub FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
+        "SELECT name, id, pub, owner FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
         user.id,
         name
     )
@@ -294,7 +294,7 @@ async fn search_list(
     .await?;
 
     let results_shared = sqlx::query!(
-        r#"SELECT name, id, readonly, pub
+        r#"SELECT name, id, readonly, pub, owner
                FROM lists, list_sharing
                WHERE (lists.id = list_sharing.list)
                    AND shared = $1
@@ -315,6 +315,7 @@ async fn search_list(
                         name: row.name,
                         status: ListStatus::Owned,
                         public: row.r#pub.unwrap_or(false),
+                        owner: row.owner,
                     },
                 )
             })
@@ -329,6 +330,7 @@ async fn search_list(
                             ListStatus::SharedWrite
                         },
                         public: row.r#pub.unwrap_or(false),
+                        owner: row.owner,
                     },
                 )
             }))

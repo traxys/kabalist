@@ -49,14 +49,14 @@ pub(crate) async fn list_lists(
 ) -> Rsp<GetListsResponse> {
     let results_owned = sqlx::query!(
         r#"
-        SELECT name, id, pub
+        SELECT name, id, pub, owner
         FROM lists WHERE owner = $1"#,
         user.id
     )
     .fetch_all(&db)
     .await?;
     let results_shared = sqlx::query!(
-        r#"SELECT name, id, readonly, pub
+        r#"SELECT name, id, readonly, pub, owner
                FROM lists, list_sharing
                WHERE (lists.id = list_sharing.list)
                    AND shared = $1 "#,
@@ -75,6 +75,7 @@ pub(crate) async fn list_lists(
                         name: row.name,
                         status: ListStatus::Owned,
                         public: row.r#pub.unwrap_or(false),
+                        owner: row.owner,
                     },
                 )
             })
@@ -89,6 +90,7 @@ pub(crate) async fn list_lists(
                             ListStatus::SharedWrite
                         },
                         public: row.r#pub.unwrap_or(false),
+                        owner: row.owner,
                     },
                 )
             }))

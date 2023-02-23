@@ -181,6 +181,90 @@
     },
     "query": "DELETE FROM list_sharing WHERE list = $1 AND shared = $2"
   },
+  "3476126e3cfc5f70c11ccd4125ec1c3e0197eb0c85374b21c05706662256487d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "pub",
+          "ordinal": 2,
+          "type_info": "Bool"
+        },
+        {
+          "name": "owner",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT name, id, pub, owner FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'"
+  },
+  "34b128e07400694aeb8fc204299ea972ac144744f955aa3fa266b8e4484738ec": {
+    "describe": {
+      "columns": [
+        {
+          "name": "name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "readonly",
+          "ordinal": 2,
+          "type_info": "Bool"
+        },
+        {
+          "name": "pub",
+          "ordinal": 3,
+          "type_info": "Bool"
+        },
+        {
+          "name": "owner",
+          "ordinal": 4,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "SELECT name, id, readonly, pub, owner\n               FROM lists, list_sharing\n               WHERE (lists.id = list_sharing.list)\n                   AND shared = $1\n                   AND name ILIKE '%' || $2 || '%'"
+  },
   "405111d9507c468550b0875beb1a277b6be6ee1148ffd6cf3818c33cc43c408a": {
     "describe": {
       "columns": [],
@@ -310,39 +394,6 @@
       }
     },
     "query": "DELETE FROM password_reset WHERE id = $1"
-  },
-  "85c4c2d46b862ad72be8dfea58cbf8193a5aef9f3b9e60d6984db92fc3277207": {
-    "describe": {
-      "columns": [
-        {
-          "name": "name",
-          "ordinal": 0,
-          "type_info": "Text"
-        },
-        {
-          "name": "id",
-          "ordinal": 1,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "pub",
-          "ordinal": 2,
-          "type_info": "Bool"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Text"
-        ]
-      }
-    },
-    "query": "SELECT name, id, pub FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'"
   },
   "8d0ecf8ca182b271a1fe7853ad5d3b06d0a70ad2e60c0b5f573596d7651007a5": {
     "describe": {
@@ -555,7 +606,7 @@
     },
     "query": "SELECT name,amount FROM lists_content WHERE list = $1"
   },
-  "be52a21240bea1723e56f0abfcc8bb0dd9e0eaa3740ae3e02f4a466287f24a5e": {
+  "bede53ffeca15dac2c189800bba83f4fd98e4b6bde3bcd09e8903d656f5f447a": {
     "describe": {
       "columns": [
         {
@@ -572,12 +623,18 @@
           "name": "pub",
           "ordinal": 2,
           "type_info": "Bool"
+        },
+        {
+          "name": "owner",
+          "ordinal": 3,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
         false,
         false,
-        true
+        true,
+        false
       ],
       "parameters": {
         "Left": [
@@ -585,9 +642,9 @@
         ]
       }
     },
-    "query": "\n        SELECT name, id, pub\n        FROM lists WHERE owner = $1"
+    "query": "\n        SELECT name, id, pub, owner\n        FROM lists WHERE owner = $1"
   },
-  "bee1b17c59954b1ab7509c987b2f1d06d3d3dd01fd4828303c872bcba4f3c170": {
+  "c276163d0c04d50fde031927b102cde97df4784605696b004d15b75cf28be2c8": {
     "describe": {
       "columns": [
         {
@@ -609,22 +666,27 @@
           "name": "pub",
           "ordinal": 3,
           "type_info": "Bool"
+        },
+        {
+          "name": "owner",
+          "ordinal": 4,
+          "type_info": "Uuid"
         }
       ],
       "nullable": [
         false,
         false,
         false,
-        true
+        true,
+        false
       ],
       "parameters": {
         "Left": [
-          "Uuid",
-          "Text"
+          "Uuid"
         ]
       }
     },
-    "query": "SELECT name, id, readonly, pub\n               FROM lists, list_sharing\n               WHERE (lists.id = list_sharing.list)\n                   AND shared = $1\n                   AND name ILIKE '%' || $2 || '%'"
+    "query": "SELECT name, id, readonly, pub, owner\n               FROM lists, list_sharing\n               WHERE (lists.id = list_sharing.list)\n                   AND shared = $1 "
   },
   "c4dab9b17e8b96242f9869f5e8fc553c8b901676e1dc6e23de1d584dd7017a94": {
     "describe": {
@@ -726,44 +788,6 @@
       }
     },
     "query": "SELECT readonly FROM list_sharing WHERE list = $1 AND shared = $2"
-  },
-  "e771ba9438ce4bc3fb9a5f07c6f164fbe9e09e45c2ca03fc91f2be5521f41740": {
-    "describe": {
-      "columns": [
-        {
-          "name": "name",
-          "ordinal": 0,
-          "type_info": "Text"
-        },
-        {
-          "name": "id",
-          "ordinal": 1,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "readonly",
-          "ordinal": 2,
-          "type_info": "Bool"
-        },
-        {
-          "name": "pub",
-          "ordinal": 3,
-          "type_info": "Bool"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "SELECT name, id, readonly, pub\n               FROM lists, list_sharing\n               WHERE (lists.id = list_sharing.list)\n                   AND shared = $1 "
   },
   "e816dc4bc47fbec737ecc7c28d9f4aab875bd4ab50f197f505cdd9f47f7f12a6": {
     "describe": {

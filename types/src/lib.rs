@@ -98,6 +98,7 @@ pub struct ListInfo {
     pub name: String,
     pub status: ListStatus,
     pub public: bool,
+    pub owner: Uuid,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
