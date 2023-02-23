@@ -1094,7 +1094,7 @@ class _PantryContentState extends State<PantryContent>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     updateContents();
     timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
       if (shouldFetch) {
@@ -1108,7 +1108,7 @@ class _PantryContentState extends State<PantryContent>
   void dispose() {
     timer?.cancel();
     widget.list.removeListener(fetchContentsCallback);
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -1458,7 +1458,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     updateContents();
     timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
       if (shouldFetch) {
@@ -1472,7 +1472,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   void dispose() {
     timer?.cancel();
     widget.list.removeListener(fetchContentsCallback);
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
