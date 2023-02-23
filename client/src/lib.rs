@@ -25,7 +25,7 @@ pub async fn login(url: &str, username: &str, password: &str) -> Result<LoginRes
 
     let client = reqwest::Client::new();
     let token: RspData<LoginResponse> = client
-        .post(format!("{}/account/login", url))
+        .post(format!("{}/api/account/login", url))
         .json(&LoginRequest { username, password })
         .send()
         .await?
@@ -49,7 +49,7 @@ pub async fn register(
 
     let client = reqwest::Client::new();
     let rsp: RspData<RegisterResponse> = client
-        .post(&format!("{}/account/register/{}", url, token))
+        .post(&format!("{}/api/account/register/{}", url, token))
         .json(&RegisterRequest { username, password })
         .send()
         .await?
@@ -62,7 +62,7 @@ pub async fn register(
 pub async fn recover_info(url: &str, recovery_id: &Uuid) -> Result<RecoveryInfoResponse> {
     let client = reqwest::Client::new();
     let rsp: RspData<RecoveryInfoResponse> = client
-        .get(&format!("{}/account/recover/{}", url, recovery_id))
+        .get(&format!("{}/api/account/recover/{}", url, recovery_id))
         .send()
         .await?
         .json()
@@ -83,7 +83,7 @@ pub async fn recover_password(
 
     let client = reqwest::Client::new();
     let rsp: RspData<RecoverPasswordResponse> = client
-        .post(&format!("{}/account/recover/{}", url, recovery_id))
+        .post(&format!("{}/api/account/recover/{}", url, recovery_id))
         .json(&Request {
             password: new_password,
         })
@@ -107,7 +107,7 @@ impl Client {
         Self {
             client: reqwest::Client::new(),
             token,
-            url,
+            url: url + "/api",
         }
     }
 

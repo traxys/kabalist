@@ -12,9 +12,7 @@ pub(crate) fn endpoint() -> String {
 
 #[cfg(not(feature = "standalone"))]
 pub(crate) fn endpoint() -> String {
-    let mut root = web_sys::window().unwrap().location().origin().unwrap();
-    root += "/api";
-    root
+    web_sys::window().unwrap().location().origin().unwrap()
 }
 
 #[derive(Clone, Copy, Routable, PartialEq)]

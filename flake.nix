@@ -126,11 +126,12 @@
         web = webPkg;
       };
       devShell = with pkgs;
-        mkShell {
+        mkShell rec {
           nativeBuildInputs = [pkgs.bashInteractive];
 
           DATABASE_URL = "postgres://traxys/list?host=/var/run/postgresql";
-          LIST_URL = "http://localhost:8080/api";
+		  KABALIST_DATABASE_URL = DATABASE_URL;
+          LIST_URL = "http://localhost:8080";
 
           buildInputs = [
             # Flutter
