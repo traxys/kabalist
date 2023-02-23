@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use kabalist_client::{ListInfo, Uuid};
+use futures::stream::{FuturesUnordered, TryStreamExt};
+use kabalist_client::Uuid;
 use yew::prelude::*;
 
 mod list;
@@ -13,6 +14,8 @@ use yew_router::{history::History, prelude::RouterScopeExt};
 
 use crate::Route;
 
+use self::sidebar::ResolvedListInfo;
+
 #[derive(Clone, PartialEq, Properties)]
 pub struct Props {
     pub logout: Callback<()>,
@@ -23,12 +26,12 @@ pub struct Props {
 
 pub struct Home {
     client: kabalist_client::Client,
-    lists: HashMap<Uuid, ListInfo>,
+    lists: HashMap<Uuid, ResolvedListInfo>,
     error: Option<String>,
 }
 
 pub enum HomeMessage {
-    SetLists(HashMap<Uuid, ListInfo>),
+    SetLists(HashMap<Uuid, ResolvedListInfo>),
     Error(String),
     ResetError,
 }
@@ -39,7 +42,30 @@ struct Token(String);
 async fn lists(client: kabalist_client::Client) -> HomeMessage {
     match client.lists().await {
         Err(e) => HomeMessage::Error(format!("Could not sync lists: {:?}", e)),
-        Ok(v) => HomeMessage::SetLists(v.results),
+        Ok(v) => {
+            let resolved = v
+                .results
+                .into_iter()
+                .map(|(id, info)| {
+                    let client = client.clone();
+                    async move {
+                        Ok::<_, kabalist_client::Error>((
+                            id,
+                            ResolvedListInfo {
+                                owner: client.account_name(&info.owner).await?.username,
+                                info,
+                            },
+                        ))
+                    }
+                })
+                .collect::<FuturesUnordered<_>>()
+                .try_collect()
+                .await;
+            match resolved {
+                Ok(v) => HomeMessage::SetLists(v),
+                Err(e) => HomeMessage::Error(format!("Could not fetch owner: {e:?}")),
+            }
+        }
     }
 }
 
@@ -49,10 +75,7 @@ impl Component for Home {
 
     fn create(ctx: &Context<Self>) -> Self {
         let home = Home {
-            client: kabalist_client::Client::new(
-                crate::endpoint(),
-                ctx.props().token.clone(),
-            ),
+            client: kabalist_client::Client::new(crate::endpoint(), ctx.props().token.clone()),
             lists: HashMap::new(),
             error: None,
         };

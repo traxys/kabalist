@@ -7,12 +7,18 @@ use kabalist_client::{ListInfo, ListStatus, Uuid};
 use yew::{prelude::*, virtual_dom::AttrValue};
 use yew_router::prelude::*;
 
+#[derive(Clone, PartialEq)]
+pub struct ResolvedListInfo {
+    pub info: ListInfo,
+    pub  owner: String,
+}
+
 #[derive(Clone, PartialEq, Properties)]
 pub struct SidebarProps {
     pub on_logout: Callback<()>,
     pub username: String,
     pub token: String,
-    pub lists: HashMap<Uuid, ListInfo>,
+    pub lists: HashMap<Uuid, ResolvedListInfo>,
     pub selected: Option<Uuid>,
     pub on_newlist: Callback<String>,
     pub on_delete: Callback<Uuid>,
@@ -38,12 +44,13 @@ pub fn side_bar(props: &SidebarProps) -> Html {
         .lists
         .iter()
         .sorted_unstable_by_key(|a| a.0)
-        .map(|(&id, info)| {
+        .map(|(&id, res_info)| {
             side_bar_list_item(
                 id,
-                info.name.clone(),
-                info.status,
+                res_info.info.name.clone(),
+                res_info.info.status,
                 Some(id) == props.selected,
+                &res_info.owner,
             )
         });
 
@@ -79,7 +86,7 @@ pub fn side_bar(props: &SidebarProps) -> Html {
                       {"Manage List Sharing"}
                     </a>
                   </li>
-                  if let ListStatus::Owned = info.status {
+                  if let ListStatus::Owned = info.info.status {
                     <li>
                       <a
                         class="dropdown-item"
@@ -123,22 +130,22 @@ pub fn side_bar(props: &SidebarProps) -> Html {
                       token={props.token.clone()}
                       modal_id="listSharingModal"
                   />
-                  if let ListStatus::Owned = info.status {
+                  if let ListStatus::Owned = info.info.status {
                      <ListVisibility
                         modal_id="visibilityModal"
                         id={id}
                         token={props.token.clone()}
-                        public={info.public}
+                        public={info.info.public}
                         on_toggle={props.sync_lists.clone()}
                     />
                      <Modal
                        id="deleteListModal"
-                       title={format!("Delete {}", info.name)}
+                       title={format!("Delete {}", info.info.name)}
                        validate="Delete List"
                        danger=true
                        {on_validated}
                      >
-                       <p>{format!("Are you sure you want to delete {}", info.name)}</p>
+                       <p>{format!("Are you sure you want to delete {}", info.info.name)}</p>
                      </Modal>
                   }
                 }
@@ -257,11 +264,17 @@ where
     }
 }
 
-fn side_bar_list_item(id: Uuid, name: String, status: ListStatus, selected: bool) -> Html {
-    let status = match status {
-        ListStatus::Owned => "owned",
-        ListStatus::SharedWrite => "shared",
-        ListStatus::SharedRead => "read-only",
+fn side_bar_list_item(
+    id: Uuid,
+    name: String,
+    status: ListStatus,
+    selected: bool,
+    owner: &str,
+) -> Html {
+    let status: Cow<str> = match status {
+        ListStatus::Owned => "owned".into(),
+        ListStatus::SharedWrite => format!("shared by {owner}").into(),
+        ListStatus::SharedRead => format!("read-only from {owner}").into(),
     };
     let classes = if selected {
         "nav-link active"
