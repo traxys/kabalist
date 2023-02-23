@@ -31,9 +31,9 @@ class GetListsResponse {
   String toString() => 'GetListsResponse[results=$results]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'results'] = results;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'results'] = this.results;
+    return json;
   }
 
   /// Returns a new [GetListsResponse] instance and imports its values from

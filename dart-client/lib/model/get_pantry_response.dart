@@ -31,9 +31,9 @@ class GetPantryResponse {
   String toString() => 'GetPantryResponse[items=$items]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'items'] = items;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'items'] = this.items;
+    return json;
   }
 
   /// Returns a new [GetPantryResponse] instance and imports its values from

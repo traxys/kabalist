@@ -17,36 +17,26 @@ void main() {
   // final instance = PantryApi();
 
   group('tests for PantryApi', () {
-    // 
-    //
     //Future<OkAddToPantryResponse> addToPantry(String id, AddToPantryRequest addToPantryRequest) async
     test('test addToPantry', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkDeletePantryItemResponse> deletePantryItem(String id, int item) async
     test('test deletePantryItem', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkGetPantryResponse> getPantry(String id) async
     test('test getPantry', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkRefillPantryResponse> refillPantry(String id) async
     test('test refillPantry', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkEditPantryItemResponse> setPantryItem(String id, int item, EditPantryItemRequest editPantryItemRequest) async
     test('test setPantryItem', () async {
       // TODO

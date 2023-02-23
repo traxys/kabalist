@@ -42,12 +42,14 @@ class GetSharesResponse {
   String toString() => 'GetSharesResponse[publicLink=$publicLink, sharedWith=$sharedWith]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-    if (publicLink != null) {
-      _json[r'public_link'] = publicLink;
+    final json = <String, dynamic>{};
+    if (this.publicLink != null) {
+      json[r'public_link'] = this.publicLink;
+    } else {
+      json[r'public_link'] = null;
     }
-      _json[r'shared_with'] = sharedWith;
-    return _json;
+      json[r'shared_with'] = this.sharedWith;
+    return json;
   }
 
   /// Returns a new [GetSharesResponse] instance and imports its values from

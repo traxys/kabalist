@@ -48,14 +48,18 @@ class EditPantryItemRequest {
   String toString() => 'EditPantryItemRequest[amount=$amount, target=$target]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-    if (amount != null) {
-      _json[r'amount'] = amount;
+    final json = <String, dynamic>{};
+    if (this.amount != null) {
+      json[r'amount'] = this.amount;
+    } else {
+      json[r'amount'] = null;
     }
-    if (target != null) {
-      _json[r'target'] = target;
+    if (this.target != null) {
+      json[r'target'] = this.target;
+    } else {
+      json[r'target'] = null;
     }
-    return _json;
+    return json;
   }
 
   /// Returns a new [EditPantryItemRequest] instance and imports its values from

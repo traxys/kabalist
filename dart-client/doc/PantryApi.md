@@ -21,8 +21,6 @@ Method | HTTP request | Description
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -69,8 +67,6 @@ Name | Type | Description  | Notes
 
 # **deletePantryItem**
 > OkDeletePantryItemResponse deletePantryItem(id, item)
-
-
 
 
 
@@ -123,8 +119,6 @@ Name | Type | Description  | Notes
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -172,8 +166,6 @@ Name | Type | Description  | Notes
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -218,8 +210,6 @@ Name | Type | Description  | Notes
 
 # **setPantryItem**
 > OkEditPantryItemResponse setPantryItem(id, item, editPantryItemRequest)
-
-
 
 
 

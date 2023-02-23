@@ -42,12 +42,14 @@ class AddToListRequest {
   String toString() => 'AddToListRequest[amount=$amount, name=$name]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-    if (amount != null) {
-      _json[r'amount'] = amount;
+    final json = <String, dynamic>{};
+    if (this.amount != null) {
+      json[r'amount'] = this.amount;
+    } else {
+      json[r'amount'] = null;
     }
-      _json[r'name'] = name;
-    return _json;
+      json[r'name'] = this.name;
+    return json;
   }
 
   /// Returns a new [AddToListRequest] instance and imports its values from

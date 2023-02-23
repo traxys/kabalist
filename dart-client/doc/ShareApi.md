@@ -20,8 +20,6 @@ Method | HTTP request | Description
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -66,8 +64,6 @@ Name | Type | Description  | Notes
 
 # **getShares**
 > OkGetSharesResponse getShares(id)
-
-
 
 
 
@@ -118,8 +114,6 @@ Name | Type | Description  | Notes
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -166,8 +160,6 @@ Name | Type | Description  | Notes
 
 # **unshare**
 > OkUnshareResponse unshare(id, account)
-
-
 
 
 

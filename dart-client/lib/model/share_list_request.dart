@@ -36,10 +36,10 @@ class ShareListRequest {
   String toString() => 'ShareListRequest[readonly=$readonly, shareWith=$shareWith]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'readonly'] = readonly;
-      _json[r'share_with'] = shareWith;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'readonly'] = this.readonly;
+      json[r'share_with'] = this.shareWith;
+    return json;
   }
 
   /// Returns a new [ShareListRequest] instance and imports its values from

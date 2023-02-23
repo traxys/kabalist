@@ -21,8 +21,6 @@ Method | HTTP request | Description
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -70,7 +68,7 @@ Name | Type | Description  | Notes
 
 Generate a JWT in order to use the other routes
 
-Generate a JWT in order to use the other routes 
+Generate a JWT in order to use the other routes
 
 ### Example
 ```dart
@@ -110,8 +108,6 @@ No authorization required
 
 # **recoverPassword**
 > OkRecoverPasswordResponse recoverPassword(id, recoverPasswordRequest)
-
-
 
 
 
@@ -158,8 +154,6 @@ No authorization required
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -198,8 +192,6 @@ No authorization required
 
 # **register**
 > OkRegisterResponse register(id, registerRequest)
-
-
 
 
 

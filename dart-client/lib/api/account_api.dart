@@ -16,10 +16,7 @@ class AccountApi {
 
   final ApiClient apiClient;
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'GET /api/account/{id}/name' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -50,8 +47,6 @@ class AccountApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -73,7 +68,7 @@ class AccountApi {
 
   /// Generate a JWT in order to use the other routes
   ///
-  /// Generate a JWT in order to use the other routes 
+  /// Generate a JWT in order to use the other routes
   ///
   /// Note: This method returns the HTTP [Response].
   ///
@@ -107,7 +102,7 @@ class AccountApi {
 
   /// Generate a JWT in order to use the other routes
   ///
-  /// Generate a JWT in order to use the other routes 
+  /// Generate a JWT in order to use the other routes
   ///
   /// Parameters:
   ///
@@ -127,10 +122,7 @@ class AccountApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'POST /api/account/recover/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -163,8 +155,6 @@ class AccountApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -186,10 +176,7 @@ class AccountApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'GET /api/account/recover/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -220,8 +207,6 @@ class AccountApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -241,10 +226,7 @@ class AccountApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'POST /api/account/register/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -277,8 +259,6 @@ class AccountApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):

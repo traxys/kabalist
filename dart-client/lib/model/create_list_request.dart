@@ -31,9 +31,9 @@ class CreateListRequest {
   String toString() => 'CreateListRequest[name=$name]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'name'] = name;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'name'] = this.name;
+    return json;
   }
 
   /// Returns a new [CreateListRequest] instance and imports its values from

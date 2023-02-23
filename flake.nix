@@ -41,8 +41,8 @@
       };
 
       openapi-generator-cli = pkgs.fetchurl {
-        url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.0.0/openapi-generator-cli-6.0.0.jar";
-        sha256 = "sha256-DLimlQ/JuMag4WGysYJ/vdglNw6nu0QP7vDT66LEKT4=";
+        url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.4.0/openapi-generator-cli-6.4.0.jar";
+        sha256 = "sha256-Na6tMA4MlGn72dMM9G9BU4l9yygpEgkcpOySEtzp0VE=";
       };
       naersk' = pkgs.callPackage naersk {
         cargo = pkgs.rust-bin-wasm;

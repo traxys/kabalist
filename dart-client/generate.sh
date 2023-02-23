@@ -9,5 +9,3 @@ openapi-generator-cli \
 	-i "$SPEC" \
 	-g dart \
 	-c ./open-generator-config.yaml
-
-rm git_push.sh

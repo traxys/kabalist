@@ -16,10 +16,7 @@ class CrateApi {
 
   final ApiClient apiClient;
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'GET /api/history/{list}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] list (required):
@@ -57,8 +54,6 @@ class CrateApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] list (required):
@@ -81,10 +76,7 @@ class CrateApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'GET /api/search/account/{name}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] name (required):
@@ -115,8 +107,6 @@ class CrateApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] name (required):
@@ -136,10 +126,7 @@ class CrateApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'GET /api/search/list/{name}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] name (required):
@@ -170,8 +157,6 @@ class CrateApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] name (required):

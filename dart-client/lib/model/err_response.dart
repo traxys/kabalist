@@ -31,9 +31,9 @@ class ErrResponse {
   String toString() => 'ErrResponse[err=$err]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'err'] = err;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'err'] = this.err;
+    return json;
   }
 
   /// Returns a new [ErrResponse] instance and imports its values from

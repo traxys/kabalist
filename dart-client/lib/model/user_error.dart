@@ -36,10 +36,10 @@ class UserError {
   String toString() => 'UserError[code=$code, description=$description]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'code'] = code;
-      _json[r'description'] = description;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'code'] = this.code;
+      json[r'description'] = this.description;
+    return json;
   }
 
   /// Returns a new [UserError] instance and imports its values from

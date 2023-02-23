@@ -48,14 +48,18 @@ class UpdateItemRequest {
   String toString() => 'UpdateItemRequest[amount=$amount, name=$name]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-    if (amount != null) {
-      _json[r'amount'] = amount;
+    final json = <String, dynamic>{};
+    if (this.amount != null) {
+      json[r'amount'] = this.amount;
+    } else {
+      json[r'amount'] = null;
     }
-    if (name != null) {
-      _json[r'name'] = name;
+    if (this.name != null) {
+      json[r'name'] = this.name;
+    } else {
+      json[r'name'] = null;
     }
-    return _json;
+    return json;
   }
 
   /// Returns a new [UpdateItemRequest] instance and imports its values from

@@ -16,10 +16,7 @@ class ListApi {
 
   final ApiClient apiClient;
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'POST /api/list/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -52,8 +49,6 @@ class ListApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -75,10 +70,7 @@ class ListApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'POST /api/list' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [CreateListRequest] createListRequest (required):
@@ -107,8 +99,6 @@ class ListApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [CreateListRequest] createListRequest (required):
@@ -127,10 +117,7 @@ class ListApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'DELETE /api/list/{id}/{item}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -165,8 +152,6 @@ class ListApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -189,10 +174,7 @@ class ListApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'DELETE /api/list/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -223,8 +205,6 @@ class ListApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -244,10 +224,7 @@ class ListApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'GET /api/list/{id}/public' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -278,8 +255,6 @@ class ListApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -299,9 +274,7 @@ class ListApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
+  /// Performs an HTTP 'GET /api/list' operation and returns the [Response].
   Future<Response> listListsWithHttpInfo() async {
     // ignore: prefer_const_declarations
     final path = r'/api/list';
@@ -327,7 +300,6 @@ class ListApi {
     );
   }
 
-  /// 
   Future<OkGetListsResponse?> listLists() async {
     final response = await listListsWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
@@ -343,10 +315,7 @@ class ListApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'GET /api/list/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -377,8 +346,6 @@ class ListApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -398,10 +365,7 @@ class ListApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'DELETE /api/list/{id}/public' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -432,8 +396,6 @@ class ListApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -453,10 +415,7 @@ class ListApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'PUT /api/list/{id}/public' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -487,8 +446,6 @@ class ListApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -508,10 +465,7 @@ class ListApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'PATCH /api/list/{id}/{item}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -548,8 +502,6 @@ class ListApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):

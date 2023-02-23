@@ -31,9 +31,9 @@ class RecoveryInfoResponse {
   String toString() => 'RecoveryInfoResponse[username=$username]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'username'] = username;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'username'] = this.username;
+    return json;
   }
 
   /// Returns a new [RecoveryInfoResponse] instance and imports its values from

@@ -16,10 +16,7 @@ class ShareApi {
 
   final ApiClient apiClient;
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'DELETE /api/share/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -50,8 +47,6 @@ class ShareApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -71,10 +66,7 @@ class ShareApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'GET /api/share/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -105,8 +97,6 @@ class ShareApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -126,10 +116,7 @@ class ShareApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'PUT /api/share/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -162,8 +149,6 @@ class ShareApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -185,10 +170,7 @@ class ShareApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'DELETE /api/share/{id}/{account}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -223,8 +205,6 @@ class ShareApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):

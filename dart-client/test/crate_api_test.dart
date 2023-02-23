@@ -17,22 +17,16 @@ void main() {
   // final instance = CrateApi();
 
   group('tests for CrateApi', () {
-    // 
-    //
     //Future<OkGetHistoryResponse> historySearch(String list, { String search }) async
     test('test historySearch', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkSearchAccountResponse> searchAccount(String name) async
     test('test searchAccount', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkGetListsResponse> searchList(String name) async
     test('test searchList', () async {
       // TODO

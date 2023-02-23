@@ -17,8 +17,6 @@ void main() {
   // final instance = AccountApi();
 
   group('tests for AccountApi', () {
-    // 
-    //
     //Future<OkGetAccountNameResponse> getAccountName(String id) async
     test('test getAccountName', () async {
       // TODO
@@ -26,29 +24,23 @@ void main() {
 
     // Generate a JWT in order to use the other routes
     //
-    // Generate a JWT in order to use the other routes 
+    // Generate a JWT in order to use the other routes
     //
     //Future<OkLoginResponse> login(LoginRequest loginRequest) async
     test('test login', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkRecoverPasswordResponse> recoverPassword(String id, RecoverPasswordRequest recoverPasswordRequest) async
     test('test recoverPassword', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkRecoveryInfoResponse> recoveryInfo(String id) async
     test('test recoveryInfo', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkRegisterResponse> register(String id, RegisterRequest registerRequest) async
     test('test register', () async {
       // TODO

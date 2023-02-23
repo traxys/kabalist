@@ -31,9 +31,9 @@ class RecoverPasswordRequest {
   String toString() => 'RecoverPasswordRequest[password=$password]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'password'] = password;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'password'] = this.password;
+    return json;
   }
 
   /// Returns a new [RecoverPasswordRequest] instance and imports its values from

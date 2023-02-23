@@ -69,7 +69,7 @@ class ListStatusTypeTransformer {
   /// and users are still using an old app with the old code.
   ListStatus? decode(dynamic data, {bool allowNull = true}) {
     if (data != null) {
-      switch (data.toString()) {
+      switch (data) {
         case r'owned': return ListStatus.owned;
         case r'shared_write': return ListStatus.sharedWrite;
         case r'shared_read': return ListStatus.sharedRead;

@@ -17,29 +17,21 @@ void main() {
   // final instance = ShareApi();
 
   group('tests for ShareApi', () {
-    // 
-    //
     //Future<OkDeleteShareResponse> deleteShares(String id) async
     test('test deleteShares', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkGetSharesResponse> getShares(String id) async
     test('test getShares', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkShareListResponse> shareList(String id, ShareListRequest shareListRequest) async
     test('test shareList', () async {
       // TODO
     });
 
-    // 
-    //
     //Future<OkUnshareResponse> unshare(String id, String account) async
     test('test unshare', () async {
       // TODO

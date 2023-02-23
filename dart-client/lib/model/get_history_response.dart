@@ -31,9 +31,9 @@ class GetHistoryResponse {
   String toString() => 'GetHistoryResponse[matches=$matches]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'matches'] = matches;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'matches'] = this.matches;
+    return json;
   }
 
   /// Returns a new [GetHistoryResponse] instance and imports its values from

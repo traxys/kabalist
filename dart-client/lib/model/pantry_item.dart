@@ -46,12 +46,12 @@ class PantryItem {
   String toString() => 'PantryItem[amount=$amount, id=$id, name=$name, target=$target]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'amount'] = amount;
-      _json[r'id'] = id;
-      _json[r'name'] = name;
-      _json[r'target'] = target;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'amount'] = this.amount;
+      json[r'id'] = this.id;
+      json[r'name'] = this.name;
+      json[r'target'] = this.target;
+    return json;
   }
 
   /// Returns a new [PantryItem] instance and imports its values from

@@ -36,10 +36,10 @@ class AddToPantryRequest {
   String toString() => 'AddToPantryRequest[name=$name, target=$target]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'name'] = name;
-      _json[r'target'] = target;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'name'] = this.name;
+      json[r'target'] = this.target;
+    return json;
   }
 
   /// Returns a new [AddToPantryRequest] instance and imports its values from

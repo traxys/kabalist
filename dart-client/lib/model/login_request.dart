@@ -36,10 +36,10 @@ class LoginRequest {
   String toString() => 'LoginRequest[password=$password, username=$username]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'password'] = password;
-      _json[r'username'] = username;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'password'] = this.password;
+      json[r'username'] = this.username;
+    return json;
   }
 
   /// Returns a new [LoginRequest] instance and imports its values from

@@ -31,9 +31,9 @@ class LoginResponse {
   String toString() => 'LoginResponse[token=$token]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'token'] = token;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'token'] = this.token;
+    return json;
   }
 
   /// Returns a new [LoginResponse] instance and imports its values from

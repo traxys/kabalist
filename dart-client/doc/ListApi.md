@@ -26,8 +26,6 @@ Method | HTTP request | Description
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -77,8 +75,6 @@ Name | Type | Description  | Notes
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -123,8 +119,6 @@ Name | Type | Description  | Notes
 
 # **deleteItem**
 > OkDeleteItemResponse deleteItem(id, item)
-
-
 
 
 
@@ -177,8 +171,6 @@ Name | Type | Description  | Notes
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -226,8 +218,6 @@ Name | Type | Description  | Notes
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -266,8 +256,6 @@ No authorization required
 
 # **listLists**
 > OkGetListsResponse listLists()
-
-
 
 
 
@@ -311,8 +299,6 @@ This endpoint does not need any parameter.
 
 # **readList**
 > OkReadListResponse readList(id)
-
-
 
 
 
@@ -363,8 +349,6 @@ Name | Type | Description  | Notes
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -412,8 +396,6 @@ Name | Type | Description  | Notes
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -458,8 +440,6 @@ Name | Type | Description  | Notes
 
 # **updateItem**
 > OkUpdateItemResponse updateItem(id, item, updateItemRequest)
-
-
 
 
 

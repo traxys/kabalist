@@ -47,13 +47,15 @@ class Item {
   String toString() => 'Item[amount=$amount, id=$id, name=$name]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-    if (amount != null) {
-      _json[r'amount'] = amount;
+    final json = <String, dynamic>{};
+    if (this.amount != null) {
+      json[r'amount'] = this.amount;
+    } else {
+      json[r'amount'] = null;
     }
-      _json[r'id'] = id;
-      _json[r'name'] = name;
-    return _json;
+      json[r'id'] = this.id;
+      json[r'name'] = this.name;
+    return json;
   }
 
   /// Returns a new [Item] instance and imports its values from

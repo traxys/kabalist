@@ -36,10 +36,10 @@ class ReadListResponse {
   String toString() => 'ReadListResponse[items=$items, readonly=$readonly]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'items'] = items;
-      _json[r'readonly'] = readonly;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'items'] = this.items;
+      json[r'readonly'] = this.readonly;
+    return json;
   }
 
   /// Returns a new [ReadListResponse] instance and imports its values from

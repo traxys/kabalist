@@ -41,11 +41,11 @@ class ListInfo {
   String toString() => 'ListInfo[id=$id, public=$public, status=$status]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'id'] = id;
-      _json[r'public'] = public;
-      _json[r'status'] = status;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'id'] = this.id;
+      json[r'public'] = this.public;
+      json[r'status'] = this.status;
+    return json;
   }
 
   /// Returns a new [ListInfo] instance and imports its values from

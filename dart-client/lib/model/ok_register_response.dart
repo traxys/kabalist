@@ -31,9 +31,9 @@ class OkRegisterResponse {
   String toString() => 'OkRegisterResponse[ok=$ok]';
 
   Map<String, dynamic> toJson() {
-    final _json = <String, dynamic>{};
-      _json[r'ok'] = ok;
-    return _json;
+    final json = <String, dynamic>{};
+      json[r'ok'] = this.ok;
+    return json;
   }
 
   /// Returns a new [OkRegisterResponse] instance and imports its values from

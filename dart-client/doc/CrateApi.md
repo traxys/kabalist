@@ -19,8 +19,6 @@ Method | HTTP request | Description
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -70,8 +68,6 @@ Name | Type | Description  | Notes
 
 
 
-
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
@@ -116,8 +112,6 @@ Name | Type | Description  | Notes
 
 # **searchList**
 > OkGetListsResponse searchList(name)
-
-
 
 
 

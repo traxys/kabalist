@@ -16,10 +16,7 @@ class PantryApi {
 
   final ApiClient apiClient;
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'POST /api/pantry/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -52,8 +49,6 @@ class PantryApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -75,10 +70,7 @@ class PantryApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'DELETE /api/pantry/{id}/{item}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -113,8 +105,6 @@ class PantryApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -137,10 +127,7 @@ class PantryApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'GET /api/pantry/{id}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -171,8 +158,6 @@ class PantryApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -192,10 +177,7 @@ class PantryApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'POST /api/pantry/{id}/refill' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -226,8 +208,6 @@ class PantryApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -247,10 +227,7 @@ class PantryApi {
     return null;
   }
 
-  /// 
-  ///
-  /// Note: This method returns the HTTP [Response].
-  ///
+  /// Performs an HTTP 'PATCH /api/pantry/{id}/{item}' operation and returns the [Response].
   /// Parameters:
   ///
   /// * [String] id (required):
@@ -287,8 +264,6 @@ class PantryApi {
     );
   }
 
-  /// 
-  ///
   /// Parameters:
   ///
   /// * [String] id (required):
