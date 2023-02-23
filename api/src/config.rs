@@ -7,7 +7,7 @@ pub(crate) struct Base64(pub(crate) HS256Key);
 
 impl std::fmt::Debug for Base64 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, r#"b64"{}""#, &base64::encode(&self.0.to_bytes()))
+        write!(f, r#"b64"{}""#, &base64::encode(self.0.to_bytes()))
     }
 }
 
@@ -16,7 +16,7 @@ impl Serialize for Base64 {
     where
         S: Serializer,
     {
-        ser.serialize_str(&base64::encode(&self.0.to_bytes()))
+        ser.serialize_str(&base64::encode(self.0.to_bytes()))
     }
 }
 

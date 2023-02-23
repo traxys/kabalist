@@ -62,7 +62,7 @@ impl UserAction {
                     .await?;
 
                 let mut table = Table::new();
-                table.set_header(&["Name", "Id"]);
+                table.set_header(["Name", "Id"]);
                 for row in users {
                     if let Some(name) = row.name {
                         table.add_row(&[name, row.id.to_string()]);
@@ -92,9 +92,9 @@ impl RegistrationAction {
                     .await?;
 
                 let mut table = Table::new();
-                table.set_header(&["Id"]);
+                table.set_header(["Id"]);
                 for row in regs {
-                    table.add_row(&[row.id]);
+                    table.add_row([row.id]);
                 }
 
                 println!("{table}")
@@ -145,7 +145,7 @@ impl RecoveryAction {
                 .await?;
 
                 let mut table = Table::new();
-                table.set_header(&["Id", "Account ID", "Account Name"]);
+                table.set_header(["Id", "Account ID", "Account Name"]);
                 for row in regs {
                     table.add_row(&[
                         row.id.to_string(),
