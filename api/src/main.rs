@@ -168,7 +168,7 @@ impl From<jwt_simple::Error> for Error {
     }
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
+#[derive(Serialize, Deserialize, ToSchema, ToResponse)]
 #[aliases(
     OkLoginResponse = OkResponse<LoginResponse>,
     OkCreateListResponse = OkResponse<CreateListResponse>,
@@ -206,7 +206,7 @@ impl<T> OkResponse<T> {
     }
 }
 
-#[derive(Serialize, Deserialize, ToResponse)]
+#[derive(Serialize, Deserialize, ToResponse, ToSchema)]
 struct ErrResponse {
     err: UserError,
 }
@@ -476,8 +476,6 @@ async fn main() -> color_eyre::Result<()> {
                 EditPantryItemRequest,
                 OkLoginResponse, // Imports all other OkResponses
                 OkCreateListResponse,
-            ),
-            responses(
                 ErrResponse,
                 LoginResponse,
                 CreateListResponse,

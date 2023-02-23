@@ -55,7 +55,7 @@ impl<'s> ToSchema<'s> for SecretString {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Copy)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct Empty {}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
@@ -66,7 +66,7 @@ pub struct LoginRequest {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct LoginResponse {
     pub token: String,
 }
@@ -78,7 +78,7 @@ pub struct CreateListRequest {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct CreateListResponse {
     pub id: Uuid,
 }
@@ -101,13 +101,13 @@ pub struct ListInfo {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct GetListsResponse {
     pub results: HashMap<String, ListInfo>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct SearchAccountResponse {
     pub id: Uuid,
 }
@@ -121,7 +121,7 @@ pub struct Item {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct ReadListResponse {
     pub items: Vec<Item>,
     pub readonly: bool,
@@ -135,7 +135,7 @@ pub struct AddToListRequest {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct AddToListResponse {
     pub id: i32,
 }
@@ -147,13 +147,21 @@ pub struct ShareListRequest {
     pub readonly: bool,
 }
 
-pub type ShareListResponse = Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct ShareListResponse {}
 
-pub type DeleteItemResponse = Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct DeleteItemResponse {}
 
-pub type DeleteShareResponse = Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct DeleteShareResponse {}
 
-pub type DeleteListResponse = Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct DeleteListResponse {}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
@@ -162,7 +170,9 @@ pub struct RegisterRequest {
     pub password: String,
 }
 
-pub type RegisterResponse = Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct RegisterResponse {}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
@@ -171,10 +181,12 @@ pub struct UpdateItemRequest {
     pub amount: Option<String>,
 }
 
-pub type UpdateItemResponse = Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct UpdateItemResponse {}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct RecoveryInfoResponse {
     pub username: String,
 }
@@ -185,29 +197,37 @@ pub struct RecoverPasswordRequest {
     pub password: String,
 }
 
-pub type RecoverPasswordResponse = Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct RecoverPasswordResponse {}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct GetSharesResponse {
     pub shared_with: HashMap<Uuid, bool>,
     pub public_link: Option<String>,
 }
 
-pub type UnshareResponse = Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone, Copy)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+pub struct UnshareResponse {}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct GetAccountNameResponse {
     pub username: String,
 }
 
-pub type SetPublicResponse = crate::Empty;
-
-pub type RemovePublicResponse = crate::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
+pub struct SetPublicResponse {}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
+pub struct RemovePublicResponse {}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct GetHistoryResponse {
     pub matches: Vec<String>,
 }
@@ -222,7 +242,7 @@ pub struct PantryItem {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
-#[cfg_attr(feature = "openapi", derive(ToResponse))]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
 pub struct GetPantryResponse {
     pub items: Vec<PantryItem>,
 }
@@ -234,9 +254,13 @@ pub struct AddToPantryRequest {
     pub target: i32,
 }
 
-pub type AddToPantryResponse = crate::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
+pub struct AddToPantryResponse {}
 
-pub type RefillPantryResponse = crate::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
+pub struct RefillPantryResponse {}
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
 #[cfg_attr(feature = "openapi", derive(ToSchema))]
@@ -245,6 +269,10 @@ pub struct EditPantryItemRequest {
     pub amount: Option<i32>,
 }
 
-pub type EditPantryItemResponse = crate::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
+pub struct EditPantryItemResponse {}
 
-pub type DeletePantryItemResponse = crate::Empty;
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Hash, Clone)]
+#[cfg_attr(feature = "openapi", derive(ToResponse, ToSchema))]
+pub struct DeletePantryItemResponse {}
