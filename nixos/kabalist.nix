@@ -16,10 +16,6 @@ with lib; {
       default = kabalist-server;
     };
 
-    secret = mkOption {
-      type = types.str;
-    };
-
     port = mkOption {
       type = types.port;
       default = 8080;
@@ -28,6 +24,11 @@ with lib; {
     user = mkOption {
       type = types.str;
       default = "kabalist";
+    };
+
+    environmentFile = mkOption {
+      type = types.nullOr types.path;
+      default = null;
     };
 
     enableFrontend = mkEnableOption "kabalist web application";
@@ -47,6 +48,7 @@ with lib; {
           User = cfg.user;
           Group = "kabalist";
           ExecStart = "${cfg.package}/bin/kabalist_api";
+          EnvironmentFile = optional (cfg.environmentFile != null) cfg.environmentFile;
           # Security
           NoNewPrivileges = true;
           # Sandboxing
@@ -71,7 +73,6 @@ with lib; {
 
         environment =
           {
-            KABALIST_JWT_SECRET = cfg.secret;
             KABALIST_PORT = toString cfg.port;
             KABALIST_DATABASE_URL = "postgres://${cfg.user}/kabalist?host=/var/run/postgresql";
             KABALIST_TEMPLATES = "${cfg.package}/share";
