@@ -26,6 +26,12 @@ with lib; {
       default = "kabalist";
     };
 
+    expiry = mkOption {
+      type = types.int;
+      default = 1000000;
+      description = "Expiry time of tokens in ms";
+    };
+
     environmentFile = mkOption {
       type = types.nullOr types.path;
       default = null;
@@ -76,6 +82,7 @@ with lib; {
             KABALIST_PORT = toString cfg.port;
             KABALIST_DATABASE_URL = "postgres://${cfg.user}/kabalist?host=/var/run/postgresql";
             KABALIST_TEMPLATES = "${cfg.package}/share";
+            KABALIST_EXP = toString cfg.expiry;
           }
           // lib.optionalAttrs cfg.enableFrontend {
             KABALIST_FRONTEND = "${kabalist-web}";
