@@ -93,7 +93,7 @@ with lib; {
         ensureUsers = [
           {
             name = cfg.user;
-            ensurePermissions = {"DATABASE \"kabalist\"" = "ALL PRIVILEGES";};
+            ensureDBOwnership = true;
           }
         ];
         ensureDatabases = ["kabalist"];
