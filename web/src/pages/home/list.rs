@@ -85,7 +85,7 @@ impl Component for List {
         }
     }
 
-    fn changed(&mut self, ctx: &yew::Context<Self>, old_props: &Self::Properties) -> bool {
+    fn changed(&mut self, ctx: &yew::Context<Self>, _old_props: &Self::Properties) -> bool {
         let c = self.client.clone();
         let id = ctx.props().uuid;
         ctx.link().send_future(async move {

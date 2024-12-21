@@ -313,7 +313,7 @@ impl AccountCommands {
             AccountCommands::Login { name, password } => {
                 let password = password
                     .map(Ok)
-                    .unwrap_or_else(|| rpassword::prompt_password(("password: ")))?;
+                    .unwrap_or_else(|| rpassword::prompt_password("password: "))?;
                 let token = kabalist_client::login(&url, &name, &password).await?;
                 println!("Token: {}", token.token);
                 println!("You can export in as LIST_TOKEN or pass it as parameters");
@@ -323,7 +323,7 @@ impl AccountCommands {
                 println!("Recovery for {}", account_name);
                 let password = password
                     .map(Ok)
-                    .unwrap_or_else(|| rpassword::prompt_password(("password: ")))?;
+                    .unwrap_or_else(|| rpassword::prompt_password("password: "))?;
                 kabalist_client::recover_password(&url, &id, &password).await?;
             }
             AccountCommands::Register {

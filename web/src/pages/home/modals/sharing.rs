@@ -89,7 +89,7 @@ impl Component for ListSharing {
         }
     }
 
-    fn changed(&mut self, ctx: &yew::Context<Self>, old_props: &Self::Properties) -> bool {
+    fn changed(&mut self, ctx: &yew::Context<Self>, _old_props: &Self::Properties) -> bool {
         self.client = kabalist_client::Client::new(endpoint(), ctx.props().token.clone());
         let c = self.client.clone();
         let id = ctx.props().id;

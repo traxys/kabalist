@@ -24,7 +24,6 @@ use utoipa::{
     },
     Modify, OpenApi, PartialSchema, ToResponse, ToSchema,
 };
-use utoipa_swagger_ui::SwaggerUi;
 
 mod config;
 mod list;
@@ -188,31 +187,31 @@ impl From<sqlx::Error> for Error {
 struct OkResponse<T: ToSchema> {
     ok: T,
 }
-pub type OkLoginResponse = OkResponse<LoginResponse>;
-pub type OkCreateListResponse = OkResponse<CreateListResponse>;
-pub type OkGetListsResponse = OkResponse<GetListsResponse>;
-pub type OkSearchAccountResponse = OkResponse<SearchAccountResponse>;
-pub type OkReadListResponse = OkResponse<ReadListResponse>;
-pub type OkAddToListResponse = OkResponse<AddToListResponse>;
-pub type OkGetHistoryResponse = OkResponse<GetHistoryResponse>;
-pub type OkUpdateItemResponse = OkResponse<UpdateItemResponse>;
-pub type OkDeleteItemResponse = OkResponse<DeleteItemResponse>;
-pub type OkDeleteListResponse = OkResponse<DeleteListResponse>;
-pub type OkUnshareResponse = OkResponse<UnshareResponse>;
-pub type OkGetSharesResponse = OkResponse<GetSharesResponse>;
-pub type OkShareListResponse = OkResponse<ShareListResponse>;
-pub type OkDeleteShareResponse = OkResponse<DeleteShareResponse>;
-pub type OkRecoveryInfoResponse = OkResponse<RecoveryInfoResponse>;
-pub type OkRecoverPasswordResponse = OkResponse<RecoverPasswordResponse>;
-pub type OkRegisterResponse = OkResponse<RegisterResponse>;
-pub type OkGetAccountNameResponse = OkResponse<GetAccountNameResponse>;
-pub type OkSetPublicResponse = OkResponse<SetPublicResponse>;
-pub type OkRemovePublicResponse = OkResponse<RemovePublicResponse>;
-pub type OkGetPantryResponse = OkResponse<GetPantryResponse>;
-pub type OkAddToPantryResponse = OkResponse<AddToPantryResponse>;
-pub type OkRefillPantryResponse = OkResponse<RefillPantryResponse>;
-pub type OkEditPantryItemResponse = OkResponse<EditPantryItemResponse>;
-pub type OkDeletePantryItemResponse = OkResponse<DeletePantryItemResponse>;
+type OkLoginResponse = OkResponse<LoginResponse>;
+type OkCreateListResponse = OkResponse<CreateListResponse>;
+type OkGetListsResponse = OkResponse<GetListsResponse>;
+type OkSearchAccountResponse = OkResponse<SearchAccountResponse>;
+type OkReadListResponse = OkResponse<ReadListResponse>;
+type OkAddToListResponse = OkResponse<AddToListResponse>;
+type OkGetHistoryResponse = OkResponse<GetHistoryResponse>;
+type OkUpdateItemResponse = OkResponse<UpdateItemResponse>;
+type OkDeleteItemResponse = OkResponse<DeleteItemResponse>;
+type OkDeleteListResponse = OkResponse<DeleteListResponse>;
+type OkUnshareResponse = OkResponse<UnshareResponse>;
+type OkGetSharesResponse = OkResponse<GetSharesResponse>;
+type OkShareListResponse = OkResponse<ShareListResponse>;
+type OkDeleteShareResponse = OkResponse<DeleteShareResponse>;
+type OkRecoveryInfoResponse = OkResponse<RecoveryInfoResponse>;
+type OkRecoverPasswordResponse = OkResponse<RecoverPasswordResponse>;
+type OkRegisterResponse = OkResponse<RegisterResponse>;
+type OkGetAccountNameResponse = OkResponse<GetAccountNameResponse>;
+type OkSetPublicResponse = OkResponse<SetPublicResponse>;
+type OkRemovePublicResponse = OkResponse<RemovePublicResponse>;
+type OkGetPantryResponse = OkResponse<GetPantryResponse>;
+type OkAddToPantryResponse = OkResponse<AddToPantryResponse>;
+type OkRefillPantryResponse = OkResponse<RefillPantryResponse>;
+type OkEditPantryItemResponse = OkResponse<EditPantryItemResponse>;
+type OkDeletePantryItemResponse = OkResponse<DeletePantryItemResponse>;
 
 impl<T: ToSchema> OkResponse<T> {
     fn ok(v: T) -> Rsp<T> {

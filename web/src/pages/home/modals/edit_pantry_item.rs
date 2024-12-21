@@ -34,7 +34,7 @@ impl Component for EditPantryItem {
         }
     }
 
-    fn changed(&mut self, ctx: &yew::Context<Self>, old_props: &Self::Properties) -> bool {
+    fn changed(&mut self, ctx: &yew::Context<Self>, _old_props: &Self::Properties) -> bool {
         self.target = ctx.props().target.clone();
         self.amount = ctx.props().amount.clone();
         true
