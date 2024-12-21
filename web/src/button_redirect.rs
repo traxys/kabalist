@@ -1,8 +1,8 @@
 use std::{borrow::Cow, marker::PhantomData};
 
 use web_sys::MouseEvent;
-use yew::{html, virtual_dom::AttrValue, Children, Component, Context, Html, Properties, Classes};
-use yew_router::{history::History, prelude::RouterScopeExt, Routable};
+use yew::{html, virtual_dom::AttrValue, Children, Classes, Component, Context, Html, Properties};
+use yew_router::{prelude::RouterScopeExt, Routable};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct RedirectButtonProps<R>
@@ -69,7 +69,11 @@ where
                 let history = ctx.link().navigator().expect("failed to read history");
                 history.push(&to.clone());
                 let href: AttrValue = route_to_url(to.clone()).into();
-                web_sys::window().unwrap().location().set_href(&href).unwrap();
+                web_sys::window()
+                    .unwrap()
+                    .location()
+                    .set_href(&href)
+                    .unwrap();
                 false
             }
         }

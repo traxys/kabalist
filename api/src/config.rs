@@ -57,6 +57,10 @@ pub(crate) struct Config {
     pub(crate) templates: Option<String>,
     #[cfg(feature = "frontend")]
     pub(crate) frontend: Option<std::path::PathBuf>,
+    pub(crate) oauth_id: String,
+    pub(crate) oauth_issuer: url::Url,
+    pub(crate) oauth_redirect: String,
+    pub(crate) oauth_secret: String,
 }
 
 impl Default for Config {
@@ -71,6 +75,10 @@ impl Default for Config {
             frontend: None,
             cors_allow_origin: "*".into(),
             templates: None,
+            oauth_id: "oauth2 client id".into(),
+            oauth_issuer: url::Url::parse("http://example.com/").unwrap(),
+            oauth_redirect: "oauth2 redirect url".into(),
+            oauth_secret: "oauth2 secret".into(),
         }
     }
 }

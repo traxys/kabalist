@@ -10,7 +10,7 @@ mod sidebar;
 
 use list::List;
 use sidebar::Sidebar;
-use yew_router::{history::History, prelude::RouterScopeExt};
+use yew_router::prelude::RouterScopeExt;
 
 use crate::Route;
 

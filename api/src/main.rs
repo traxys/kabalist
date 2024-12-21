@@ -1,11 +1,7 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
-    extract::{self, Query},
-    http::{header, HeaderValue, Method, StatusCode},
-    response::IntoResponse,
-    routing::get,
-    Extension, Json, Router, ServiceExt,
+    extract::{self, Query}, http::{header, HeaderValue, Method, StatusCode}, response::IntoResponse, routing::get, Extension, Json, RequestPartsExt, Router
 };
 use figment::{
     providers::{self, Format},
@@ -22,31 +18,17 @@ use utoipa::{
         schema::Schema,
         security::{self, SecurityScheme},
     },
-    Modify, OpenApi, PartialSchema, ToResponse, ToSchema,
+    Modify, OpenApi, ToResponse, ToSchema,
 };
 
+mod auth;
 mod config;
 mod list;
 mod pantry;
 mod share;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct PrivateUser {
-    pub id: Uuid,
-}
 
-impl<S> axum::extract::FromRequestParts<S> for PrivateUser {
-    type Rejection = std::convert::Infallible;
-
-    fn from_request_parts(
-        parts: &mut axum::http::request::Parts,
-        state: &S,
-    ) -> impl std::future::Future<Output = Result<Self, Self::Rejection>> + Send {
-        async { todo!() }
-    }
-}
-
-pub(crate) type User = PrivateUser;
+pub(crate) type User = auth::User;
 
 macro_rules! define_error {
     (
@@ -201,9 +183,13 @@ type OkUnshareResponse = OkResponse<UnshareResponse>;
 type OkGetSharesResponse = OkResponse<GetSharesResponse>;
 type OkShareListResponse = OkResponse<ShareListResponse>;
 type OkDeleteShareResponse = OkResponse<DeleteShareResponse>;
+#[allow(dead_code)]
 type OkRecoveryInfoResponse = OkResponse<RecoveryInfoResponse>;
+#[allow(dead_code)]
 type OkRecoverPasswordResponse = OkResponse<RecoverPasswordResponse>;
+#[allow(dead_code)]
 type OkRegisterResponse = OkResponse<RegisterResponse>;
+#[allow(dead_code)]
 type OkGetAccountNameResponse = OkResponse<GetAccountNameResponse>;
 type OkSetPublicResponse = OkResponse<SetPublicResponse>;
 type OkRemovePublicResponse = OkResponse<RemovePublicResponse>;
@@ -516,6 +502,7 @@ async fn main() -> color_eyre::Result<()> {
         ),
         modifiers(&SecurityKey),
     )]
+    #[allow(dead_code)]
     struct ApiDoc;
 
     struct SecurityKey;
@@ -559,17 +546,21 @@ async fn main() -> color_eyre::Result<()> {
         .route("/search/account/{name}", get(search_account))
         .route("/history/{id}", get(history_search))
         .nest("/list", list::router())
+        .nest("/auth", auth::router())
         .nest("/share", share::router())
         .nest("/pantry", pantry::router());
 
     #[cfg(feature = "frontend")]
     let frontend = config.frontend.clone();
 
-    let app = Router::<()>::new()
+    let app: Router = Router::new()
         // .merge(Router::<()>::from(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .nest("/api", api)
         .layer(Extension(templates))
         .layer(Extension(db))
+        .layer(Extension(
+            auth::Oauth2Client::from_config(config.clone()).await?,
+        ))
         .layer(
             CorsLayer::new()
                 .allow_origin(config.cors_allow_origin.parse::<HeaderValue>()?)
@@ -601,10 +592,7 @@ async fn main() -> color_eyre::Result<()> {
         }
     };
 
-    axum::serve::serve(
-        tokio::net::TcpListener::bind(addr).await?,
-        app.into_make_service(),
-    )
-    .await
-    .map_err(color_eyre::Report::from)
+    axum::serve::serve(tokio::net::TcpListener::bind(addr).await?, app)
+        .await
+        .map_err(color_eyre::Report::from)
 }
