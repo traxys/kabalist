@@ -14,10 +14,10 @@ use crate::{User, check_list, OkResponse, Rsp, *};
 
 pub(crate) fn router() -> Router {
     Router::new()
-        .route("/:id", get(get_pantry).post(add_to_pantry))
-        .route("/:id/refill", post(refill_pantry))
+        .route("/{id}", get(get_pantry).post(add_to_pantry))
+        .route("/{id}/refill", post(refill_pantry))
         .route(
-            "/:id/:item",
+            "/{id}/{item}",
             patch(set_pantry_item).delete(delete_pantry_item),
         )
 }

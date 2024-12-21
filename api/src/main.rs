@@ -555,9 +555,9 @@ async fn main() -> color_eyre::Result<()> {
     sqlx::migrate!("sqlx/migrations").run(&db).await?;
 
     let api = Router::new()
-        .route("/search/list/:name", get(search_list))
-        .route("/search/account/:name", get(search_account))
-        .route("/history/:id", get(history_search))
+        .route("/search/list/{name}", get(search_list))
+        .route("/search/account/{name}", get(search_account))
+        .route("/history/{id}", get(history_search))
         .nest("/list", list::router())
         .nest("/share", share::router())
         .nest("/pantry", pantry::router());
@@ -606,5 +606,5 @@ async fn main() -> color_eyre::Result<()> {
         app.into_make_service(),
     )
     .await
-    .map_err(|e| color_eyre::Report::from(e))
+    .map_err(color_eyre::Report::from)
 }
