@@ -199,8 +199,8 @@ where
         match msg {
             Msg::OnClick => {
                 let LinkProps { to, .. } = ctx.props();
-                let history = ctx.link().history().expect("failed to read history");
-                history.push(to.clone());
+                let history = ctx.link().navigator().expect("failed to read history");
+                history.push(&to.clone());
                 false
             }
         }

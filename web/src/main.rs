@@ -124,9 +124,8 @@ impl Component for App {
         let on_login = ctx.link().callback(AppMessage::Login);
         let logout = ctx.link().callback(|()| AppMessage::Logout);
         let account_info = self.account_info.clone();
-        let render = Switch::render(move |r| {
-            route_switch(r, on_login.clone(), logout.clone(), account_info.clone())
-        });
+        let render =
+            move |r| route_switch(&r, on_login.clone(), logout.clone(), account_info.clone());
 
         //let link = ctx.link();
         html! {<>
@@ -145,5 +144,5 @@ impl Component for App {
 }
 
 fn main() {
-    yew::start_app::<App>();
+    yew::Renderer::<App>::new().render();
 }

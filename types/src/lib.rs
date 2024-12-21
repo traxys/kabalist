@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Debug};
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "openapi")]
-use utoipa::{openapi::Schema, ToResponse, ToSchema};
+use utoipa::{PartialSchema, ToResponse, ToSchema};
 pub use uuid;
 use uuid::Uuid;
 
@@ -42,15 +42,21 @@ impl Debug for SecretString {
 }
 
 #[cfg(feature = "openapi")]
-impl<'s> ToSchema<'s> for SecretString {
-    fn schema() -> (&'s str, utoipa::openapi::RefOr<Schema>) {
-        (
-            "SecretString",
-            utoipa::openapi::ObjectBuilder::new()
-                .schema_type(utoipa::openapi::SchemaType::String)
-                .build()
-                .into(),
-        )
+impl PartialSchema for SecretString {
+    fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+        utoipa::openapi::ObjectBuilder::new()
+            .schema_type(utoipa::openapi::schema::SchemaType::Type(
+                utoipa::openapi::Type::String,
+            ))
+            .build()
+            .into()
+    }
+}
+
+#[cfg(feature = "openapi")]
+impl ToSchema for SecretString {
+    fn name() -> std::borrow::Cow<'static, str> {
+        "SecretString".into()
     }
 }
 

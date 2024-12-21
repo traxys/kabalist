@@ -66,8 +66,8 @@ where
         match msg {
             Msg::OnClick => {
                 let RedirectButtonProps { to, .. } = ctx.props();
-                let history = ctx.link().history().expect("failed to read history");
-                history.push(to.clone());
+                let history = ctx.link().navigator().expect("failed to read history");
+                history.push(&to.clone());
                 let href: AttrValue = route_to_url(to.clone()).into();
                 web_sys::window().unwrap().location().set_href(&href).unwrap();
                 false

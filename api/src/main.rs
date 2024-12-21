@@ -5,7 +5,7 @@ use axum::{
     http::{header, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::get,
-    Extension, Json, Router,
+    Extension, Json, Router, ServiceExt,
 };
 use figment::{
     providers::{self, Format},
@@ -22,17 +22,32 @@ use utoipa::{
         schema::Schema,
         security::{self, SecurityScheme},
     },
-    Modify, OpenApi, ToResponse, ToSchema,
+    Modify, OpenApi, PartialSchema, ToResponse, ToSchema,
 };
 use utoipa_swagger_ui::SwaggerUi;
 
-mod account;
 mod config;
 mod list;
 mod pantry;
 mod share;
 
-pub(crate) use account::User;
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct PrivateUser {
+    pub id: Uuid,
+}
+
+impl<S> axum::extract::FromRequestParts<S> for PrivateUser {
+    type Rejection = std::convert::Infallible;
+
+    fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        state: &S,
+    ) -> impl std::future::Future<Output = Result<Self, Self::Rejection>> + Send {
+        async { todo!() }
+    }
+}
+
+pub(crate) type User = PrivateUser;
 
 macro_rules! define_error {
     (
@@ -51,17 +66,25 @@ macro_rules! define_error {
             )*
         }
 
-        impl<'s> ToSchema<'s> for Error {
-           fn schema() -> (&'s str, utoipa::openapi::RefOr<Schema>) {
+        impl utoipa::PartialSchema for Error {
+
+            fn schema() -> utoipa::openapi::RefOr<Schema> {
                (
-                    "Error",
                     utoipa::openapi::ObjectBuilder::new()
-                        .schema_type(utoipa::openapi::SchemaType::Number)
+                        .schema_type(utoipa::openapi::schema::SchemaType::Type(utoipa::openapi::Type::Number))
                         .enum_values(Some([$($code,)*]))
                         .build()
                         .into()
                 )
            }
+        }
+
+        impl ToSchema for Error {
+            fn name() -> std::borrow::Cow<'static, str>
+                {
+                    "Error".into()
+                }
+
         }
 
         impl Error {
@@ -161,46 +184,37 @@ impl From<sqlx::Error> for Error {
     }
 }
 
-impl From<jwt_simple::Error> for Error {
-    fn from(value: jwt_simple::Error) -> Self {
-        tracing::error!("Jwt error: {value:?}");
-        Error::InvalidToken
-    }
-}
-
 #[derive(Serialize, Deserialize, ToSchema, ToResponse)]
-#[aliases(
-    OkLoginResponse = OkResponse<LoginResponse>,
-    OkCreateListResponse = OkResponse<CreateListResponse>,
-    OkGetListsResponse = OkResponse<GetListsResponse>,
-    OkSearchAccountResponse = OkResponse<SearchAccountResponse>,
-    OkReadListResponse = OkResponse<ReadListResponse>,
-    OkAddToListResponse = OkResponse<AddToListResponse>,
-    OkGetHistoryResponse = OkResponse<GetHistoryResponse>,
-    OkUpdateItemResponse = OkResponse<UpdateItemResponse>,
-    OkDeleteItemResponse = OkResponse<DeleteItemResponse>,
-    OkDeleteListResponse = OkResponse<DeleteListResponse>,
-    OkUnshareResponse = OkResponse<UnshareResponse>,
-    OkGetSharesResponse = OkResponse<GetSharesResponse>,
-    OkShareListResponse = OkResponse<ShareListResponse>,
-    OkDeleteShareResponse = OkResponse<DeleteShareResponse>,
-    OkRecoveryInfoResponse = OkResponse<RecoveryInfoResponse>,
-    OkRecoverPasswordResponse = OkResponse<RecoverPasswordResponse>,
-    OkRegisterResponse = OkResponse<RegisterResponse>,
-    OkGetAccountNameResponse = OkResponse<GetAccountNameResponse>,
-    OkSetPublicResponse = OkResponse<SetPublicResponse>,
-    OkRemovePublicResponse = OkResponse<RemovePublicResponse>,
-    OkGetPantryResponse = OkResponse<GetPantryResponse>,
-    OkAddToPantryResponse = OkResponse<AddToPantryResponse>,
-    OkRefillPantryResponse = OkResponse<RefillPantryResponse>,
-    OkEditPantryItemResponse = OkResponse<EditPantryItemResponse>,
-    OkDeletePantryItemResponse = OkResponse<DeletePantryItemResponse>,
-)]
-struct OkResponse<T> {
+struct OkResponse<T: ToSchema> {
     ok: T,
 }
+pub type OkLoginResponse = OkResponse<LoginResponse>;
+pub type OkCreateListResponse = OkResponse<CreateListResponse>;
+pub type OkGetListsResponse = OkResponse<GetListsResponse>;
+pub type OkSearchAccountResponse = OkResponse<SearchAccountResponse>;
+pub type OkReadListResponse = OkResponse<ReadListResponse>;
+pub type OkAddToListResponse = OkResponse<AddToListResponse>;
+pub type OkGetHistoryResponse = OkResponse<GetHistoryResponse>;
+pub type OkUpdateItemResponse = OkResponse<UpdateItemResponse>;
+pub type OkDeleteItemResponse = OkResponse<DeleteItemResponse>;
+pub type OkDeleteListResponse = OkResponse<DeleteListResponse>;
+pub type OkUnshareResponse = OkResponse<UnshareResponse>;
+pub type OkGetSharesResponse = OkResponse<GetSharesResponse>;
+pub type OkShareListResponse = OkResponse<ShareListResponse>;
+pub type OkDeleteShareResponse = OkResponse<DeleteShareResponse>;
+pub type OkRecoveryInfoResponse = OkResponse<RecoveryInfoResponse>;
+pub type OkRecoverPasswordResponse = OkResponse<RecoverPasswordResponse>;
+pub type OkRegisterResponse = OkResponse<RegisterResponse>;
+pub type OkGetAccountNameResponse = OkResponse<GetAccountNameResponse>;
+pub type OkSetPublicResponse = OkResponse<SetPublicResponse>;
+pub type OkRemovePublicResponse = OkResponse<RemovePublicResponse>;
+pub type OkGetPantryResponse = OkResponse<GetPantryResponse>;
+pub type OkAddToPantryResponse = OkResponse<AddToPantryResponse>;
+pub type OkRefillPantryResponse = OkResponse<RefillPantryResponse>;
+pub type OkEditPantryItemResponse = OkResponse<EditPantryItemResponse>;
+pub type OkDeletePantryItemResponse = OkResponse<DeletePantryItemResponse>;
 
-impl<T> OkResponse<T> {
+impl<T: ToSchema> OkResponse<T> {
     fn ok(v: T) -> Rsp<T> {
         Ok(Json(Self { ok: v }))
     }
@@ -443,11 +457,6 @@ async fn main() -> color_eyre::Result<()> {
             list::set_public,
             list::remove_public,
             list::get_public_list,
-            account::login,
-            account::register,
-            account::recovery_info,
-            account::recover_password,
-            account::get_account_name,
             share::delete_shares,
             share::unshare,
             share::get_shares,
@@ -552,14 +561,13 @@ async fn main() -> color_eyre::Result<()> {
         .route("/history/:id", get(history_search))
         .nest("/list", list::router())
         .nest("/share", share::router())
-        .nest("/account", account::router())
         .nest("/pantry", pantry::router());
 
     #[cfg(feature = "frontend")]
     let frontend = config.frontend.clone();
 
-    let app = Router::new()
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
+    let app = Router::<()>::new()
+        // .merge(Router::<()>::from(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .nest("/api", api)
         .layer(Extension(templates))
         .layer(Extension(db))
@@ -583,25 +591,21 @@ async fn main() -> color_eyre::Result<()> {
         Some(mut p) => {
             use axum::routing::get_service;
 
-            async fn handle_error(err: std::io::Error) -> impl IntoResponse {
-                tracing::error!("File serving error: {:?}", err);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong...")
-            }
-
-            app.fallback(
-                get_service(tower_http::services::ServeDir::new(&p).fallback(
+            app.fallback(get_service(
+                tower_http::services::ServeDir::new(&p).fallback(
                     tower_http::services::ServeFile::new({
                         p.push("index.html");
                         p
                     }),
-                ))
-                .handle_error(handle_error),
-            )
+                ),
+            ))
         }
     };
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .map_err(Into::into)
+    axum::serve::serve(
+        tokio::net::TcpListener::bind(addr).await?,
+        app.into_make_service(),
+    )
+    .await
+    .map_err(|e| color_eyre::Report::from(e))
 }

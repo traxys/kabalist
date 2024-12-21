@@ -36,7 +36,7 @@ impl Component for Recover {
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &yew::Context<Self>, old_props: &Self::Properties) -> bool {
         self.id = ctx.props().recovery_id.clone();
         true
     }

@@ -17,7 +17,7 @@ use tera::Tera;
 use tokio_stream::StreamExt;
 use uuid::Uuid;
 
-use crate::{check_list, is_owner, Error, OkResponse, Rsp, User};
+use crate::{check_list, is_owner, ErrResponse, Error, OkResponse, Rsp, User, *};
 
 pub(crate) fn router() -> Router {
     Router::new()
@@ -43,6 +43,7 @@ pub(crate) fn router() -> Router {
     )
 )]
 #[tracing::instrument(skip(db))]
+#[axum::debug_handler]
 pub(crate) async fn list_lists(
     Extension(db): Extension<PgPool>,
     user: User,
@@ -111,6 +112,7 @@ pub(crate) async fn list_lists(
         ("token" = [])
     )
 )]
+#[axum::debug_handler]
 #[tracing::instrument(skip(db))]
 pub(crate) async fn create_list(
     Extension(db): Extension<PgPool>,
@@ -156,6 +158,7 @@ pub(crate) async fn create_list(
         ("token" = [])
     )
 )]
+#[axum::debug_handler]
 #[tracing::instrument(skip(db))]
 pub(crate) async fn read_list(
     Extension(db): Extension<PgPool>,
@@ -213,6 +216,7 @@ pub(crate) async fn read_list(
         ("token" = [])
     )
 )]
+#[axum::debug_handler]
 #[tracing::instrument(skip(db))]
 pub(crate) async fn add_list(
     Extension(db): Extension<PgPool>,
@@ -230,7 +234,7 @@ pub(crate) async fn add_list(
         item.name,
         item.amount
     )
-    .fetch_one(&mut tx)
+    .fetch_one(&mut *tx)
     .await?;
 
     sqlx::query!(
@@ -242,7 +246,7 @@ pub(crate) async fn add_list(
         user.id,
         item.name
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;
@@ -267,6 +271,7 @@ pub(crate) async fn add_list(
         ("token" = [])
     )
 )]
+#[axum::debug_handler]
 #[tracing::instrument(skip(db))]
 pub(crate) async fn update_item(
     Extension(db): Extension<PgPool>,
@@ -285,7 +290,7 @@ pub(crate) async fn update_item(
             list,
             item
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     }
 
@@ -296,7 +301,7 @@ pub(crate) async fn update_item(
             list,
             item
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     }
 
@@ -321,6 +326,7 @@ pub(crate) async fn update_item(
         ("token" = [])
     )
 )]
+#[axum::debug_handler]
 pub(crate) async fn delete_item(
     Extension(db): Extension<PgPool>,
     user: User,
@@ -345,7 +351,7 @@ pub(crate) async fn delete_item(
         list,
         item
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     sqlx::query!(
@@ -353,7 +359,7 @@ pub(crate) async fn delete_item(
         list,
         item
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;
@@ -377,6 +383,7 @@ pub(crate) async fn delete_item(
     )
 )]
 #[tracing::instrument(skip(db))]
+#[axum::debug_handler]
 pub(crate) async fn delete_list(
     Extension(db): Extension<PgPool>,
     user: User,
@@ -386,16 +393,16 @@ pub(crate) async fn delete_list(
     let mut tx = db.begin().await?;
 
     sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     sqlx::query!("DELETE FROM lists_content WHERE list = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     sqlx::query!("DELETE FROM history WHERE list = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     sqlx::query!("DELETE FROM lists WHERE id = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
 
     tx.commit().await?;

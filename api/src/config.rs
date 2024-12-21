@@ -1,13 +1,12 @@
-use jwt_simple::algorithms::HS256Key;
 use std::net::IpAddr;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-pub(crate) struct Base64(pub(crate) HS256Key);
+pub(crate) struct Base64(pub(crate) Vec<u8>);
 
 impl std::fmt::Debug for Base64 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, r#"b64"{}""#, &base64::encode(self.0.to_bytes()))
+        write!(f, r#"b64"{}""#, &base64::encode(self.0.as_slice()))
     }
 }
 
@@ -16,7 +15,7 @@ impl Serialize for Base64 {
     where
         S: Serializer,
     {
-        ser.serialize_str(&base64::encode(self.0.to_bytes()))
+        ser.serialize_str(&base64::encode(self.0.as_slice()))
     }
 }
 
@@ -39,10 +38,7 @@ impl<'de> Deserialize<'de> for Base64 {
             where
                 E: serde::de::Error,
             {
-                base64::decode(v)
-                    .map_err(E::custom)
-                    .map(|b| HS256Key::from_bytes(&b))
-                    .map(Base64)
+                base64::decode(v).map_err(E::custom).map(|b| b).map(Base64)
             }
         }
 
@@ -67,7 +63,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             database_url: "postgres://postgres:password@localhost/postgres".into(),
-            jwt_secret: Base64(HS256Key::from_bytes(b"kabalist_secret")),
+            jwt_secret: Base64(Vec::from(b"kabalist_secret")),
             exp: 1000000,
             listen_addr: [127, 0, 0, 1].into(),
             port: 8080,
