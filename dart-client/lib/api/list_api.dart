@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -55,7 +55,7 @@ class ListApi {
   ///   List ID
   ///
   /// * [AddToListRequest] addToListRequest (required):
-  Future<OkAddToListResponse?> addList(String id, AddToListRequest addToListRequest,) async {
+  Future<OkResponse?> addList(String id, AddToListRequest addToListRequest,) async {
     final response = await addListWithHttpInfo(id, addToListRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -64,7 +64,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkAddToListResponse',) as OkAddToListResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
     
     }
     return null;
@@ -102,7 +102,7 @@ class ListApi {
   /// Parameters:
   ///
   /// * [CreateListRequest] createListRequest (required):
-  Future<OkLoginResponse?> createList(CreateListRequest createListRequest,) async {
+  Future<OkResponse?> createList(CreateListRequest createListRequest,) async {
     final response = await createListWithHttpInfo(createListRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -111,7 +111,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkLoginResponse',) as OkLoginResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
     
     }
     return null;
@@ -159,7 +159,7 @@ class ListApi {
   ///
   /// * [int] item (required):
   ///   Item ID
-  Future<OkDeleteItemResponse?> deleteItem(String id, int item,) async {
+  Future<OkResponse?> deleteItem(String id, int item,) async {
     final response = await deleteItemWithHttpInfo(id, item,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -168,7 +168,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkDeleteItemResponse',) as OkDeleteItemResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
     
     }
     return null;
@@ -209,7 +209,7 @@ class ListApi {
   ///
   /// * [String] id (required):
   ///   List ID
-  Future<OkDeleteListResponse?> deleteList(String id,) async {
+  Future<OkResponse?> deleteList(String id,) async {
     final response = await deleteListWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -218,7 +218,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkDeleteListResponse',) as OkDeleteListResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
     
     }
     return null;
@@ -300,7 +300,7 @@ class ListApi {
     );
   }
 
-  Future<OkGetListsResponse?> listLists() async {
+  Future<OkResponse?> listLists() async {
     final response = await listListsWithHttpInfo();
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -309,7 +309,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkGetListsResponse',) as OkGetListsResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
     
     }
     return null;
@@ -350,7 +350,7 @@ class ListApi {
   ///
   /// * [String] id (required):
   ///   List ID
-  Future<OkReadListResponse?> readList(String id,) async {
+  Future<OkResponse?> readList(String id,) async {
     final response = await readListWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -359,7 +359,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkReadListResponse',) as OkReadListResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
     
     }
     return null;
@@ -400,7 +400,7 @@ class ListApi {
   ///
   /// * [String] id (required):
   ///   List ID
-  Future<OkRemovePublicResponse?> removePublic(String id,) async {
+  Future<OkResponse?> removePublic(String id,) async {
     final response = await removePublicWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -409,7 +409,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkRemovePublicResponse',) as OkRemovePublicResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
     
     }
     return null;
@@ -450,7 +450,7 @@ class ListApi {
   ///
   /// * [String] id (required):
   ///   List ID
-  Future<OkSetPublicResponse?> setPublic(String id,) async {
+  Future<OkResponse?> setPublic(String id,) async {
     final response = await setPublicWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -459,7 +459,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkSetPublicResponse',) as OkSetPublicResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
     
     }
     return null;
@@ -511,7 +511,7 @@ class ListApi {
   ///   Item ID
   ///
   /// * [UpdateItemRequest] updateItemRequest (required):
-  Future<OkUpdateItemResponse?> updateItem(String id, int item, UpdateItemRequest updateItemRequest,) async {
+  Future<OkResponse?> updateItem(String id, int item, UpdateItemRequest updateItemRequest,) async {
     final response = await updateItemWithHttpInfo(id, item, updateItemRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -520,7 +520,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkUpdateItemResponse',) as OkUpdateItemResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
     
     }
     return null;

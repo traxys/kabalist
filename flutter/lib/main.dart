@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'endpoint.dart';
 import 'package:kabalist_client/api.dart' as kb;
 import 'package:numberpicker/numberpicker.dart';
@@ -17,6 +20,7 @@ kb.ListApi listApiClient(String token) {
   return kb.ListApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
+/*
 kb.AccountApi accountApiClient(String? token) {
   var auth;
   if (token != null) {
@@ -31,6 +35,7 @@ kb.CrateApi miscApiClient(String token) {
   auth.accessToken = token;
   return kb.CrateApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
+*/
 
 kb.ShareApi shareApiClient(String token) {
   final auth = kb.HttpBearerAuth();
@@ -99,7 +104,33 @@ class _ListsState extends State<Lists> {
   @override
   void initState() {
     super.initState();
+    _handleIncomingLinks();
     loadToken();
+  }
+
+  void _handleIncomingLinks() async {
+    final appLinks = AppLinks();
+    // Initial link when the app is started via a deep link
+
+    // Listen for any subsequent links
+    print("start");
+    appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) {
+        print("got uri: $uri");
+        _processUri(uri);
+      }
+    });
+  }
+
+  void _processUri(Uri uri) async {
+    if (uri.scheme == "kabalist" && uri.host == "auth") {
+      final token = uri.queryParameters["user"];
+      if (token != null) {
+        // Store the token app-wide if needed
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString("token", token);
+      }
+    }
   }
 
   @override
@@ -145,13 +176,13 @@ class LoginForm extends StatefulWidget {
 
 class _LoginFormState extends State<LoginForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String? username;
-  String? password;
   String? error;
   bool showPassword = false;
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController _controller = TextEditingController();
+
     final errorTxt;
     if (error == null) {
       errorTxt = <Widget>[];
@@ -161,59 +192,61 @@ class _LoginFormState extends State<LoginForm> {
 
     return Form(
         key: _formKey,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: <
-            Widget>[
-          ...errorTxt,
-          TextFormField(
-            decoration: const InputDecoration(hintText: "Username"),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return "Username can't be empty";
-              }
-              return null;
-            },
-            onSaved: (String? nm) => setState(() => username = nm),
-          ),
-          TextFormField(
-            decoration: InputDecoration(
-                hintText: "Password",
-                suffixIcon: IconButton(
-                    icon: Icon(
-                        showPassword ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () {
-                      setState(() {
-                        showPassword = !showPassword;
-                      });
-                    })),
-            obscureText: !showPassword,
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return "Password can't be empty";
-              }
-              return null;
-            },
-            onSaved: (String? pass) => setState(() => password = pass),
-          ),
-          ElevatedButton(
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              ...errorTxt,
+              TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  labelText: 'URL',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              ElevatedButton(
+                  onPressed: () async {
+                    String text = _controller.text;
+                    print("URL = $text");
+                    final uri = Uri.parse(text);
+                    if (uri.scheme == "kabalist" && uri.host == "auth") {
+                      final token = uri.queryParameters["user"];
+                      if (token != null) {
+                        // Store the token app-wide if needed
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
+                        widget.getToken(token);
+                        prefs.setString("token", token);
+                      }
+                    }
+                  },
+                  child: const Text('test uri')),
+              ElevatedButton(
+                  onPressed: () async {
+                    /*
+                    if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
 
-                  final instance = accountApiClient(null);
-                  final loginRequest =
-                      kb.LoginRequest(username: username!, password: password!);
-                  try {
-                    final response = await instance.login(loginRequest);
-                    widget.getToken(response!.ok.token);
-                  } on kb.ApiException catch (err) {
-                    setState(() {
-                      error = err.toString();
-                    });
-                  }
-                }
-              },
-              child: const Text('Login'))
-        ]));
+                      final instance = accountApiClient(null);
+                      final loginRequest = kb.LoginRequest(
+                          username: username!, password: password!);
+                      try {
+                        final response = await instance.login(loginRequest);
+                        widget.getToken(response!.ok.token);
+                      } on kb.ApiException catch (err) {
+                        setState(() {
+                          error = err.toString();
+                        });
+                      }
+                    }
+                    */
+                    final Uri url =
+                        Uri.parse(ENDPOINT + "/api/auth/login?mobile=true");
+                    if (!await launchUrl(url)) {
+                      throw Exception('Could not launch $url');
+                    }
+                  },
+                  child: const Text('Login'))
+            ]));
   }
 }
 
@@ -275,6 +308,7 @@ class _ListDrawerState extends State<ListDrawer> {
 
     widget.fetchedList(List.from(rsp.keys));
 
+    /*
     final accountInfo = accountApiClient(widget.token);
     final owners = {};
     Map<String, ExtendedListInfo> resolvedRsp = {};
@@ -285,8 +319,9 @@ class _ListDrawerState extends State<ListDrawer> {
           ownerInfo = (await accountInfo.getAccountName(entry.value.owner))
               ?.ok
               .username;
-        } on kb.ApiException catch (e) {
-          /* Unknown Account, Should not happen but let's be conservative */
+        } on kb.ApiException catch (e) { */
+    /* Unknown Account, Should not happen but let's be conservative */
+    /*
           if (e.code == 7) {
             ownerInfo = "<unknown>";
           } else {
@@ -299,6 +334,8 @@ class _ListDrawerState extends State<ListDrawer> {
     }
 
     return resolvedRsp;
+  */
+    return {};
   }
 
   void addList(String name) async {
@@ -324,6 +361,7 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void shareList(String listId, String shareWith, bool readonly) async {
+    /*
     final miscInstance = miscApiClient(widget.token);
 
     try {
@@ -339,6 +377,7 @@ class _ListDrawerState extends State<ListDrawer> {
         shareError = e.toString();
       });
     }
+    */
   }
 
   @override
@@ -376,7 +415,8 @@ class _ListDrawerState extends State<ListDrawer> {
                             child: Text("Delete List"),
                           )
                         ];
-                        if (entry.value.info.status != kb.ListStatus.sharedRead) {
+                        if (entry.value.info.status !=
+                            kb.ListStatus.sharedRead) {
                           actions.add(SimpleDialogOption(
                             onPressed: () {
                               Navigator.pop(ctx, ListAction.Share);
@@ -913,12 +953,15 @@ class ItemInput extends StatelessWidget {
 
   // TODO: Maybe not fetch everything, but use the query to narrow instead of doing it client side
   static Future<List<String>> fetchHistory(String listId, String token) async {
+    /*
     final instance = miscApiClient(token);
 
     final matches =
         (await instance.historySearch(listId, search: null))!.ok.matches;
 
     return matches.map((String value) => value.toLowerCase()).toList();
+    */
+    return [];
   }
 
   @override
@@ -1217,49 +1260,52 @@ class _PantryContentState extends State<PantryContent>
                     key: _formKey,
                     child: Container(
                         margin: EdgeInsets.all(10.0),
-                        child:
-                            Column(mainAxisSize: MainAxisSize.min, children: <
-                                Widget>[
-                          ...errorTxt,
-                          Text("Amount"),
-                          NumberPicker(
-                            value: editAmount ?? 0,
-                            maxValue: 1 << 31,
-                            minValue: 0,
-                            onChanged: (value) =>
-                                setState(() => editAmount = value),
-                          ),
-                          Text("Target"),
-                          NumberPicker(
-                            value: editTarget ?? 0,
-                            maxValue: 1 << 31,
-                            minValue: 0,
-                            onChanged: (value) =>
-                                setState(() => editTarget = value),
-                          ),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: <Widget>[
-                                ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        primary: Colors.red,
-                                        onPrimary: Colors.white),
-                                    onPressed: () async {
-                                      doDelete(item.id);
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: const Text('Delete')),
-                                ElevatedButton(
-                                    onPressed: () async {
-                                      if (_formKey.currentState!.validate()) {
-                                        _formKey.currentState!.save();
-                                        doEdit(editAmount, editTarget, item.id);
-                                        Navigator.of(context).pop();
-                                      }
-                                    },
-                                    child: const Text('Edit'))
-                              ])
-                        ])));
+                        child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              ...errorTxt,
+                              Text("Amount"),
+                              NumberPicker(
+                                value: editAmount ?? 0,
+                                maxValue: 1 << 31,
+                                minValue: 0,
+                                onChanged: (value) =>
+                                    setState(() => editAmount = value),
+                              ),
+                              Text("Target"),
+                              NumberPicker(
+                                value: editTarget ?? 0,
+                                maxValue: 1 << 31,
+                                minValue: 0,
+                                onChanged: (value) =>
+                                    setState(() => editTarget = value),
+                              ),
+                              Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: <Widget>[
+                                    ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white),
+                                        onPressed: () async {
+                                          doDelete(item.id);
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('Delete')),
+                                    ElevatedButton(
+                                        onPressed: () async {
+                                          if (_formKey.currentState!
+                                              .validate()) {
+                                            _formKey.currentState!.save();
+                                            doEdit(editAmount, editTarget,
+                                                item.id);
+                                            Navigator.of(context).pop();
+                                          }
+                                        },
+                                        child: const Text('Edit'))
+                                  ])
+                            ])));
               }));
         });
   }
@@ -1701,7 +1747,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     if (!readOnly && strickedItems.isNotEmpty) {
       items.add(ElevatedButton(
           style: ElevatedButton.styleFrom(
-              primary: Colors.red, onPrimary: Colors.white),
+              backgroundColor: Colors.red, foregroundColor: Colors.white),
           onPressed: strikeItems,
           child: const Text('Delete Striked Items')));
     }

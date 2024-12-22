@@ -5,7 +5,7 @@ use axum::{
     http::{header, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::get,
-    Extension, Json, RequestPartsExt, Router,
+    Extension, Json, Router,
 };
 use figment::{
     providers::{self, Format},
@@ -553,7 +553,7 @@ async fn main() -> color_eyre::Result<()> {
         .nest("/auth", auth::router())
         .nest("/share", share::router())
         .nest("/pantry", pantry::router())
-        .route("/api/openapi.json", get(|| async { Json(json) }));
+        .route("/openapi.json", get(|| async { Json(json) }));
 
     #[cfg(feature = "frontend")]
     let frontend = config.frontend.clone();

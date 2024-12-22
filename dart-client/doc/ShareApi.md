@@ -16,7 +16,7 @@ Method | HTTP request | Description
 
 
 # **deleteShares**
-> OkDeleteShareResponse deleteShares(id)
+> OkResponse deleteShares(id)
 
 
 
@@ -49,7 +49,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkDeleteShareResponse**](OkDeleteShareResponse.md)
+[**OkResponse**](OkResponse.md)
 
 ### Authorization
 
@@ -63,7 +63,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getShares**
-> OkGetSharesResponse getShares(id)
+> OkResponse getShares(id)
 
 
 
@@ -96,7 +96,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkGetSharesResponse**](OkGetSharesResponse.md)
+[**OkResponse**](OkResponse.md)
 
 ### Authorization
 
@@ -110,7 +110,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **shareList**
-> OkShareListResponse shareList(id, shareListRequest)
+> OkResponse shareList(id, shareListRequest)
 
 
 
@@ -145,7 +145,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkShareListResponse**](OkShareListResponse.md)
+[**OkResponse**](OkResponse.md)
 
 ### Authorization
 
@@ -159,7 +159,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **unshare**
-> OkUnshareResponse unshare(id, account)
+> OkResponse unshare(id, account)
 
 
 
@@ -194,7 +194,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkUnshareResponse**](OkUnshareResponse.md)
+[**OkResponse**](OkResponse.md)
 
 ### Authorization
 

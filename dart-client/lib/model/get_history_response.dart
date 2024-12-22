@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -20,7 +20,7 @@ class GetHistoryResponse {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is GetHistoryResponse &&
-     other.matches == matches;
+    _deepEquality.equals(other.matches, matches);
 
   @override
   int get hashCode =>
@@ -55,15 +55,15 @@ class GetHistoryResponse {
       }());
 
       return GetHistoryResponse(
-        matches: json[r'matches'] is List
-            ? (json[r'matches'] as List).cast<String>()
+        matches: json[r'matches'] is Iterable
+            ? (json[r'matches'] as Iterable).cast<String>().toList(growable: false)
             : const [],
       );
     }
     return null;
   }
 
-  static List<GetHistoryResponse>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<GetHistoryResponse> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <GetHistoryResponse>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -94,12 +94,10 @@ class GetHistoryResponse {
   static Map<String, List<GetHistoryResponse>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<GetHistoryResponse>>{};
     if (json is Map && json.isNotEmpty) {
-      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      // ignore: parameter_assignments
+      json = json.cast<String, dynamic>();
       for (final entry in json.entries) {
-        final value = GetHistoryResponse.listFromJson(entry.value, growable: growable,);
-        if (value != null) {
-          map[entry.key] = value;
-        }
+        map[entry.key] = GetHistoryResponse.listFromJson(entry.value, growable: growable,);
       }
     }
     return map;

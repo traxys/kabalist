@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -17,27 +17,27 @@ void main() {
   // final instance = PantryApi();
 
   group('tests for PantryApi', () {
-    //Future<OkAddToPantryResponse> addToPantry(String id, AddToPantryRequest addToPantryRequest) async
+    //Future<OkResponse> addToPantry(String id, AddToPantryRequest addToPantryRequest) async
     test('test addToPantry', () async {
       // TODO
     });
 
-    //Future<OkDeletePantryItemResponse> deletePantryItem(String id, int item) async
+    //Future<OkResponse> deletePantryItem(String id, int item) async
     test('test deletePantryItem', () async {
       // TODO
     });
 
-    //Future<OkGetPantryResponse> getPantry(String id) async
+    //Future<OkResponse> getPantry(String id) async
     test('test getPantry', () async {
       // TODO
     });
 
-    //Future<OkRefillPantryResponse> refillPantry(String id) async
+    //Future<OkResponse> refillPantry(String id) async
     test('test refillPantry', () async {
       // TODO
     });
 
-    //Future<OkEditPantryItemResponse> setPantryItem(String id, int item, EditPantryItemRequest editPantryItemRequest) async
+    //Future<OkResponse> setPantryItem(String id, int item, EditPantryItemRequest editPantryItemRequest) async
     test('test setPantryItem', () async {
       // TODO
     });

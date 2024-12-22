@@ -1,12 +1,13 @@
 buildscript {
-    ext.kotlin_version = '1.4.21'
+    ext.kotlin_version = '1.9.25'
     repositories {
         google()
         jcenter()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.0'
+        classpath 'com.android.tools.build:gradle:8.0.0'
+
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -16,7 +17,39 @@ allprojects {
         google()
         jcenter()
     }
+    // This code is where all the magic happens and fixes the error.
+    subprojects {
+        afterEvaluate { project ->
+            if (project.hasProperty('android')) {
+				def javaVersion = JavaVersion.VERSION_17
+                project.android {
+                    if (namespace == null) {
+                        namespace project.group
+                    }
+                    compileSdk          34
+                    buildToolsVersion  "34.0.0"
+                    ndkVersion         "25.1.8937393"
+                    compileOptions {
+                        sourceCompatibility  javaVersion 
+                        targetCompatibility  javaVersion
+                    }
+				}
+				tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                    kotlinOptions {
+                        jvmTarget = javaVersion.toString()
+                    }
+                }
+            }
+            if (project.hasProperty('kotlin')) {
+				project.kotlin {
+					jvmToolchain(17)
+				}
+			}
+        }
+    }
+    // This code is where all the magic happens and fixes the error.
 }
+
 
 rootProject.buildDir = '../build'
 subprojects {
@@ -24,6 +57,7 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-task clean(type: Delete) {
+tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
+

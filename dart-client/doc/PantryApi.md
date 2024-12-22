@@ -17,7 +17,7 @@ Method | HTTP request | Description
 
 
 # **addToPantry**
-> OkAddToPantryResponse addToPantry(id, addToPantryRequest)
+> OkResponse addToPantry(id, addToPantryRequest)
 
 
 
@@ -52,7 +52,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkAddToPantryResponse**](OkAddToPantryResponse.md)
+[**OkResponse**](OkResponse.md)
 
 ### Authorization
 
@@ -66,7 +66,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **deletePantryItem**
-> OkDeletePantryItemResponse deletePantryItem(id, item)
+> OkResponse deletePantryItem(id, item)
 
 
 
@@ -101,7 +101,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkDeletePantryItemResponse**](OkDeletePantryItemResponse.md)
+[**OkResponse**](OkResponse.md)
 
 ### Authorization
 
@@ -115,7 +115,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getPantry**
-> OkGetPantryResponse getPantry(id)
+> OkResponse getPantry(id)
 
 
 
@@ -148,7 +148,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkGetPantryResponse**](OkGetPantryResponse.md)
+[**OkResponse**](OkResponse.md)
 
 ### Authorization
 
@@ -162,7 +162,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **refillPantry**
-> OkRefillPantryResponse refillPantry(id)
+> OkResponse refillPantry(id)
 
 
 
@@ -195,7 +195,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkRefillPantryResponse**](OkRefillPantryResponse.md)
+[**OkResponse**](OkResponse.md)
 
 ### Authorization
 
@@ -209,7 +209,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **setPantryItem**
-> OkEditPantryItemResponse setPantryItem(id, item, editPantryItemRequest)
+> OkResponse setPantryItem(id, item, editPantryItemRequest)
 
 
 
@@ -246,7 +246,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkEditPantryItemResponse**](OkEditPantryItemResponse.md)
+[**OkResponse**](OkResponse.md)
 
 ### Authorization
 

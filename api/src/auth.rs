@@ -1,15 +1,18 @@
 use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use axum::{
-    extract::{FromRef, FromRequestParts, Query, State},
-    http::{Extensions, HeaderMap, StatusCode},
+    extract::{FromRef, FromRequest, FromRequestParts, Query},
+    http::{HeaderMap, StatusCode},
     response::{IntoResponse, Redirect},
     routing::get,
     Extension, Router,
 };
-use axum_extra::extract::{
-    cookie::{Cookie, Key, SameSite},
-    PrivateCookieJar,
+use axum_extra::{
+    extract::{
+        cookie::{Cookie, Key, SameSite},
+        CookieJar, PrivateCookieJar,
+    },
+    headers::HeaderMapExt,
 };
 use color_eyre::eyre::{self, eyre, ContextCompat, WrapErr};
 
@@ -79,6 +82,9 @@ async fn oauth2_login(
     let (challenge, result) = PkceCodeChallenge::new_random_sha256();
 
     let mobile = query.contains_key("mobile");
+    if mobile {
+        info!("this is a mobile redirect pls");
+    }
 
     let (url, _csrf, _nonce) = state
         .oauth2
@@ -91,9 +97,9 @@ async fn oauth2_login(
         .add_scope(Scope::new("email".to_string()))
         .add_scope(Scope::new("profile".to_string()))
         .set_redirect_uri(Cow::Owned(
-            RedirectUrl::new(if mobile {
-                    state.config.oauth_redirect_mobile.clone()
-            } else {state.config.oauth_redirect.clone()})
+            RedirectUrl::new(if !mobile {
+                    state.config.oauth_redirect.clone()
+            } else {state.config.oauth_redirect_mobile.clone()})
                 .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
         ))
         .url();
@@ -159,10 +165,7 @@ async fn oauth2_callback(
         cookie.set_secure(false);
         cookie.set_path("/");
         let ujar = jar.add(cookie);
-        eyre::Result::Ok((
-            ujar,
-            Redirect::to(format!("kabalist://logged_in?token={}", uuid).as_str()),
-        ))
+        eyre::Result::Ok((ujar, Redirect::to(format!("/").as_str())))
     };
     match inner().await {
         Ok(ret) => Ok(ret),
@@ -184,12 +187,14 @@ async fn oauth2_callback_mobile(
     let inner = || async {
         let Some(code) = params.get("code") else {
             info!("Error");
-            dbg!(params);
-            return Ok::<_, color_eyre::eyre::Report>((jar, Redirect::to("/")));
+            return Ok::<_, color_eyre::eyre::Report>(Redirect::to("/"));
         };
         let bearer = state
             .oauth2
             .exchange_code(AuthorizationCode::new(code.to_string()))
+            .set_redirect_uri(Cow::Owned(RedirectUrl::new(
+                state.config.oauth_redirect_mobile.clone(),
+            )?))
             .set_pkce_verifier(PkceCodeVerifier::new(
                 jar.get("pkce")
                     .map(|c| c.value().to_string())
@@ -229,7 +234,16 @@ async fn oauth2_callback_mobile(
         cookie.set_secure(false);
         cookie.set_path("/");
         let ujar = jar.add(cookie);
-        eyre::Result::Ok((ujar, Redirect::to("/")))
+        let ujar_resp = ujar.into_response();
+        let (user, _) = ujar_resp
+            .headers()
+            .get("set-cookie")
+            .unwrap()
+            .to_str()?
+            .split_once(";")
+            .unwrap();
+
+        eyre::Result::Ok(Redirect::to(dbg!(&format!("kabalist://auth?{user}"))))
     };
     match inner().await {
         Ok(ret) => Ok(ret),

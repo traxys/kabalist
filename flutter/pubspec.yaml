@@ -27,18 +27,19 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
-  http: ^0.13.3
-  shared_preferences: ^2.0.6
+  cupertino_icons: ^1.0.8
+  http: ^1.2.2
+  shared_preferences: ^2.3.4
   kabalist_client:
     path: ../dart-client
-  numberpicker: ^2.1.1
+  numberpicker: ^2.1.2
+  url_launcher: ^6.1.8
+  app_links: ^6.3.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_rename_app:
-  flutter_launcher_icons: "^0.8.0"
+  flutter_launcher_icons: "^0.14.2"
 
 flutter_icons:
   android: "launcher_icon"
@@ -46,8 +47,8 @@ flutter_icons:
   adaptive_icon_background: "#e8e4c9"
 
 flutter_rename_app:
-  application_name: KabaList
-  dart_package_name: kabalist
+  application_name: KabaList Debug
+  dart_package_name: kabalist Debug
   application_id: com.traxys.kabalist
   bundle_id: com.ios.kabalist
   android_package_name: com.traxys.kabalist

@@ -1,10 +1,6 @@
 [workspace]
 resolver = "2"
-members = [
-	"api",
-	"cli",
-	"types",
-	"client",
-	"web",
-	"admin",
-]
+members = ["api", "cli", "types", "client", "web", "admin"]
+
+[patch.crates-io]
+#utoipa = { path = "../utoipa/utoipa/" }

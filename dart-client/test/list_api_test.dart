@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -17,22 +17,22 @@ void main() {
   // final instance = ListApi();
 
   group('tests for ListApi', () {
-    //Future<OkAddToListResponse> addList(String id, AddToListRequest addToListRequest) async
+    //Future<OkResponse> addList(String id, AddToListRequest addToListRequest) async
     test('test addList', () async {
       // TODO
     });
 
-    //Future<OkLoginResponse> createList(CreateListRequest createListRequest) async
+    //Future<OkResponse> createList(CreateListRequest createListRequest) async
     test('test createList', () async {
       // TODO
     });
 
-    //Future<OkDeleteItemResponse> deleteItem(String id, int item) async
+    //Future<OkResponse> deleteItem(String id, int item) async
     test('test deleteItem', () async {
       // TODO
     });
 
-    //Future<OkDeleteListResponse> deleteList(String id) async
+    //Future<OkResponse> deleteList(String id) async
     test('test deleteList', () async {
       // TODO
     });
@@ -42,27 +42,27 @@ void main() {
       // TODO
     });
 
-    //Future<OkGetListsResponse> listLists() async
+    //Future<OkResponse> listLists() async
     test('test listLists', () async {
       // TODO
     });
 
-    //Future<OkReadListResponse> readList(String id) async
+    //Future<OkResponse> readList(String id) async
     test('test readList', () async {
       // TODO
     });
 
-    //Future<OkRemovePublicResponse> removePublic(String id) async
+    //Future<OkResponse> removePublic(String id) async
     test('test removePublic', () async {
       // TODO
     });
 
-    //Future<OkSetPublicResponse> setPublic(String id) async
+    //Future<OkResponse> setPublic(String id) async
     test('test setPublic', () async {
       // TODO
     });
 
-    //Future<OkUpdateItemResponse> updateItem(String id, int item, UpdateItemRequest updateItemRequest) async
+    //Future<OkResponse> updateItem(String id, int item, UpdateItemRequest updateItemRequest) async
     test('test updateItem', () async {
       // TODO
     });
