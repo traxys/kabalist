@@ -1,7 +1,11 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
-    extract::{self, Query}, http::{header, HeaderValue, Method, StatusCode}, response::IntoResponse, routing::get, Extension, Json, RequestPartsExt, Router
+    extract::{self, Query},
+    http::{header, HeaderValue, Method, StatusCode},
+    response::IntoResponse,
+    routing::get,
+    Extension, Json, RequestPartsExt, Router,
 };
 use figment::{
     providers::{self, Format},
@@ -26,7 +30,6 @@ mod config;
 mod list;
 mod pantry;
 mod share;
-
 
 pub(crate) type User = auth::User;
 
@@ -541,6 +544,7 @@ async fn main() -> color_eyre::Result<()> {
     tracing::info!("Running SQLx migrations");
     sqlx::migrate!("sqlx/migrations").run(&db).await?;
 
+    let json = ApiDoc::openapi();
     let api = Router::new()
         .route("/search/list/{name}", get(search_list))
         .route("/search/account/{name}", get(search_account))
@@ -548,7 +552,8 @@ async fn main() -> color_eyre::Result<()> {
         .nest("/list", list::router())
         .nest("/auth", auth::router())
         .nest("/share", share::router())
-        .nest("/pantry", pantry::router());
+        .nest("/pantry", pantry::router())
+        .route("/api/openapi.json", get(|| async { Json(json) }));
 
     #[cfg(feature = "frontend")]
     let frontend = config.frontend.clone();

@@ -60,6 +60,7 @@ pub(crate) struct Config {
     pub(crate) oauth_id: String,
     pub(crate) oauth_issuer: url::Url,
     pub(crate) oauth_redirect: String,
+    pub(crate) oauth_redirect_mobile: String,
     pub(crate) oauth_secret: String,
 }
 
@@ -78,6 +79,7 @@ impl Default for Config {
             oauth_id: "oauth2 client id".into(),
             oauth_issuer: url::Url::parse("http://example.com/").unwrap(),
             oauth_redirect: "oauth2 redirect url".into(),
+            oauth_redirect_mobile: "oauth2 redirect url/mobile".into(),
             oauth_secret: "oauth2 secret".into(),
         }
     }

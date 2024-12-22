@@ -129,14 +129,13 @@
         mkShell rec {
           nativeBuildInputs = [pkgs.bashInteractive];
 
-          DATABASE_URL = "postgres://maix/list?host=/var/run/postgresql&password=1234";
-		      KABALIST_DATABASE_URL = DATABASE_URL;
+          DATABASE_URL = "postgres://traxys/list?host=/var/run/postgresql";
+		  KABALIST_DATABASE_URL = DATABASE_URL;
           LIST_URL = "http://localhost:8080";
 
           buildInputs = [
             # Flutter
-            /*
-              (android-nixpkgs.sdk."${system}" (sdkPkgs:
+            (android-nixpkgs.sdk."${system}" (sdkPkgs:
               with sdkPkgs; [
                 cmdline-tools-latest
                 build-tools-29-0-2
@@ -145,7 +144,6 @@
                 platforms-android-31
                 emulator
               ]))
-            */
 
             flutter
             jdk8
@@ -159,14 +157,13 @@
 
             # Rust
             rust-bin-wasm
-            cargo-edit
 
             # Web
             trunk
             wasm-bindgen-cli
 
             # Docker
-            # docker-compose
+            docker-compose
           ];
         };
     });
