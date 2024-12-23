@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.18
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -143,19 +143,19 @@ class ApiClient {
     );
   }
 
-  Future<dynamic> deserializeAsync(String value, String targetType, {bool growable = false,}) async =>
+  Future<dynamic> deserializeAsync(String json, String targetType, {bool growable = false,}) async =>
     // ignore: deprecated_member_use_from_same_package
-    deserialize(value, targetType, growable: growable);
+    deserialize(json, targetType, growable: growable);
 
   @Deprecated('Scheduled for removal in OpenAPI Generator 6.x. Use deserializeAsync() instead.')
-  dynamic deserialize(String value, String targetType, {bool growable = false,}) {
+  dynamic deserialize(String json, String targetType, {bool growable = false,}) {
     // Remove all spaces. Necessary for regular expressions as well.
     targetType = targetType.replaceAll(' ', ''); // ignore: parameter_assignments
 
     // If the expected target type is String, nothing to do...
     return targetType == 'String'
-      ? value
-      : fromJson(json.decode(value), targetType, growable: growable);
+      ? json
+      : _deserialize(jsonDecode(json), targetType, growable: growable);
   }
 
   // ignore: deprecated_member_use_from_same_package
@@ -164,8 +164,7 @@ class ApiClient {
   @Deprecated('Scheduled for removal in OpenAPI Generator 6.x. Use serializeAsync() instead.')
   String serialize(Object? value) => value == null ? '' : json.encode(value);
 
-  /// Returns a native instance of an OpenAPI class matching the [specified type][targetType].
-  static dynamic fromJson(dynamic value, String targetType, {bool growable = false,}) {
+  static dynamic _deserialize(dynamic value, String targetType, {bool growable = false}) {
     try {
       switch (targetType) {
         case 'String':
@@ -218,8 +217,56 @@ class ApiClient {
           return LoginRequest.fromJson(value);
         case 'LoginResponse':
           return LoginResponse.fromJson(value);
-        case 'OkResponse':
-          return OkResponse.fromJson(value);
+        case 'OkAddToListResponse':
+          return OkAddToListResponse.fromJson(value);
+        case 'OkAddToPantryResponse':
+          return OkAddToPantryResponse.fromJson(value);
+        case 'OkCreateListResponse':
+          return OkCreateListResponse.fromJson(value);
+        case 'OkDeleteItemResponse':
+          return OkDeleteItemResponse.fromJson(value);
+        case 'OkDeleteListResponse':
+          return OkDeleteListResponse.fromJson(value);
+        case 'OkDeletePantryItemResponse':
+          return OkDeletePantryItemResponse.fromJson(value);
+        case 'OkDeleteShareResponse':
+          return OkDeleteShareResponse.fromJson(value);
+        case 'OkEditPantryItemResponse':
+          return OkEditPantryItemResponse.fromJson(value);
+        case 'OkGetAccountNameResponse':
+          return OkGetAccountNameResponse.fromJson(value);
+        case 'OkGetHistoryResponse':
+          return OkGetHistoryResponse.fromJson(value);
+        case 'OkGetListsResponse':
+          return OkGetListsResponse.fromJson(value);
+        case 'OkGetPantryResponse':
+          return OkGetPantryResponse.fromJson(value);
+        case 'OkGetSharesResponse':
+          return OkGetSharesResponse.fromJson(value);
+        case 'OkLoginResponse':
+          return OkLoginResponse.fromJson(value);
+        case 'OkReadListResponse':
+          return OkReadListResponse.fromJson(value);
+        case 'OkRecoverPasswordResponse':
+          return OkRecoverPasswordResponse.fromJson(value);
+        case 'OkRecoveryInfoResponse':
+          return OkRecoveryInfoResponse.fromJson(value);
+        case 'OkRefillPantryResponse':
+          return OkRefillPantryResponse.fromJson(value);
+        case 'OkRegisterResponse':
+          return OkRegisterResponse.fromJson(value);
+        case 'OkRemovePublicResponse':
+          return OkRemovePublicResponse.fromJson(value);
+        case 'OkSearchAccountResponse':
+          return OkSearchAccountResponse.fromJson(value);
+        case 'OkSetPublicResponse':
+          return OkSetPublicResponse.fromJson(value);
+        case 'OkShareListResponse':
+          return OkShareListResponse.fromJson(value);
+        case 'OkUnshareResponse':
+          return OkUnshareResponse.fromJson(value);
+        case 'OkUpdateItemResponse':
+          return OkUpdateItemResponse.fromJson(value);
         case 'PantryItem':
           return PantryItem.fromJson(value);
         case 'ReadListResponse':
@@ -242,18 +289,18 @@ class ApiClient {
           dynamic match;
           if (value is List && (match = _regList.firstMatch(targetType)?.group(1)) != null) {
             return value
-              .map<dynamic>((dynamic v) => fromJson(v, match, growable: growable,))
+              .map<dynamic>((dynamic v) => _deserialize(v, match, growable: growable,))
               .toList(growable: growable);
           }
           if (value is Set && (match = _regSet.firstMatch(targetType)?.group(1)) != null) {
             return value
-              .map<dynamic>((dynamic v) => fromJson(v, match, growable: growable,))
+              .map<dynamic>((dynamic v) => _deserialize(v, match, growable: growable,))
               .toSet();
           }
           if (value is Map && (match = _regMap.firstMatch(targetType)?.group(1)) != null) {
             return Map<String, dynamic>.fromIterables(
               value.keys.cast<String>(),
-              value.values.map<dynamic>((dynamic v) => fromJson(v, match, growable: growable,)),
+              value.values.map<dynamic>((dynamic v) => _deserialize(v, match, growable: growable,)),
             );
           }
       }
@@ -283,17 +330,6 @@ class DeserializationMessage {
 }
 
 /// Primarily intended for use in an isolate.
-Future<dynamic> decodeAsync(DeserializationMessage message) async {
-  // Remove all spaces. Necessary for regular expressions as well.
-  final targetType = message.targetType.replaceAll(' ', '');
-
-  // If the expected target type is String, nothing to do...
-  return targetType == 'String'
-    ? message.json
-    : json.decode(message.json);
-}
-
-/// Primarily intended for use in an isolate.
 Future<dynamic> deserializeAsync(DeserializationMessage message) async {
   // Remove all spaces. Necessary for regular expressions as well.
   final targetType = message.targetType.replaceAll(' ', '');
@@ -301,8 +337,8 @@ Future<dynamic> deserializeAsync(DeserializationMessage message) async {
   // If the expected target type is String, nothing to do...
   return targetType == 'String'
     ? message.json
-    : ApiClient.fromJson(
-        json.decode(message.json),
+    : ApiClient._deserialize(
+        jsonDecode(message.json),
         targetType,
         growable: message.growable,
       );

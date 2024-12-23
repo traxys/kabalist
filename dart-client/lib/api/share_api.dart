@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.18
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -51,7 +51,7 @@ class ShareApi {
   ///
   /// * [String] id (required):
   ///   List ID
-  Future<OkResponse?> deleteShares(String id,) async {
+  Future<OkDeleteShareResponse?> deleteShares(String id,) async {
     final response = await deleteSharesWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -60,7 +60,7 @@ class ShareApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkDeleteShareResponse',) as OkDeleteShareResponse;
     
     }
     return null;
@@ -101,7 +101,7 @@ class ShareApi {
   ///
   /// * [String] id (required):
   ///   List ID
-  Future<OkResponse?> getShares(String id,) async {
+  Future<OkGetSharesResponse?> getShares(String id,) async {
     final response = await getSharesWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -110,7 +110,7 @@ class ShareApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkGetSharesResponse',) as OkGetSharesResponse;
     
     }
     return null;
@@ -155,7 +155,7 @@ class ShareApi {
   ///   List ID
   ///
   /// * [ShareListRequest] shareListRequest (required):
-  Future<OkResponse?> shareList(String id, ShareListRequest shareListRequest,) async {
+  Future<OkShareListResponse?> shareList(String id, ShareListRequest shareListRequest,) async {
     final response = await shareListWithHttpInfo(id, shareListRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -164,7 +164,7 @@ class ShareApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkShareListResponse',) as OkShareListResponse;
     
     }
     return null;
@@ -212,7 +212,7 @@ class ShareApi {
   ///
   /// * [String] account (required):
   ///   Account ID
-  Future<OkResponse?> unshare(String id, String account,) async {
+  Future<OkUnshareResponse?> unshare(String id, String account,) async {
     final response = await unshareWithHttpInfo(id, account,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -221,7 +221,7 @@ class ShareApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkUnshareResponse',) as OkUnshareResponse;
     
     }
     return null;

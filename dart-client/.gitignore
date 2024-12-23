@@ -3,9 +3,7 @@
 .dart_tool/
 .packages
 build/
-
-# Except for application packages
-pubspec.lock
+pubspec.lock  # Except for application packages
 
 doc/api/
 

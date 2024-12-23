@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.18
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -17,14 +17,20 @@ class AddToListRequest {
     required this.name,
   });
 
+  ///
+  /// Please note: This property should have been non-nullable! Since the specification file
+  /// does not include a default value (using the "default:" property), however, the generated
+  /// source code must fall back to having a nullable type.
+  /// Consider adding a "default:" property in the specification file to hide this note.
+  ///
   String? amount;
 
   String name;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is AddToListRequest &&
-    other.amount == amount &&
-    other.name == name;
+     other.amount == amount &&
+     other.name == name;
 
   @override
   int get hashCode =>
@@ -72,7 +78,7 @@ class AddToListRequest {
     return null;
   }
 
-  static List<AddToListRequest> listFromJson(dynamic json, {bool growable = false,}) {
+  static List<AddToListRequest>? listFromJson(dynamic json, {bool growable = false,}) {
     final result = <AddToListRequest>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -103,10 +109,12 @@ class AddToListRequest {
   static Map<String, List<AddToListRequest>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<AddToListRequest>>{};
     if (json is Map && json.isNotEmpty) {
-      // ignore: parameter_assignments
-      json = json.cast<String, dynamic>();
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        map[entry.key] = AddToListRequest.listFromJson(entry.value, growable: growable,);
+        final value = AddToListRequest.listFromJson(entry.value, growable: growable,);
+        if (value != null) {
+          map[entry.key] = value;
+        }
       }
     }
     return map;

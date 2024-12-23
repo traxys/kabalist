@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.18
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -23,8 +23,8 @@ class ShareListRequest {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is ShareListRequest &&
-    other.readonly == readonly &&
-    other.shareWith == shareWith;
+     other.readonly == readonly &&
+     other.shareWith == shareWith;
 
   @override
   int get hashCode =>
@@ -68,7 +68,7 @@ class ShareListRequest {
     return null;
   }
 
-  static List<ShareListRequest> listFromJson(dynamic json, {bool growable = false,}) {
+  static List<ShareListRequest>? listFromJson(dynamic json, {bool growable = false,}) {
     final result = <ShareListRequest>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -99,10 +99,12 @@ class ShareListRequest {
   static Map<String, List<ShareListRequest>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<ShareListRequest>>{};
     if (json is Map && json.isNotEmpty) {
-      // ignore: parameter_assignments
-      json = json.cast<String, dynamic>();
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        map[entry.key] = ShareListRequest.listFromJson(entry.value, growable: growable,);
+        final value = ShareListRequest.listFromJson(entry.value, growable: growable,);
+        if (value != null) {
+          map[entry.key] = value;
+        }
       }
     }
     return map;

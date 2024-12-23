@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.18
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -20,7 +20,7 @@ class GetAccountNameResponse {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is GetAccountNameResponse &&
-    other.username == username;
+     other.username == username;
 
   @override
   int get hashCode =>
@@ -61,7 +61,7 @@ class GetAccountNameResponse {
     return null;
   }
 
-  static List<GetAccountNameResponse> listFromJson(dynamic json, {bool growable = false,}) {
+  static List<GetAccountNameResponse>? listFromJson(dynamic json, {bool growable = false,}) {
     final result = <GetAccountNameResponse>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -92,10 +92,12 @@ class GetAccountNameResponse {
   static Map<String, List<GetAccountNameResponse>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<GetAccountNameResponse>>{};
     if (json is Map && json.isNotEmpty) {
-      // ignore: parameter_assignments
-      json = json.cast<String, dynamic>();
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        map[entry.key] = GetAccountNameResponse.listFromJson(entry.value, growable: growable,);
+        final value = GetAccountNameResponse.listFromJson(entry.value, growable: growable,);
+        if (value != null) {
+          map[entry.key] = value;
+        }
       }
     }
     return map;

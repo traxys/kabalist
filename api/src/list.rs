@@ -15,6 +15,7 @@ use kabalist_types::{
 use sqlx::PgPool;
 use tera::Tera;
 use tokio_stream::StreamExt;
+use tracing::debug;
 use uuid::Uuid;
 
 use crate::{check_list, is_owner, ErrResponse, Error, OkResponse, Rsp, User, *};
@@ -48,6 +49,7 @@ pub(crate) async fn list_lists(
     Extension(db): Extension<PgPool>,
     user: User,
 ) -> Rsp<GetListsResponse> {
+    debug!("HELLO USER {user:?}");
     let results_owned = sqlx::query!(
         r#"
         SELECT name, id, pub, owner
@@ -70,7 +72,7 @@ pub(crate) async fn list_lists(
         results: results_owned
             .into_iter()
             .map(|row| {
-                (
+                dbg!((
                     row.id,
                     ListInfo {
                         name: row.name,
@@ -78,7 +80,7 @@ pub(crate) async fn list_lists(
                         public: row.r#pub.unwrap_or(false),
                         owner: row.owner,
                     },
-                )
+                ))
             })
             .chain(results_shared.into_iter().map(|row| {
                 (

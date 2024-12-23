@@ -1,8 +1,9 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, sync::Arc, time::Duration};
 
 use axum::{
+    body::Bytes,
     extract::{self, Query},
-    http::{header, HeaderValue, Method, StatusCode},
+    http::{header, HeaderValue, Method, Response, StatusCode},
     response::IntoResponse,
     routing::get,
     Extension, Json, Router,
@@ -17,10 +18,11 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio_stream::StreamExt;
 use tower_http::cors::CorsLayer;
+use tracing::{info, trace, Span};
 use utoipa::{
     openapi::{
         schema::Schema,
-        security::{self, SecurityScheme},
+        security::{self, ApiKeyValue, SecurityScheme},
     },
     Modify, OpenApi, ToResponse, ToSchema,
 };
@@ -454,6 +456,7 @@ async fn main() -> color_eyre::Result<()> {
             pantry::refill_pantry,
             pantry::set_pantry_item,
             pantry::delete_pantry_item,
+            auth::get_account_name,
         ),
         components(
             schemas(
@@ -500,8 +503,7 @@ async fn main() -> color_eyre::Result<()> {
                 AddToPantryResponse,
                 RefillPantryResponse,
                 EditPantryItemResponse,
-                DeletePantryItemResponse,
-            ),
+                DeletePantryItemResponse,)
         ),
         modifiers(&SecurityKey),
     )]
@@ -514,8 +516,8 @@ async fn main() -> color_eyre::Result<()> {
         fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
             if let Some(components) = openapi.components.as_mut() {
                 components.add_security_scheme(
-                    "token",
-                    SecurityScheme::Http(security::Http::new(security::HttpAuthScheme::Bearer)),
+                    "user",
+                    SecurityScheme::ApiKey(security::ApiKey::Cookie(ApiKeyValue::new("user"))),
                 )
             }
         }
@@ -550,7 +552,7 @@ async fn main() -> color_eyre::Result<()> {
         .route("/search/account/{name}", get(search_account))
         .route("/history/{id}", get(history_search))
         .nest("/list", list::router())
-        .nest("/auth", auth::router())
+        .nest("/account", auth::router())
         .nest("/share", share::router())
         .nest("/pantry", pantry::router())
         .route("/openapi.json", get(|| async { Json(json) }));
@@ -578,7 +580,17 @@ async fn main() -> color_eyre::Result<()> {
                     Method::PUT,
                 ]),
         )
-        .layer(Extension(config));
+        .layer(Extension(config))
+        .layer(
+            tower_http::trace::TraceLayer::new_for_http()
+                .on_request(tower_http::trace::DefaultOnRequest::new().level(tracing::Level::INFO))
+                .make_span_with(
+                    tower_http::trace::DefaultMakeSpan::new().level(tracing::Level::INFO),
+                )
+                .on_response(
+                    tower_http::trace::DefaultOnResponse::new().level(tracing::Level::INFO),
+                ),
+        );
 
     #[cfg(feature = "frontend")]
     let app = match frontend {

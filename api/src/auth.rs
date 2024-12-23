@@ -1,21 +1,18 @@
 use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use axum::{
-    extract::{FromRef, FromRequest, FromRequestParts, Query},
+    extract::{self, FromRef, FromRequestParts, Query},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Redirect},
     routing::get,
     Extension, Router,
 };
-use axum_extra::{
-    extract::{
-        cookie::{Cookie, Key, SameSite},
-        CookieJar, PrivateCookieJar,
-    },
-    headers::HeaderMapExt,
+use axum_extra::extract::{
+    cookie::{Cookie, Key, SameSite},
+    PrivateCookieJar,
 };
 use color_eyre::eyre::{self, eyre, ContextCompat, WrapErr};
-
+use kabalist_types::GetAccountNameResponse;
 use openidconnect::{
     AuthorizationCode, CsrfToken, Nonce, OAuth2TokenResponse, PkceCodeChallenge, PkceCodeVerifier,
     RedirectUrl, Scope, UserInfoClaims,
@@ -23,6 +20,8 @@ use openidconnect::{
 use sqlx::PgPool;
 use tracing::*;
 use uuid::Uuid;
+
+use crate::{ErrResponse, Error, OkGetAccountNameResponse, OkResponse, Rsp};
 
 #[derive(Clone, Debug)]
 pub struct Oauth2Client {
@@ -39,6 +38,7 @@ impl FromRef<Oauth2Client> for Key {
 
 pub(crate) fn router() -> Router {
     Router::new()
+        .route("/{id}/name", get(get_account_name))
         .route("/login", get(oauth2_login))
         .route("/callback", get(oauth2_callback))
         .route("/callback/mobile", get(oauth2_callback_mobile))
@@ -165,7 +165,7 @@ async fn oauth2_callback(
         cookie.set_secure(false);
         cookie.set_path("/");
         let ujar = jar.add(cookie);
-        eyre::Result::Ok((ujar, Redirect::to(format!("/").as_str())))
+        eyre::Result::Ok((ujar, Redirect::to("/")))
     };
     match inner().await {
         Ok(ret) => Ok(ret),
@@ -173,6 +173,37 @@ async fn oauth2_callback(
             error!("{:?}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
+    }
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/account/{id}/name",
+    responses(
+        (status = 200, description = "Account Name", body = OkGetAccountNameResponse),
+        (status = 404, description = "Unknown Account", body = ErrResponse),
+        (status = 500, description = "Internal Error", body = ErrResponse),
+    ),
+    params(
+        ("id" = Uuid, Path, description = "Account ID"),
+    ),
+    security(
+        ("token" = [])
+    )
+)]
+pub async fn get_account_name(
+    Extension(db): Extension<PgPool>,
+    _user: User,
+    extract::Path(id): extract::Path<Uuid>,
+) -> Rsp<GetAccountNameResponse> {
+    let name = sqlx::query!("SELECT name::text FROM accounts WHERE id = $1", id)
+        .fetch_one(&db)
+        .await?
+        .name;
+
+    match name {
+        Some(username) => OkResponse::ok(GetAccountNameResponse { username }),
+        None => Err(Error::AccountNotFound),
     }
 }
 
@@ -246,7 +277,7 @@ async fn oauth2_callback_mobile(
         eyre::Result::Ok(Redirect::to(dbg!(&format!("kabalist://auth?{user}"))))
     };
     match inner().await {
-        Ok(ret) => Ok(ret),
+        Ok(ret) => Ok(dbg!(ret)),
         Err(e) => {
             error!("{:?}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
@@ -310,8 +341,8 @@ impl<S: Send + Sync> FromRequestParts<S> for User {
             .await
             .map_err(|_| ())?;
 
-        let jar = PrivateCookieJar::from_headers(&hmap, s.key.clone());
-        let uuid_raw = jar.get("user").map(|c| c.value().to_string()).ok_or(())?;
+        let jar = PrivateCookieJar::from_headers(dbg!(&hmap), s.key.clone());
+        let uuid_raw = dbg!(jar.get("user")).map(|c| c.value().to_string()).ok_or(())?;
 
         let uuid = Uuid::parse_str(uuid_raw.as_str()).map_err(|_| ())?;
         Ok(User { id: uuid })

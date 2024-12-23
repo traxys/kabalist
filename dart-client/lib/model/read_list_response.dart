@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.18
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -23,8 +23,8 @@ class ReadListResponse {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is ReadListResponse &&
-    _deepEquality.equals(other.items, items) &&
-    other.readonly == readonly;
+     other.items == items &&
+     other.readonly == readonly;
 
   @override
   int get hashCode =>
@@ -61,14 +61,14 @@ class ReadListResponse {
       }());
 
       return ReadListResponse(
-        items: Item.listFromJson(json[r'items']),
+        items: Item.listFromJson(json[r'items'])!,
         readonly: mapValueOfType<bool>(json, r'readonly')!,
       );
     }
     return null;
   }
 
-  static List<ReadListResponse> listFromJson(dynamic json, {bool growable = false,}) {
+  static List<ReadListResponse>? listFromJson(dynamic json, {bool growable = false,}) {
     final result = <ReadListResponse>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -99,10 +99,12 @@ class ReadListResponse {
   static Map<String, List<ReadListResponse>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<ReadListResponse>>{};
     if (json is Map && json.isNotEmpty) {
-      // ignore: parameter_assignments
-      json = json.cast<String, dynamic>();
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        map[entry.key] = ReadListResponse.listFromJson(entry.value, growable: growable,);
+        final value = ReadListResponse.listFromJson(entry.value, growable: growable,);
+        if (value != null) {
+          map[entry.key] = value;
+        }
       }
     }
     return map;

@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.18
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -55,7 +55,7 @@ class PantryApi {
   ///   List ID
   ///
   /// * [AddToPantryRequest] addToPantryRequest (required):
-  Future<OkResponse?> addToPantry(String id, AddToPantryRequest addToPantryRequest,) async {
+  Future<OkAddToPantryResponse?> addToPantry(String id, AddToPantryRequest addToPantryRequest,) async {
     final response = await addToPantryWithHttpInfo(id, addToPantryRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -64,7 +64,7 @@ class PantryApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkAddToPantryResponse',) as OkAddToPantryResponse;
     
     }
     return null;
@@ -112,7 +112,7 @@ class PantryApi {
   ///
   /// * [int] item (required):
   ///   Item ID
-  Future<OkResponse?> deletePantryItem(String id, int item,) async {
+  Future<OkDeletePantryItemResponse?> deletePantryItem(String id, int item,) async {
     final response = await deletePantryItemWithHttpInfo(id, item,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -121,7 +121,7 @@ class PantryApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkDeletePantryItemResponse',) as OkDeletePantryItemResponse;
     
     }
     return null;
@@ -162,7 +162,7 @@ class PantryApi {
   ///
   /// * [String] id (required):
   ///   List ID
-  Future<OkResponse?> getPantry(String id,) async {
+  Future<OkGetPantryResponse?> getPantry(String id,) async {
     final response = await getPantryWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -171,7 +171,7 @@ class PantryApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkGetPantryResponse',) as OkGetPantryResponse;
     
     }
     return null;
@@ -212,7 +212,7 @@ class PantryApi {
   ///
   /// * [String] id (required):
   ///   List ID
-  Future<OkResponse?> refillPantry(String id,) async {
+  Future<OkRefillPantryResponse?> refillPantry(String id,) async {
     final response = await refillPantryWithHttpInfo(id,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -221,7 +221,7 @@ class PantryApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkRefillPantryResponse',) as OkRefillPantryResponse;
     
     }
     return null;
@@ -273,7 +273,7 @@ class PantryApi {
   ///   Item ID
   ///
   /// * [EditPantryItemRequest] editPantryItemRequest (required):
-  Future<OkResponse?> setPantryItem(String id, int item, EditPantryItemRequest editPantryItemRequest,) async {
+  Future<OkEditPantryItemResponse?> setPantryItem(String id, int item, EditPantryItemRequest editPantryItemRequest,) async {
     final response = await setPantryItemWithHttpInfo(id, item, editPantryItemRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -282,7 +282,7 @@ class PantryApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkResponse',) as OkResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkEditPantryItemResponse',) as OkEditPantryItemResponse;
     
     }
     return null;

@@ -22,7 +22,7 @@ Method | HTTP request | Description
 
 
 # **addList**
-> OkResponse addList(id, addToListRequest)
+> OkAddToListResponse addList(id, addToListRequest)
 
 
 
@@ -57,7 +57,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkResponse**](OkResponse.md)
+[**OkAddToListResponse**](OkAddToListResponse.md)
 
 ### Authorization
 
@@ -71,7 +71,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **createList**
-> OkResponse createList(createListRequest)
+> OkLoginResponse createList(createListRequest)
 
 
 
@@ -104,7 +104,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkResponse**](OkResponse.md)
+[**OkLoginResponse**](OkLoginResponse.md)
 
 ### Authorization
 
@@ -118,7 +118,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **deleteItem**
-> OkResponse deleteItem(id, item)
+> OkDeleteItemResponse deleteItem(id, item)
 
 
 
@@ -153,7 +153,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkResponse**](OkResponse.md)
+[**OkDeleteItemResponse**](OkDeleteItemResponse.md)
 
 ### Authorization
 
@@ -167,7 +167,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **deleteList**
-> OkResponse deleteList(id)
+> OkDeleteListResponse deleteList(id)
 
 
 
@@ -200,7 +200,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkResponse**](OkResponse.md)
+[**OkDeleteListResponse**](OkDeleteListResponse.md)
 
 ### Authorization
 
@@ -255,7 +255,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listLists**
-> OkResponse listLists()
+> OkGetListsResponse listLists()
 
 
 
@@ -284,7 +284,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**OkResponse**](OkResponse.md)
+[**OkGetListsResponse**](OkGetListsResponse.md)
 
 ### Authorization
 
@@ -298,7 +298,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **readList**
-> OkResponse readList(id)
+> OkReadListResponse readList(id)
 
 
 
@@ -331,7 +331,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkResponse**](OkResponse.md)
+[**OkReadListResponse**](OkReadListResponse.md)
 
 ### Authorization
 
@@ -345,7 +345,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **removePublic**
-> OkResponse removePublic(id)
+> OkRemovePublicResponse removePublic(id)
 
 
 
@@ -378,7 +378,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkResponse**](OkResponse.md)
+[**OkRemovePublicResponse**](OkRemovePublicResponse.md)
 
 ### Authorization
 
@@ -392,7 +392,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **setPublic**
-> OkResponse setPublic(id)
+> OkSetPublicResponse setPublic(id)
 
 
 
@@ -425,7 +425,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkResponse**](OkResponse.md)
+[**OkSetPublicResponse**](OkSetPublicResponse.md)
 
 ### Authorization
 
@@ -439,7 +439,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateItem**
-> OkResponse updateItem(id, item, updateItemRequest)
+> OkUpdateItemResponse updateItem(id, item, updateItemRequest)
 
 
 
@@ -476,7 +476,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**OkResponse**](OkResponse.md)
+[**OkUpdateItemResponse**](OkUpdateItemResponse.md)
 
 ### Authorization
 

@@ -1,51 +1,44 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'endpoint.dart';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'endpoint.dart';
 import 'package:kabalist_client/api.dart' as kb;
 import 'package:numberpicker/numberpicker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 kb.ListApi listApiClient(String token) {
-  final auth = kb.HttpBearerAuth();
-  auth.accessToken = token;
+  final auth = kb.ApiKeyAuth("cookie", "user");
+  auth.apiKey = token;
   return kb.ListApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
-/*
-kb.AccountApi accountApiClient(String? token) {
-  var auth;
-  if (token != null) {
-    auth = kb.HttpBearerAuth();
-    auth.accessToken = token;
-  }
-  return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT, authentication: auth));
+kb.AccountApi accountApiClient() {
+  return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT));
 }
 
 kb.CrateApi miscApiClient(String token) {
-  final auth = kb.HttpBearerAuth();
-  auth.accessToken = token;
+  final auth = kb.ApiKeyAuth("cookie", "user");
+  auth.apiKey = token;
   return kb.CrateApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
-*/
 
 kb.ShareApi shareApiClient(String token) {
-  final auth = kb.HttpBearerAuth();
-  auth.accessToken = token;
+  final auth = kb.ApiKeyAuth("cookie", "user");
+  auth.apiKey = token;
   return kb.ShareApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
 kb.PantryApi pantryApiClient(String token) {
-  final auth = kb.HttpBearerAuth();
-  auth.accessToken = token;
+  final auth = kb.ApiKeyAuth("cookie", "user");
+  auth.apiKey = token;
   return kb.PantryApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
@@ -101,13 +94,6 @@ class _ListsState extends State<Lists> {
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _handleIncomingLinks();
-    loadToken();
-  }
-
   void _handleIncomingLinks() async {
     final appLinks = AppLinks();
     // Initial link when the app is started via a deep link
@@ -131,6 +117,13 @@ class _ListsState extends State<Lists> {
         prefs.setString("token", token);
       }
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _handleIncomingLinks();
+    loadToken();
   }
 
   @override
@@ -181,8 +174,6 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController _controller = TextEditingController();
-
     final errorTxt;
     if (error == null) {
       errorTxt = <Widget>[];
@@ -196,56 +187,15 @@ class _LoginFormState extends State<LoginForm> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               ...errorTxt,
-              TextField(
-                controller: _controller,
-                decoration: InputDecoration(
-                  labelText: 'URL',
-                  border: OutlineInputBorder(),
-                ),
-              ),
               ElevatedButton(
                   onPressed: () async {
-                    String text = _controller.text;
-                    print("URL = $text");
-                    final uri = Uri.parse(text);
-                    if (uri.scheme == "kabalist" && uri.host == "auth") {
-                      final token = uri.queryParameters["user"];
-                      if (token != null) {
-                        // Store the token app-wide if needed
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
-                        widget.getToken(token);
-                        prefs.setString("token", token);
-                      }
-                    }
-                  },
-                  child: const Text('test uri')),
-              ElevatedButton(
-                  onPressed: () async {
-                    /*
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-
-                      final instance = accountApiClient(null);
-                      final loginRequest = kb.LoginRequest(
-                          username: username!, password: password!);
-                      try {
-                        final response = await instance.login(loginRequest);
-                        widget.getToken(response!.ok.token);
-                      } on kb.ApiException catch (err) {
-                        setState(() {
-                          error = err.toString();
-                        });
-                      }
-                    }
-                    */
                     final Uri url =
                         Uri.parse(ENDPOINT + "/api/auth/login?mobile=true");
                     if (!await launchUrl(url)) {
                       throw Exception('Could not launch $url');
                     }
                   },
-                  child: const Text('Login'))
+                  child: const Text('Open Login URL'))
             ]));
   }
 }
@@ -274,24 +224,17 @@ class ListDrawer extends StatefulWidget {
   State<ListDrawer> createState() => _ListDrawerState();
 }
 
-String fmtStatus(kb.ListStatus status, String owned) {
+String fmtStatus(kb.ListStatus status) {
   switch (status) {
     case kb.ListStatus.owned:
       return "";
     case kb.ListStatus.sharedRead:
-      return " (readonly from $owned)";
+      return " (readonly)";
     case kb.ListStatus.sharedWrite:
-      return " (shared by $owned)";
+      return " (shared)";
     default:
       return "";
   }
-}
-
-class ExtendedListInfo {
-  ExtendedListInfo({required this.info, required this.owner});
-
-  final kb.ListInfo info;
-  final String owner;
 }
 
 class _ListDrawerState extends State<ListDrawer> {
@@ -300,42 +243,18 @@ class _ListDrawerState extends State<ListDrawer> {
 
   late String shareName;
   bool shareReadonly = false;
-  late Future<Map<String, ExtendedListInfo>> lists;
+  late Future<Map<String, kb.ListInfo>> lists;
 
-  Future<Map<String, ExtendedListInfo>> fetchLists() async {
+  Future<Map<String, kb.ListInfo>> fetchLists() async {
     final instance = listApiClient(widget.token);
-    final rsp = (await instance.listLists())!.ok.results;
-
-    widget.fetchedList(List.from(rsp.keys));
-
-    /*
-    final accountInfo = accountApiClient(widget.token);
-    final owners = {};
-    Map<String, ExtendedListInfo> resolvedRsp = {};
-    for (final entry in rsp.entries) {
-      var ownerInfo = owners[entry.value.owner];
-      if (ownerInfo == null) {
-        try {
-          ownerInfo = (await accountInfo.getAccountName(entry.value.owner))
-              ?.ok
-              .username;
-        } on kb.ApiException catch (e) { */
-    /* Unknown Account, Should not happen but let's be conservative */
-    /*
-          if (e.code == 7) {
-            ownerInfo = "<unknown>";
-          } else {
-            throw e;
-          }
-        }
-      }
-      resolvedRsp[entry.key] =
-          ExtendedListInfo(owner: ownerInfo, info: entry.value);
+    final rsp_null = (await instance.listLists());
+    final rsp = rsp_null?.ok.results;
+    final v = rsp_null?.toJson();
+    print("Fetched lists: $v!");
+    if (rsp != null) {
+      widget.fetchedList(List.from(rsp.keys));
     }
-
-    return resolvedRsp;
-  */
-    return {};
+    return rsp ?? {};
   }
 
   void addList(String name) async {
@@ -361,7 +280,6 @@ class _ListDrawerState extends State<ListDrawer> {
   }
 
   void shareList(String listId, String shareWith, bool readonly) async {
-    /*
     final miscInstance = miscApiClient(widget.token);
 
     try {
@@ -377,7 +295,6 @@ class _ListDrawerState extends State<ListDrawer> {
         shareError = e.toString();
       });
     }
-    */
   }
 
   @override
@@ -388,7 +305,7 @@ class _ListDrawerState extends State<ListDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, ExtendedListInfo>>(
+    return FutureBuilder<Map<String, kb.ListInfo>>(
         future: lists,
         builder: (context, snapshots) {
           final names;
@@ -397,10 +314,9 @@ class _ListDrawerState extends State<ListDrawer> {
             names = List.from(snapshots.data!.entries);
             names.sort((a, b) => widget.listSorter(a.key, b.key));
             data = List.from(names.map((entry) => ListTile(
-                title: Text(
-                    "${entry.value.info.name}${fmtStatus(entry.value.info.status, entry.value.owner)}"),
+                title: Text("${entry.key}${fmtStatus(entry.value.status)}"),
                 onTap: () {
-                  widget.selectList(entry.key, entry.value.info);
+                  widget.selectList(entry.key, entry.value);
                   Navigator.pop(context);
                 },
                 onLongPress: () async {
@@ -415,8 +331,7 @@ class _ListDrawerState extends State<ListDrawer> {
                             child: Text("Delete List"),
                           )
                         ];
-                        if (entry.value.info.status !=
-                            kb.ListStatus.sharedRead) {
+                        if (entry.value.status != kb.ListStatus.sharedRead) {
                           actions.add(SimpleDialogOption(
                             onPressed: () {
                               Navigator.pop(ctx, ListAction.Share);
@@ -428,7 +343,7 @@ class _ListDrawerState extends State<ListDrawer> {
                             title: Text("List Actions"), children: actions);
                       })) {
                     case ListAction.Delete:
-                      deleteList(entry.key);
+                      deleteList(entry.value.id);
                       break;
                     case ListAction.Share:
                       print("todo share");
@@ -489,7 +404,7 @@ class _ListDrawerState extends State<ListDrawer> {
                                                         _formKey.currentState!
                                                             .save();
                                                         shareList(
-                                                            entry.key,
+                                                            entry.value.id,
                                                             shareName,
                                                             shareReadonly);
                                                         Navigator.of(context)
@@ -847,15 +762,21 @@ class _AuthListsState extends State<AuthLists> {
     });
   }
 
-  Future<ListDesc> getLastUsedList() async {
+  Future<ListDesc?> getLastUsedList() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final Map<String, String> lastUsed =
-        json.decode(prefs.getString("lastUsed")!).cast<String, String>();
-    final status = lastUsed["status"]!;
-    return ListDesc(
-        name: lastUsed["name"]!,
-        status: kb.ListStatus.values.firstWhere((e) => e.toString() == status),
-        id: lastUsed["id"]!);
+    final val = prefs.getString("lastUsed");
+    if (val != null) {
+      final Map<String, String> lastUsed =
+          json.decode(val).cast<String, String>();
+      final status = lastUsed["status"]!;
+      return ListDesc(
+          name: lastUsed["name"]!,
+          status:
+              kb.ListStatus.values.firstWhere((e) => e.toString() == status),
+          id: lastUsed["id"]!);
+    } else {
+      return null;
+    }
   }
 
   void setLastUsed(ListDesc info) async {
@@ -910,12 +831,12 @@ class _AuthListsState extends State<AuthLists> {
               setList(null);
             }
             final lastUsed = await getLastUsedList();
-            if (lastUsed.id == id) {
+            if (lastUsed == null || lastUsed.id == id) {
               clearLastUsed();
             }
           },
-          selectList: (id, data) async {
-            final info = ListDesc(id: id, name: data.name, status: data.status);
+          selectList: (name, data) async {
+            final info = ListDesc(id: data.id, name: name, status: data.status);
             setState(() {
               settings = false;
             });
@@ -953,15 +874,12 @@ class ItemInput extends StatelessWidget {
 
   // TODO: Maybe not fetch everything, but use the query to narrow instead of doing it client side
   static Future<List<String>> fetchHistory(String listId, String token) async {
-    /*
     final instance = miscApiClient(token);
 
     final matches =
         (await instance.historySearch(listId, search: null))!.ok.matches;
 
     return matches.map((String value) => value.toLowerCase()).toList();
-    */
-    return [];
   }
 
   @override
@@ -1173,7 +1091,7 @@ class _PantryContentState extends State<PantryContent>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance!.addObserver(this);
     updateContents();
     timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
       if (shouldFetch) {
@@ -1187,7 +1105,7 @@ class _PantryContentState extends State<PantryContent>
   void dispose() {
     timer?.cancel();
     widget.list.removeListener(fetchContentsCallback);
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
   }
 
@@ -1540,7 +1458,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance!.addObserver(this);
     updateContents();
     timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
       if (shouldFetch) {
@@ -1554,7 +1472,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
   void dispose() {
     timer?.cancel();
     widget.list.removeListener(fetchContentsCallback);
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
   }
 

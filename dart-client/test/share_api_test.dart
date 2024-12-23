@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.18
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -17,22 +17,22 @@ void main() {
   // final instance = ShareApi();
 
   group('tests for ShareApi', () {
-    //Future<OkResponse> deleteShares(String id) async
+    //Future<OkDeleteShareResponse> deleteShares(String id) async
     test('test deleteShares', () async {
       // TODO
     });
 
-    //Future<OkResponse> getShares(String id) async
+    //Future<OkGetSharesResponse> getShares(String id) async
     test('test getShares', () async {
       // TODO
     });
 
-    //Future<OkResponse> shareList(String id, ShareListRequest shareListRequest) async
+    //Future<OkShareListResponse> shareList(String id, ShareListRequest shareListRequest) async
     test('test shareList', () async {
       // TODO
     });
 
-    //Future<OkResponse> unshare(String id, String account) async
+    //Future<OkUnshareResponse> unshare(String id, String account) async
     test('test unshare', () async {
       // TODO
     });

@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.18
+// @dart=2.12
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -13,15 +13,12 @@ part of openapi.api;
 class ListInfo {
   /// Returns a new [ListInfo] instance.
   ListInfo({
-    required this.name,
-    required this.owner,
+    required this.id,
     required this.public,
     required this.status,
   });
 
-  String name;
-
-  String owner;
+  String id;
 
   bool public;
 
@@ -29,26 +26,23 @@ class ListInfo {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is ListInfo &&
-    other.name == name &&
-    other.owner == owner &&
-    other.public == public &&
-    other.status == status;
+     other.id == id &&
+     other.public == public &&
+     other.status == status;
 
   @override
   int get hashCode =>
     // ignore: unnecessary_parenthesis
-    (name.hashCode) +
-    (owner.hashCode) +
+    (id.hashCode) +
     (public.hashCode) +
     (status.hashCode);
 
   @override
-  String toString() => 'ListInfo[name=$name, owner=$owner, public=$public, status=$status]';
+  String toString() => 'ListInfo[id=$id, public=$public, status=$status]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
-      json[r'name'] = this.name;
-      json[r'owner'] = this.owner;
+      json[r'id'] = this.id;
       json[r'public'] = this.public;
       json[r'status'] = this.status;
     return json;
@@ -73,8 +67,7 @@ class ListInfo {
       }());
 
       return ListInfo(
-        name: mapValueOfType<String>(json, r'name')!,
-        owner: mapValueOfType<String>(json, r'owner')!,
+        id: mapValueOfType<String>(json, r'id')!,
         public: mapValueOfType<bool>(json, r'public')!,
         status: ListStatus.fromJson(json[r'status'])!,
       );
@@ -82,7 +75,7 @@ class ListInfo {
     return null;
   }
 
-  static List<ListInfo> listFromJson(dynamic json, {bool growable = false,}) {
+  static List<ListInfo>? listFromJson(dynamic json, {bool growable = false,}) {
     final result = <ListInfo>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -113,10 +106,12 @@ class ListInfo {
   static Map<String, List<ListInfo>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<ListInfo>>{};
     if (json is Map && json.isNotEmpty) {
-      // ignore: parameter_assignments
-      json = json.cast<String, dynamic>();
+      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
       for (final entry in json.entries) {
-        map[entry.key] = ListInfo.listFromJson(entry.value, growable: growable,);
+        final value = ListInfo.listFromJson(entry.value, growable: growable,);
+        if (value != null) {
+          map[entry.key] = value;
+        }
       }
     }
     return map;
@@ -124,8 +119,7 @@ class ListInfo {
 
   /// The list of required keys that must be present in a JSON.
   static const requiredKeys = <String>{
-    'name',
-    'owner',
+    'id',
     'public',
     'status',
   };
