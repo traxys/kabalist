@@ -20,14 +20,14 @@ kb.ListApi listApiClient(String token) {
   return kb.ListApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
-kb.AccountApi accountApiClient() {
-  return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT));
+kb.AuthApi accountApiClient() {
+  return kb.AuthApi(kb.ApiClient(basePath: ENDPOINT));
 }
 
-kb.CrateApi miscApiClient(String token) {
+kb.DefaultApi miscApiClient(String token) {
   final auth = kb.ApiKeyAuth("cookie", "user");
   auth.apiKey = token;
-  return kb.CrateApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
+  return kb.DefaultApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
 kb.ShareApi shareApiClient(String token) {
@@ -91,6 +91,8 @@ class _ListsState extends State<Lists> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       token = prefs.getString("token");
+      token =
+          "rMvYJPMTeP9B8enGn5TEfssAqtJwAE9uwTBQggqsUlMZMzW27nA5yDJRkBP8YMqaAIBQn1XeV6Pe5ARvrgCm/Q==";
     });
   }
 
@@ -112,9 +114,11 @@ class _ListsState extends State<Lists> {
     if (uri.scheme == "kabalist" && uri.host == "auth") {
       final token = uri.queryParameters["user"];
       if (token != null) {
+        final tok = Uri.encodeQueryComponent(token);
+        print("user token = '$tok'");
         // Store the token app-wide if needed
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setString("token", token);
+        prefs.setString("token", tok);
       }
     }
   }
@@ -190,7 +194,7 @@ class _LoginFormState extends State<LoginForm> {
               ElevatedButton(
                   onPressed: () async {
                     final Uri url =
-                        Uri.parse(ENDPOINT + "/api/auth/login?mobile=true");
+                        Uri.parse(ENDPOINT + "/api/account/login?mobile=true");
                     if (!await launchUrl(url)) {
                       throw Exception('Could not launch $url');
                     }
@@ -249,8 +253,6 @@ class _ListDrawerState extends State<ListDrawer> {
     final instance = listApiClient(widget.token);
     final rsp_null = (await instance.listLists());
     final rsp = rsp_null?.ok.results;
-    final v = rsp_null?.toJson();
-    print("Fetched lists: $v!");
     if (rsp != null) {
       widget.fetchedList(List.from(rsp.keys));
     }
@@ -314,9 +316,10 @@ class _ListDrawerState extends State<ListDrawer> {
             names = List.from(snapshots.data!.entries);
             names.sort((a, b) => widget.listSorter(a.key, b.key));
             data = List.from(names.map((entry) => ListTile(
-                title: Text("${entry.key}${fmtStatus(entry.value.status)}"),
+                title:
+                    Text("${entry.value.name}${fmtStatus(entry.value.status)}"),
                 onTap: () {
-                  widget.selectList(entry.key, entry.value);
+                  widget.selectList(entry.value.name, entry.value);
                   Navigator.pop(context);
                 },
                 onLongPress: () async {

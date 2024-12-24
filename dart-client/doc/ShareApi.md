@@ -23,12 +23,6 @@ Method | HTTP request | Description
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
-// TODO Configure HTTP Bearer authorization: token
-// Case 1. Use String Token
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken('YOUR_ACCESS_TOKEN');
-// Case 2. Use Function which generate token.
-// String yourTokenGeneratorFunction() { ... }
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken(yourTokenGeneratorFunction);
 
 final api_instance = ShareApi();
 final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | List ID
@@ -53,7 +47,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[token](../README.md#token)
+No authorization required
 
 ### HTTP request headers
 
@@ -70,12 +64,6 @@ Name | Type | Description  | Notes
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
-// TODO Configure HTTP Bearer authorization: token
-// Case 1. Use String Token
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken('YOUR_ACCESS_TOKEN');
-// Case 2. Use Function which generate token.
-// String yourTokenGeneratorFunction() { ... }
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken(yourTokenGeneratorFunction);
 
 final api_instance = ShareApi();
 final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | List ID
@@ -100,7 +88,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[token](../README.md#token)
+No authorization required
 
 ### HTTP request headers
 
@@ -117,12 +105,6 @@ Name | Type | Description  | Notes
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
-// TODO Configure HTTP Bearer authorization: token
-// Case 1. Use String Token
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken('YOUR_ACCESS_TOKEN');
-// Case 2. Use Function which generate token.
-// String yourTokenGeneratorFunction() { ... }
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken(yourTokenGeneratorFunction);
 
 final api_instance = ShareApi();
 final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | List ID
@@ -149,7 +131,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[token](../README.md#token)
+No authorization required
 
 ### HTTP request headers
 
@@ -166,12 +148,6 @@ Name | Type | Description  | Notes
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
-// TODO Configure HTTP Bearer authorization: token
-// Case 1. Use String Token
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken('YOUR_ACCESS_TOKEN');
-// Case 2. Use Function which generate token.
-// String yourTokenGeneratorFunction() { ... }
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken(yourTokenGeneratorFunction);
 
 final api_instance = ShareApi();
 final id = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | List ID
@@ -198,7 +174,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[token](../README.md#token)
+No authorization required
 
 ### HTTP request headers
 

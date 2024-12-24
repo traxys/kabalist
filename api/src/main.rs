@@ -170,44 +170,55 @@ impl From<sqlx::Error> for Error {
     }
 }
 
-#[derive(Serialize, Deserialize, ToSchema, ToResponse)]
-struct OkResponse<T: ToSchema> {
-    ok: T,
-}
-type OkLoginResponse = OkResponse<LoginResponse>;
-type OkCreateListResponse = OkResponse<CreateListResponse>;
-type OkGetListsResponse = OkResponse<GetListsResponse>;
-type OkSearchAccountResponse = OkResponse<SearchAccountResponse>;
-type OkReadListResponse = OkResponse<ReadListResponse>;
-type OkAddToListResponse = OkResponse<AddToListResponse>;
-type OkGetHistoryResponse = OkResponse<GetHistoryResponse>;
-type OkUpdateItemResponse = OkResponse<UpdateItemResponse>;
-type OkDeleteItemResponse = OkResponse<DeleteItemResponse>;
-type OkDeleteListResponse = OkResponse<DeleteListResponse>;
-type OkUnshareResponse = OkResponse<UnshareResponse>;
-type OkGetSharesResponse = OkResponse<GetSharesResponse>;
-type OkShareListResponse = OkResponse<ShareListResponse>;
-type OkDeleteShareResponse = OkResponse<DeleteShareResponse>;
-#[allow(dead_code)]
-type OkRecoveryInfoResponse = OkResponse<RecoveryInfoResponse>;
-#[allow(dead_code)]
-type OkRecoverPasswordResponse = OkResponse<RecoverPasswordResponse>;
-#[allow(dead_code)]
-type OkRegisterResponse = OkResponse<RegisterResponse>;
-#[allow(dead_code)]
-type OkGetAccountNameResponse = OkResponse<GetAccountNameResponse>;
-type OkSetPublicResponse = OkResponse<SetPublicResponse>;
-type OkRemovePublicResponse = OkResponse<RemovePublicResponse>;
-type OkGetPantryResponse = OkResponse<GetPantryResponse>;
-type OkAddToPantryResponse = OkResponse<AddToPantryResponse>;
-type OkRefillPantryResponse = OkResponse<RefillPantryResponse>;
-type OkEditPantryItemResponse = OkResponse<EditPantryItemResponse>;
-type OkDeletePantryItemResponse = OkResponse<DeletePantryItemResponse>;
+trait OkResponse {
+    type Wrapper;
 
-impl<T: ToSchema> OkResponse<T> {
-    fn ok(v: T) -> Rsp<T> {
-        Ok(Json(Self { ok: v }))
-    }
+    fn ok(ok: Self) -> Rsp<Self>;
+}
+
+macro_rules! alias {
+    ($($okResp:ident => $ty:ident),* $(,)?) => {
+        $(#[derive(Serialize, Deserialize, ToSchema, ToResponse)]
+        struct $okResp {
+            ok: $ty,
+        }
+
+        impl $okResp {
+        }
+        impl OkResponse for $ty {
+            type Wrapper = $okResp;
+            fn ok(v: $ty) -> Rsp<$ty> {
+                Ok(Json($okResp { ok: v }))
+            }
+        }
+        )*
+    };
+}
+
+alias! {
+    OkLoginResponse => LoginResponse,
+    OkCreateListResponse => CreateListResponse,
+    OkGetListsResponse => GetListsResponse,
+    OkSearchAccountResponse => SearchAccountResponse,
+    OkReadListResponse => ReadListResponse,
+    OkAddToListResponse => AddToListResponse,
+    OkGetHistoryResponse => GetHistoryResponse,
+    OkUpdateItemResponse => UpdateItemResponse,
+    OkDeleteItemResponse => DeleteItemResponse,
+    OkDeleteListResponse => DeleteListResponse,
+    OkUnshareResponse => UnshareResponse,
+    OkGetSharesResponse => GetSharesResponse,
+    OkShareListResponse => ShareListResponse,
+    OkDeleteShareResponse => DeleteShareResponse,
+    OkGetAccountNameResponse => GetAccountNameResponse,
+    OkSetPublicResponse => SetPublicResponse,
+    OkRemovePublicResponse => RemovePublicResponse,
+    OkGetPantryResponse => GetPantryResponse,
+    OkAddToPantryResponse => AddToPantryResponse,
+    OkRefillPantryResponse => RefillPantryResponse,
+    OkEditPantryItemResponse => EditPantryItemResponse,
+    OkDeletePantryItemResponse => DeletePantryItemResponse,
+
 }
 
 #[derive(Serialize, Deserialize, ToResponse, ToSchema)]
@@ -215,7 +226,7 @@ struct ErrResponse {
     err: UserError,
 }
 
-type Rsp<T> = Result<Json<OkResponse<T>>, Error>;
+type Rsp<T> = Result<Json<<T as OkResponse>::Wrapper>, Error>;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 struct UserError {
@@ -316,6 +327,7 @@ async fn search_list(
                 (
                     row.id,
                     ListInfo {
+                        id: row.id,
                         name: row.name,
                         status: ListStatus::Owned,
                         public: row.r#pub.unwrap_or(false),
@@ -327,6 +339,7 @@ async fn search_list(
                 (
                     row.id,
                     ListInfo {
+                        id: row.id,
                         name: row.name,
                         status: if row.readonly {
                             ListStatus::SharedRead

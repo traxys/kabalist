@@ -1,4 +1,4 @@
-# kabalist_client.api.CrateApi
+# kabalist_client.api.DefaultApi
 
 ## Load the API package
 ```dart
@@ -9,9 +9,9 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**historySearch**](CrateApi.md#historysearch) | **GET** /api/history/{list} | 
-[**searchAccount**](CrateApi.md#searchaccount) | **GET** /api/search/account/{name} | 
-[**searchList**](CrateApi.md#searchlist) | **GET** /api/search/list/{name} | 
+[**historySearch**](DefaultApi.md#historysearch) | **GET** /api/history/{list} | 
+[**searchAccount**](DefaultApi.md#searchaccount) | **GET** /api/search/account/{name} | 
+[**searchList**](DefaultApi.md#searchlist) | **GET** /api/search/list/{name} | 
 
 
 # **historySearch**
@@ -22,14 +22,8 @@ Method | HTTP request | Description
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
-// TODO Configure HTTP Bearer authorization: token
-// Case 1. Use String Token
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken('YOUR_ACCESS_TOKEN');
-// Case 2. Use Function which generate token.
-// String yourTokenGeneratorFunction() { ... }
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken(yourTokenGeneratorFunction);
 
-final api_instance = CrateApi();
+final api_instance = DefaultApi();
 final list = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | List ID
 final search = search_example; // String | Substring Search
 
@@ -37,7 +31,7 @@ try {
     final result = api_instance.historySearch(list, search);
     print(result);
 } catch (e) {
-    print('Exception when calling CrateApi->historySearch: $e\n');
+    print('Exception when calling DefaultApi->historySearch: $e\n');
 }
 ```
 
@@ -54,7 +48,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[token](../README.md#token)
+No authorization required
 
 ### HTTP request headers
 
@@ -71,21 +65,15 @@ Name | Type | Description  | Notes
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
-// TODO Configure HTTP Bearer authorization: token
-// Case 1. Use String Token
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken('YOUR_ACCESS_TOKEN');
-// Case 2. Use Function which generate token.
-// String yourTokenGeneratorFunction() { ... }
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken(yourTokenGeneratorFunction);
 
-final api_instance = CrateApi();
+final api_instance = DefaultApi();
 final name = name_example; // String | Account name
 
 try {
     final result = api_instance.searchAccount(name);
     print(result);
 } catch (e) {
-    print('Exception when calling CrateApi->searchAccount: $e\n');
+    print('Exception when calling DefaultApi->searchAccount: $e\n');
 }
 ```
 
@@ -101,7 +89,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[token](../README.md#token)
+No authorization required
 
 ### HTTP request headers
 
@@ -118,21 +106,15 @@ Name | Type | Description  | Notes
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';
-// TODO Configure HTTP Bearer authorization: token
-// Case 1. Use String Token
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken('YOUR_ACCESS_TOKEN');
-// Case 2. Use Function which generate token.
-// String yourTokenGeneratorFunction() { ... }
-//defaultApiClient.getAuthentication<HttpBearerAuth>('token').setAccessToken(yourTokenGeneratorFunction);
 
-final api_instance = CrateApi();
+final api_instance = DefaultApi();
 final name = name_example; // String | Part of the list name
 
 try {
     final result = api_instance.searchList(name);
     print(result);
 } catch (e) {
-    print('Exception when calling CrateApi->searchList: $e\n');
+    print('Exception when calling DefaultApi->searchList: $e\n');
 }
 ```
 
@@ -148,7 +130,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[token](../README.md#token)
+No authorization required
 
 ### HTTP request headers
 

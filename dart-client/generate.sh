@@ -8,4 +8,5 @@ openapi-generator-cli \
 	generate \
 	-i "$SPEC" \
 	-g dart \
-	-c ./open-generator-config.yaml
+	-c ./open-generator-config.yaml \
+	--skip-validate-spec

@@ -75,6 +75,7 @@ pub(crate) async fn list_lists(
                 dbg!((
                     row.id,
                     ListInfo {
+                        id: row.id,
                         name: row.name,
                         status: ListStatus::Owned,
                         public: row.r#pub.unwrap_or(false),
@@ -86,6 +87,7 @@ pub(crate) async fn list_lists(
                 (
                     row.id,
                     ListInfo {
+                        id: row.id,
                         name: row.name,
                         status: if row.readonly {
                             ListStatus::SharedRead
@@ -105,7 +107,7 @@ pub(crate) async fn list_lists(
     post,
     path = "/api/list",
     responses(
-        (status = 200, description = "List ID", body = OkLoginResponse),
+        (status = 200, description = "List ID", body = OkCreateListResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
         (status = 500, description = "Internal Error", body = ErrResponse),
     ),

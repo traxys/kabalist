@@ -9,6 +9,8 @@ import 'package:kabalist_client/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **String** |  | 
+**name** | **String** |  | 
+**owner** | **String** |  | 
 **public** | **bool** |  | 
 **status** | [**ListStatus**](ListStatus.md) |  | 
 

@@ -2,14 +2,14 @@ use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use axum::{
     extract::{self, FromRef, FromRequestParts, Query},
-    http::{HeaderMap, StatusCode},
+    http::{header::COOKIE, HeaderMap, HeaderValue, StatusCode},
     response::{IntoResponse, Redirect},
     routing::get,
     Extension, Router,
 };
 use axum_extra::extract::{
     cookie::{Cookie, Key, SameSite},
-    PrivateCookieJar,
+    CookieJar, PrivateCookieJar,
 };
 use color_eyre::eyre::{self, eyre, ContextCompat, WrapErr};
 use kabalist_types::GetAccountNameResponse;
@@ -161,7 +161,7 @@ async fn oauth2_callback(
         .await?;
 
         let mut cookie = Cookie::new("user", uuid.to_string());
-        cookie.set_same_site(SameSite::None);
+        cookie.set_same_site(SameSite::Lax);
         cookie.set_secure(false);
         cookie.set_path("/");
         let ujar = jar.add(cookie);
@@ -261,20 +261,21 @@ async fn oauth2_callback_mobile(
         .await?;
 
         let mut cookie = Cookie::new("user", uuid.to_string());
-        cookie.set_same_site(SameSite::None);
+        cookie.set_same_site(SameSite::Lax);
         cookie.set_secure(false);
         cookie.set_path("/");
         let ujar = jar.add(cookie);
         let ujar_resp = ujar.into_response();
-        let (user, _) = ujar_resp
-            .headers()
-            .get("set-cookie")
-            .unwrap()
-            .to_str()?
-            .split_once(";")
-            .unwrap();
+        let user_set_cookie = ujar_resp.headers().get("set-cookie").unwrap().to_str()?;
+        dbg!(user_set_cookie);
+        let mut headermap = HeaderMap::new();
+        headermap.append(COOKIE, HeaderValue::from_str(user_set_cookie).unwrap());
+        let cookie_jar = CookieJar::from_headers(&headermap);
 
-        eyre::Result::Ok(Redirect::to(dbg!(&format!("kabalist://auth?{user}"))))
+        eyre::Result::Ok(Redirect::to(dbg!(&format!(
+            "kabalist://auth?{}",
+            dbg!(cookie_jar.get("user").unwrap())
+        ))))
     };
     match inner().await {
         Ok(ret) => Ok(dbg!(ret)),
@@ -328,7 +329,7 @@ pub struct User {
 }
 
 impl<S: Send + Sync> FromRequestParts<S> for User {
-    type Rejection = (); // Aka not logged in
+    type Rejection = StatusCode; // Aka not logged in
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
@@ -336,15 +337,17 @@ impl<S: Send + Sync> FromRequestParts<S> for User {
     ) -> Result<Self, Self::Rejection> {
         let hmap = HeaderMap::from_request_parts(parts, state)
             .await
-            .map_err(|_| ())?;
+            .map_err(|_| StatusCode::BAD_REQUEST)?;
         let Extension(s): Extension<Oauth2Client> = Extension::from_request_parts(parts, state)
             .await
-            .map_err(|_| ())?;
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
         let jar = PrivateCookieJar::from_headers(dbg!(&hmap), s.key.clone());
-        let uuid_raw = dbg!(jar.get("user")).map(|c| c.value().to_string()).ok_or(())?;
+        let uuid_raw = dbg!(dbg!(jar).get("user"))
+            .map(|c| c.value().to_string())
+            .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
 
-        let uuid = Uuid::parse_str(uuid_raw.as_str()).map_err(|_| ())?;
+        let uuid = Uuid::parse_str(uuid_raw.as_str()).map_err(|_| StatusCode::UNAUTHORIZED)?;
         Ok(User { id: uuid })
     }
 }
