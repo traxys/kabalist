@@ -29,7 +29,7 @@ impl<'de> Deserialize<'de> for Base64 {
         use serde::de::Visitor;
 
         struct DecodingVisitor;
-        impl<'de> Visitor<'de> for DecodingVisitor {
+        impl Visitor<'_> for DecodingVisitor {
             type Value = Base64;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

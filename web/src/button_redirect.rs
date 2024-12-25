@@ -34,7 +34,9 @@ fn route_to_url<R: Routable>(route: R) -> Cow<'static, str> {
     let base = yew_router::utils::base_url();
     let url = route.to_path();
 
-    let path = match base {
+    
+
+    match base {
         Some(base) => {
             let path = format!("{}{}", base, url);
             if path.is_empty() {
@@ -44,9 +46,7 @@ fn route_to_url<R: Routable>(route: R) -> Cow<'static, str> {
             }
         }
         None => url.into(),
-    };
-
-    path
+    }
 }
 
 impl<R> Component for RedirectButton<R>

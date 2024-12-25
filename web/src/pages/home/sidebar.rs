@@ -211,7 +211,9 @@ where
             let base = yew_router::utils::base_url();
             let url = route.to_path();
 
-            let path = match base {
+            
+
+            match base {
                 Some(base) => {
                     let path = format!("{}{}", base, url);
                     if path.is_empty() {
@@ -221,9 +223,7 @@ where
                     }
                 }
                 None => url.into(),
-            };
-
-            path
+            }
         }
 
         let LinkProps {

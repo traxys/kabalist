@@ -49,7 +49,7 @@ pub async fn register(
 
     let client = reqwest::Client::new();
     let rsp: RspData<RegisterResponse> = client
-        .post(&format!("{}/api/account/register/{}", url, token))
+        .post(format!("{}/api/account/register/{}", url, token))
         .json(&RegisterRequest { username, password })
         .send()
         .await?
@@ -62,7 +62,7 @@ pub async fn register(
 pub async fn recover_info(url: &str, recovery_id: &Uuid) -> Result<RecoveryInfoResponse> {
     let client = reqwest::Client::new();
     let rsp: RspData<RecoveryInfoResponse> = client
-        .get(&format!("{}/api/account/recover/{}", url, recovery_id))
+        .get(format!("{}/api/account/recover/{}", url, recovery_id))
         .send()
         .await?
         .json()
@@ -83,7 +83,7 @@ pub async fn recover_password(
 
     let client = reqwest::Client::new();
     let rsp: RspData<RecoverPasswordResponse> = client
-        .post(&format!("{}/api/account/recover/{}", url, recovery_id))
+        .post(format!("{}/api/account/recover/{}", url, recovery_id))
         .json(&Request {
             password: new_password,
         })
@@ -114,7 +114,7 @@ impl Client {
     pub async fn lists(&self) -> Result<GetListsResponse> {
         let lists: RspData<GetListsResponse> = self
             .client
-            .get(&format!("{}/list", self.url))
+            .get(format!("{}/list", self.url))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -127,7 +127,7 @@ impl Client {
     pub async fn search(&self, name: &str) -> Result<GetListsResponse> {
         let lists: RspData<GetListsResponse> = self
             .client
-            .get(&format!("{}/search/list/{}", self.url, name))
+            .get(format!("{}/search/list/{}", self.url, name))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -140,7 +140,7 @@ impl Client {
     pub async fn read(&self, id: &Uuid) -> Result<ReadListResponse> {
         let rsp: RspData<ReadListResponse> = self
             .client
-            .get(&format!("{}/list/{}", self.url, id))
+            .get(format!("{}/list/{}", self.url, id))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -153,7 +153,7 @@ impl Client {
     pub async fn delete_list(&self, id: &Uuid) -> Result<DeleteListResponse> {
         let rsp: RspData<DeleteListResponse> = self
             .client
-            .delete(&format!("{}/list/{}", self.url, id))
+            .delete(format!("{}/list/{}", self.url, id))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -177,7 +177,7 @@ impl Client {
 
         let rsp: RspData<AddToListResponse> = self
             .client
-            .post(&format!("{}/list/{}", self.url, list))
+            .post(format!("{}/list/{}", self.url, list))
             .bearer_auth(&self.token)
             .json(&Request { name, amount })
             .send()
@@ -191,7 +191,7 @@ impl Client {
     pub async fn search_account(&self, name: &str) -> Result<SearchAccountResponse> {
         let rsp: RspData<SearchAccountResponse> = self
             .client
-            .get(&format!("{}/search/account/{}", self.url, name))
+            .get(format!("{}/search/account/{}", self.url, name))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -215,7 +215,7 @@ impl Client {
 
         let rsp: RspData<ShareListResponse> = self
             .client
-            .put(&format!("{}/share/{}", self.url, list))
+            .put(format!("{}/share/{}", self.url, list))
             .bearer_auth(&self.token)
             .json(&Request {
                 share_with,
@@ -232,7 +232,7 @@ impl Client {
     pub async fn delete_share(&self, list: &Uuid) -> Result<DeleteShareResponse> {
         let rsp: RspData<DeleteShareResponse> = self
             .client
-            .delete(&format!("{}/share/{}", self.url, list))
+            .delete(format!("{}/share/{}", self.url, list))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -250,7 +250,7 @@ impl Client {
 
         let rsp: RspData<CreateListResponse> = self
             .client
-            .post(&format!("{}/list", self.url))
+            .post(format!("{}/list", self.url))
             .bearer_auth(&self.token)
             .json(&Request { name: list_name })
             .send()
@@ -264,7 +264,7 @@ impl Client {
     pub async fn delete_item(&self, list: &Uuid, item: i32) -> Result<DeleteItemResponse> {
         let rsp: RspData<DeleteItemResponse> = self
             .client
-            .delete(&format!("{}/list/{}/{}", self.url, list, item))
+            .delete(format!("{}/list/{}/{}", self.url, list, item))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -289,7 +289,7 @@ impl Client {
 
         let rsp: RspData<UpdateItemResponse> = self
             .client
-            .patch(&format!("{}/list/{}/{}", self.url, list, item))
+            .patch(format!("{}/list/{}/{}", self.url, list, item))
             .bearer_auth(&self.token)
             .json(&Request { name, amount })
             .send()
@@ -303,7 +303,7 @@ impl Client {
     pub async fn get_shares(&self, list: &Uuid) -> Result<GetSharesResponse> {
         let rsp: RspData<GetSharesResponse> = self
             .client
-            .get(&format!("{}/share/{}", self.url, list))
+            .get(format!("{}/share/{}", self.url, list))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -316,7 +316,7 @@ impl Client {
     pub async fn unshare_with(&self, list: &Uuid, account: &Uuid) -> Result<UnshareResponse> {
         let rsp: RspData<UnshareResponse> = self
             .client
-            .delete(&format!("{}/share/{}/{}", self.url, list, account))
+            .delete(format!("{}/share/{}/{}", self.url, list, account))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -329,7 +329,7 @@ impl Client {
     pub async fn account_name(&self, account: &Uuid) -> Result<GetAccountNameResponse> {
         let rsp: RspData<GetAccountNameResponse> = self
             .client
-            .get(&format!("{}/account/{}/name", self.url, account))
+            .get(format!("{}/account/{}/name", self.url, account))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -342,7 +342,7 @@ impl Client {
     pub async fn set_public(&self, list: &Uuid) -> Result<SetPublicResponse> {
         let rsp: RspData<SetPublicResponse> = self
             .client
-            .put(&format!("{}/list/{}/public", self.url, list))
+            .put(format!("{}/list/{}/public", self.url, list))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -355,7 +355,7 @@ impl Client {
     pub async fn remove_public(&self, list: &Uuid) -> Result<RemovePublicResponse> {
         let rsp: RspData<RemovePublicResponse> = self
             .client
-            .delete(&format!("{}/list/{}/public", self.url, list))
+            .delete(format!("{}/list/{}/public", self.url, list))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -368,7 +368,7 @@ impl Client {
     pub async fn search_history(&self, list: &Uuid, search: &str) -> Result<GetHistoryResponse> {
         let rsp: RspData<GetHistoryResponse> = self
             .client
-            .get(&format!("{}/history/{}", self.url, list))
+            .get(format!("{}/history/{}", self.url, list))
             .query(&[("search", search)])
             .bearer_auth(&self.token)
             .send()
@@ -382,7 +382,7 @@ impl Client {
     pub async fn pantry(&self, list: Uuid) -> Result<GetPantryResponse> {
         let rsp: RspData<GetPantryResponse> = self
             .client
-            .get(&format!("{}/pantry/{}", self.url, list))
+            .get(format!("{}/pantry/{}", self.url, list))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -395,7 +395,7 @@ impl Client {
     pub async fn refill_pantry(&self, list: Uuid) -> Result<RefillPantryResponse> {
         let rsp: RspData<RefillPantryResponse> = self
             .client
-            .post(&format!("{}/pantry/{}/refill", self.url, list))
+            .post(format!("{}/pantry/{}/refill", self.url, list))
             .bearer_auth(&self.token)
             .send()
             .await?
@@ -413,7 +413,7 @@ impl Client {
     ) -> Result<AddToPantryResponse> {
         let rsp: RspData<AddToPantryResponse> = self
             .client
-            .post(&format!("{}/pantry/{}", self.url, list))
+            .post(format!("{}/pantry/{}", self.url, list))
             .bearer_auth(&self.token)
             .json(&AddToPantryRequest { name, target })
             .send()
@@ -433,7 +433,7 @@ impl Client {
     ) -> Result<EditPantryItemResponse> {
         let rsp: RspData<EditPantryItemResponse> = self
             .client
-            .patch(&format!("{}/pantry/{}/{}", self.url, list, item))
+            .patch(format!("{}/pantry/{}/{}", self.url, list, item))
             .bearer_auth(&self.token)
             .json(&EditPantryItemRequest { amount, target })
             .send()
@@ -451,7 +451,7 @@ impl Client {
     ) -> Result<DeletePantryItemResponse> {
         let rsp: RspData<DeletePantryItemResponse> = self
             .client
-            .delete(&format!("{}/pantry/{}/{}", self.url, list, item))
+            .delete(format!("{}/pantry/{}/{}", self.url, list, item))
             .bearer_auth(&self.token)
             .send()
             .await?
