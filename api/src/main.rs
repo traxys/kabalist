@@ -1,9 +1,8 @@
-use std::{net::SocketAddr, sync::Arc, time::Duration};
+use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
-    body::Bytes,
     extract::{self, Query},
-    http::{header, HeaderValue, Method, Response, StatusCode},
+    http::{header, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::get,
     Extension, Json, Router,
@@ -18,7 +17,6 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio_stream::StreamExt;
 use tower_http::cors::CorsLayer;
-use tracing::{info, trace, Span};
 use utoipa::{
     openapi::{
         schema::Schema,

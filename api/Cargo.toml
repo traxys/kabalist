@@ -28,7 +28,7 @@ rand = { version = "0.8.5", features = ["min_const_gen"] }
 serde = "1.0.216"
 serde_repr = "0.1.19"
 tera = "1.20.0"
-thiserror = "2.0.8"
+thiserror = "2.0.9"
 tokio = { version = "1.42.0", features = ["rt-multi-thread", "macros"] }
 tokio-stream = "0.1.17"
 tower-http = { version = "0.6.2", features = ["cors", "trace"] }
