@@ -65,7 +65,7 @@ impl Oauth2Client {
         )?);
 
         Ok(Self {
-            key: Key::from(config.jwt_secret.0.as_slice()),
+            key: Key::from(config.cookie_secret.0.as_slice()),
             oauth2: Arc::new(client),
             config,
         })
@@ -77,14 +77,10 @@ async fn oauth2_login(
     hmap: HeaderMap,
     query: Query<HashMap<String, Option<String>>>,
 ) -> Result<(PrivateCookieJar, Redirect), StatusCode> {
-    info!("REDIRECT");
     let jar = PrivateCookieJar::from_headers(&hmap, state.key.clone());
     let (challenge, result) = PkceCodeChallenge::new_random_sha256();
 
     let mobile = query.contains_key("mobile");
-    if mobile {
-        info!("this is a mobile redirect pls");
-    }
 
     let (url, _csrf, _nonce) = state
         .oauth2
@@ -103,9 +99,11 @@ async fn oauth2_login(
                 .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
         ))
         .url();
-    let c = Cookie::new("pkce", result.secret().clone());
-    let jar = jar.add(c);
-    Ok((jar, Redirect::to(url.as_str())))
+
+    Ok((
+        jar.add(Cookie::new("pkce", result.secret().clone())),
+        Redirect::to(url.as_str()),
+    ))
 }
 
 #[axum::debug_handler]
@@ -116,11 +114,9 @@ async fn oauth2_callback(
     hmap: HeaderMap,
 ) -> Result<impl IntoResponse, StatusCode> {
     let jar = PrivateCookieJar::from_headers(&hmap, state.key.clone());
-    dbg!(&params);
     let inner = || async {
         let Some(code) = params.get("code") else {
-            info!("Error");
-            dbg!(params);
+            warn!("oauth2 callback no code querystring");
             return Ok::<_, color_eyre::eyre::Report>((jar, Redirect::to("/")));
         };
         let bearer = state
@@ -143,6 +139,7 @@ async fn oauth2_callback(
             .user_info(rtok.clone(), None)?
             .request_async(openidconnect::reqwest::async_http_client)
             .await?;
+
         let uuid = get_uuid_for_mail(
             userinfo
                 .preferred_username()
@@ -164,13 +161,13 @@ async fn oauth2_callback(
         cookie.set_same_site(SameSite::Lax);
         cookie.set_secure(false);
         cookie.set_path("/");
-        let ujar = jar.add(cookie);
-        eyre::Result::Ok((ujar, Redirect::to("/")))
+
+        eyre::Result::Ok((jar.add(cookie), Redirect::to("/")))
     };
     match inner().await {
         Ok(ret) => Ok(ret),
         Err(e) => {
-            error!("{:?}", e);
+            error!("Oauth2 Callback Error: {:?}", e);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -214,76 +211,27 @@ async fn oauth2_callback_mobile(
     Query(params): Query<HashMap<String, String>>,
     hmap: HeaderMap,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let jar = PrivateCookieJar::from_headers(&hmap, state.key.clone());
-    let inner = || async {
-        let Some(code) = params.get("code") else {
-            info!("Error");
-            return Ok::<_, color_eyre::eyre::Report>(Redirect::to("/"));
-        };
-        let bearer = state
-            .oauth2
-            .exchange_code(AuthorizationCode::new(code.to_string()))
-            .set_redirect_uri(Cow::Owned(RedirectUrl::new(
-                state.config.oauth_redirect_mobile.clone(),
-            )?))
-            .set_pkce_verifier(PkceCodeVerifier::new(
-                jar.get("pkce")
-                    .map(|c| c.value().to_string())
-                    .wrap_err("no pkce")?,
-            ))
-            .request_async(openidconnect::reqwest::async_http_client)
-            .await
-            .wrap_err("get token error")?;
-        let access_token = bearer.access_token();
-        let userinfo: UserInfoClaims<
-            openidconnect::EmptyAdditionalClaims,
-            openidconnect::core::CoreGenderClaim,
-        > = state
-            .oauth2
-            .user_info(access_token.clone(), None)?
-            .request_async(openidconnect::reqwest::async_http_client)
-            .await?;
-        let uuid = get_uuid_for_mail(
-            userinfo
-                .preferred_username()
-                .ok_or_else(|| eyre!("missing preferred username"))?
-                .as_str()
-                .to_string(),
-            userinfo
-                .name()
-                .ok_or_else(|| eyre!("missing preferred username"))?
-                .get(None)
-                .ok_or_else(|| eyre!("missing preferred username"))?
-                .as_str()
-                .to_string(),
-            db,
-        )
-        .await?;
+    // We basically want to do the same stuff as [`oauth2_callback`] function, but redirect to
+    // another uri with the encrypted token. This delegate the logic portion to the function and
+    // just extract the cookie we want
+    let raw_rsp = oauth2_callback(
+        Extension(state.clone()),
+        Extension(db.clone()),
+        Query(params),
+        hmap,
+    )
+    .await?;
 
-        let mut cookie = Cookie::new("user", uuid.to_string());
-        cookie.set_same_site(SameSite::Lax);
-        cookie.set_secure(false);
-        cookie.set_path("/");
-        let ujar = jar.add(cookie);
-        let ujar_resp = ujar.into_response();
-        let user_set_cookie = ujar_resp.headers().get("set-cookie").unwrap().to_str()?;
-        dbg!(user_set_cookie);
-        let mut headermap = HeaderMap::new();
-        headermap.append(COOKIE, HeaderValue::from_str(user_set_cookie).unwrap());
-        let cookie_jar = CookieJar::from_headers(&headermap);
+    let rsp = raw_rsp.into_response();
+    let user_set_cookie = rsp.headers().get("set-cookie").unwrap().to_str().unwrap();
 
-        eyre::Result::Ok(Redirect::to(dbg!(&format!(
-            "kabalist://auth?{}",
-            dbg!(cookie_jar.get("user").unwrap())
-        ))))
-    };
-    match inner().await {
-        Ok(ret) => Ok(dbg!(ret)),
-        Err(e) => {
-            error!("{:?}", e);
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
-        }
-    }
+    let mut headermap = HeaderMap::new();
+    headermap.append(COOKIE, HeaderValue::from_str(user_set_cookie).unwrap());
+    let cookie_jar = CookieJar::from_headers(&headermap);
+    eyre::Result::Ok(Redirect::to(&format!(
+        "kabalist://auth?{}",
+        cookie_jar.get("user").unwrap()
+    )))
 }
 
 async fn get_uuid_for_mail(mail: String, name: String, database: PgPool) -> eyre::Result<Uuid> {
@@ -293,12 +241,15 @@ async fn get_uuid_for_mail(mail: String, name: String, database: PgPool) -> eyre
     )
     .map(|r| r.account)
     .fetch_optional(&database)
-    .await?;
-    if let Some(Some(uuid)) = uuid {
-        info!("got a uuid = {uuid}! for {mail}");
+    .await?
+    .flatten();
+
+    if let Some(uuid) = uuid {
+        // the user exists, just return that
         return Ok(uuid);
     }
 
+    info!("creating a user for mail='{mail}' name='{name}'");
     let db_uuid = sqlx::query!(
         r#"INSERT INTO accounts (id, name, password)
            VALUES (uuid_generate_v4(), 
@@ -310,8 +261,6 @@ async fn get_uuid_for_mail(mail: String, name: String, database: PgPool) -> eyre
     .map(|r| r.id)
     .fetch_one(&database)
     .await?;
-
-    info!("created a uuid = {db_uuid}! mail='{mail}' name='{name}'");
     sqlx::query!(
         "INSERT INTO mail_to_uuid (id, mail, account) VALUES (uuid_generate_v4(), $1, $2)",
         mail,
@@ -329,7 +278,7 @@ pub struct User {
 }
 
 impl<S: Send + Sync> FromRequestParts<S> for User {
-    type Rejection = StatusCode; // Aka not logged in
+    type Rejection = StatusCode;
 
     async fn from_request_parts(
         parts: &mut axum::http::request::Parts,
@@ -337,15 +286,16 @@ impl<S: Send + Sync> FromRequestParts<S> for User {
     ) -> Result<Self, Self::Rejection> {
         let hmap = HeaderMap::from_request_parts(parts, state)
             .await
-            .map_err(|_| StatusCode::BAD_REQUEST)?;
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
         let Extension(s): Extension<Oauth2Client> = Extension::from_request_parts(parts, state)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
         let jar = PrivateCookieJar::from_headers(dbg!(&hmap), s.key.clone());
-        let uuid_raw = dbg!(dbg!(jar).get("user"))
+        let uuid_raw = jar
+            .get("user")
             .map(|c| c.value().to_string())
-            .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+            .ok_or(StatusCode::BAD_REQUEST)?;
 
         let uuid = Uuid::parse_str(uuid_raw.as_str()).map_err(|_| StatusCode::UNAUTHORIZED)?;
         Ok(User { id: uuid })

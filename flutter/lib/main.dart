@@ -91,8 +91,6 @@ class _ListsState extends State<Lists> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       token = prefs.getString("token");
-      token =
-          "rMvYJPMTeP9B8enGn5TEfssAqtJwAE9uwTBQggqsUlMZMzW27nA5yDJRkBP8YMqaAIBQn1XeV6Pe5ARvrgCm/Q==";
     });
   }
 

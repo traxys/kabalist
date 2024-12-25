@@ -72,7 +72,7 @@ pub(crate) async fn list_lists(
         results: results_owned
             .into_iter()
             .map(|row| {
-                dbg!((
+                (
                     row.id,
                     ListInfo {
                         id: row.id,
@@ -81,7 +81,7 @@ pub(crate) async fn list_lists(
                         public: row.r#pub.unwrap_or(false),
                         owner: row.owner,
                     },
-                ))
+                )
             })
             .chain(results_shared.into_iter().map(|row| {
                 (

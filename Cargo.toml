@@ -2,5 +2,7 @@
 resolver = "2"
 members = ["api", "cli", "types", "client", "web", "admin"]
 
-[patch.crates-io]
+# use this as of right now if you wish to have SawggerIU built in.
+# You need to use a version of the fork that is using the same version of axum (0.8.0-rc.1) as of writing
+#[patch.crates-io]
 #utoipa = { path = "../utoipa/utoipa/" }

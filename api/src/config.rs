@@ -51,7 +51,7 @@ impl<'de> Deserialize<'de> for Base64 {
 #[derive(Deserialize, Debug, Serialize)]
 pub(crate) struct Config {
     pub(crate) database_url: String,
-    pub(crate) jwt_secret: Base64,
+    pub(crate) cookie_secret: Base64,
     pub(crate) exp: usize,
     pub(crate) listen_addr: IpAddr,
     pub(crate) port: u16,
@@ -70,7 +70,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             database_url: "postgres://postgres:password@localhost/postgres".into(),
-            jwt_secret: Base64(Vec::from(b"kabalist_secret")),
+            cookie_secret: Base64(Vec::from(b"kabalist_secret")),
             exp: 1000000,
             listen_addr: [127, 0, 0, 1].into(),
             port: 8080,
