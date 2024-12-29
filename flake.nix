@@ -75,7 +75,7 @@
 
           src = ./.;
           XDG_CACHE_HOME = "/build/cache";
-          TRUNK_TOOLS_WASM_BINDGEN = "0.2.84";
+          TRUNK_TOOLS_WASM_BINDGEN = "${wasm-bindgen-cli.version}";
 
           buildPhase = ''
             runHook preBuild
