@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT name, id, readonly, pub, owner\n               FROM lists, list_sharing\n               WHERE (lists.id = list_sharing.list)\n                   AND shared = $1\n                   AND name ILIKE '%' || $2 || '%'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "readonly",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "pub",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "owner",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "34b128e07400694aeb8fc204299ea972ac144744f955aa3fa266b8e4484738ec"
+}

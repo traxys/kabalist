@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT name, id, pub, owner FROM lists WHERE owner = $1 AND name ILIKE '%' || $2 || '%'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "pub",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "owner",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "3476126e3cfc5f70c11ccd4125ec1c3e0197eb0c85374b21c05706662256487d"
+}

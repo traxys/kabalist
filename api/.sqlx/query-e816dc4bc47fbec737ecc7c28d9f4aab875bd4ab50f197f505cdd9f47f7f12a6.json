@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE lists_content SET amount = $1 WHERE list = $2 AND id = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e816dc4bc47fbec737ecc7c28d9f4aab875bd4ab50f197f505cdd9f47f7f12a6"
+}

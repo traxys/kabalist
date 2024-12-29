@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "9683bfd3cb60e69242e333abde9e3088104d34106a748ca85ed6840a80b35da2"
+}

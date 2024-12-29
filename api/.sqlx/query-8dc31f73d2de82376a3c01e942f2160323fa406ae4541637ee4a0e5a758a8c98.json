@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "CREATE EXTENSION IF NOT EXISTS pgcrypto;",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "8dc31f73d2de82376a3c01e942f2160323fa406ae4541637ee4a0e5a758a8c98"
+}

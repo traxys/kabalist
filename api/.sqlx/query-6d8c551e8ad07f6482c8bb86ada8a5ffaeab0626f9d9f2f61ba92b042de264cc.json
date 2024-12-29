@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE lists SET pub = false WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6d8c551e8ad07f6482c8bb86ada8a5ffaeab0626f9d9f2f61ba92b042de264cc"
+}

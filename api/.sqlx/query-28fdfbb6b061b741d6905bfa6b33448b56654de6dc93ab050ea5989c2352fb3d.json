@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM list_sharing WHERE list = $1 AND shared = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "28fdfbb6b061b741d6905bfa6b33448b56654de6dc93ab050ea5989c2352fb3d"
+}
