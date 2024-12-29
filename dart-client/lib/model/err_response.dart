@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -20,7 +20,7 @@ class ErrResponse {
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is ErrResponse &&
-     other.err == err;
+    other.err == err;
 
   @override
   int get hashCode =>
@@ -61,7 +61,7 @@ class ErrResponse {
     return null;
   }
 
-  static List<ErrResponse>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<ErrResponse> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <ErrResponse>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -92,12 +92,10 @@ class ErrResponse {
   static Map<String, List<ErrResponse>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<ErrResponse>>{};
     if (json is Map && json.isNotEmpty) {
-      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      // ignore: parameter_assignments
+      json = json.cast<String, dynamic>();
       for (final entry in json.entries) {
-        final value = ErrResponse.listFromJson(entry.value, growable: growable,);
-        if (value != null) {
-          map[entry.key] = value;
-        }
+        map[entry.key] = ErrResponse.listFromJson(entry.value, growable: growable,);
       }
     }
     return map;

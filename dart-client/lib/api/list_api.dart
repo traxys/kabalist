@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -102,7 +102,7 @@ class ListApi {
   /// Parameters:
   ///
   /// * [CreateListRequest] createListRequest (required):
-  Future<OkLoginResponse?> createList(CreateListRequest createListRequest,) async {
+  Future<OkCreateListResponse?> createList(CreateListRequest createListRequest,) async {
     final response = await createListWithHttpInfo(createListRequest,);
     if (response.statusCode >= HttpStatus.badRequest) {
       throw ApiException(response.statusCode, await _decodeBodyBytes(response));
@@ -111,7 +111,7 @@ class ListApi {
     // At the time of writing this, `dart:convert` will throw an "Unexpected end of input"
     // FormatException when trying to decode an empty string.
     if (response.body.isNotEmpty && response.statusCode != HttpStatus.noContent) {
-      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkLoginResponse',) as OkLoginResponse;
+      return await apiClient.deserializeAsync(await _decodeBodyBytes(response), 'OkCreateListResponse',) as OkCreateListResponse;
     
     }
     return null;
