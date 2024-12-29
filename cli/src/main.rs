@@ -1,6 +1,6 @@
 use std::io;
 
-use clap::{Args, IntoApp, Parser, Subcommand};
+use clap::{Args, CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell};
 use itertools::Itertools;
 use kabalist_client::{Client, Uuid};
@@ -313,7 +313,7 @@ impl AccountCommands {
             AccountCommands::Login { name, password } => {
                 let password = password
                     .map(Ok)
-                    .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
+                    .unwrap_or_else(|| rpassword::prompt_password("password: "))?;
                 let token = kabalist_client::login(&url, &name, &password).await?;
                 println!("Token: {}", token.token);
                 println!("You can export in as LIST_TOKEN or pass it as parameters");
@@ -323,7 +323,7 @@ impl AccountCommands {
                 println!("Recovery for {}", account_name);
                 let password = password
                     .map(Ok)
-                    .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
+                    .unwrap_or_else(|| rpassword::prompt_password("password: "))?;
                 kabalist_client::recover_password(&url, &id, &password).await?;
             }
             AccountCommands::Register {
@@ -333,7 +333,7 @@ impl AccountCommands {
             } => {
                 let password = password
                     .map(Ok)
-                    .unwrap_or_else(|| rpassword::read_password_from_tty(Some("password: ")))?;
+                    .unwrap_or_else(|| rpassword::prompt_password("password: "))?;
                 kabalist_client::register(&url, id, &username, &password).await?;
             }
         }
@@ -374,7 +374,7 @@ struct Opts {
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
-    let args = Opts::from_args();
+    let args = Opts::parse();
 
     match args.command {
         Commands::Account(a) => {
