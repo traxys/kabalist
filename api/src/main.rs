@@ -18,17 +18,17 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio_stream::StreamExt;
 use tower_http::cors::CorsLayer;
 use utoipa::{
-    openapi::security::{self, SecurityScheme},
+    openapi::security::{self, ApiKeyValue, SecurityScheme},
     Modify, OpenApi, PartialSchema, ToResponse, ToSchema,
 };
 
-mod account;
+mod auth;
 mod config;
 mod list;
 mod pantry;
 mod share;
 
-pub(crate) use account::User;
+pub(crate) use auth::User;
 
 macro_rules! define_error {
     (
@@ -155,13 +155,6 @@ impl From<sqlx::Error> for Error {
     fn from(e: sqlx::Error) -> Self {
         tracing::error!("Database error: {:?}", e);
         Error::Internal
-    }
-}
-
-impl From<jwt_simple::Error> for Error {
-    fn from(value: jwt_simple::Error) -> Self {
-        tracing::error!("Jwt error: {value:?}");
-        Error::InvalidToken
     }
 }
 
@@ -449,30 +442,26 @@ async fn main() -> color_eyre::Result<()> {
             search_list,
             search_account,
             history_search,
+            auth::get_account_name,
+            list::add_list,
             list::create_list,
-            list::update_item,
             list::delete_item,
+            list::delete_list,
+            list::get_public_list,
             list::list_lists,
             list::read_list,
-            list::add_list,
-            list::delete_list,
-            list::set_public,
             list::remove_public,
-            list::get_public_list,
-            account::login,
-            account::register,
-            account::recovery_info,
-            account::recover_password,
-            account::get_account_name,
-            share::delete_shares,
-            share::unshare,
-            share::get_shares,
-            share::share_list,
-            pantry::get_pantry,
+            list::set_public,
+            list::update_item,
             pantry::add_to_pantry,
+            pantry::delete_pantry_item,
+            pantry::get_pantry,
             pantry::refill_pantry,
             pantry::set_pantry_item,
-            pantry::delete_pantry_item,
+            share::delete_shares,
+            share::get_shares,
+            share::share_list,
+            share::unshare,
         ),
         components(
             schemas(
@@ -556,8 +545,8 @@ async fn main() -> color_eyre::Result<()> {
         fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
             if let Some(components) = openapi.components.as_mut() {
                 components.add_security_scheme(
-                    "token",
-                    SecurityScheme::Http(security::Http::new(security::HttpAuthScheme::Bearer)),
+                    "user",
+                    SecurityScheme::ApiKey(security::ApiKey::Cookie(ApiKeyValue::new("user"))),
                 )
             }
         }
@@ -592,11 +581,13 @@ async fn main() -> color_eyre::Result<()> {
         .route("/history/{id}", get(history_search))
         .nest("/list", list::router())
         .nest("/share", share::router())
-        .nest("/account", account::router())
+        .nest("/account", auth::router())
         .nest("/pantry", pantry::router());
 
     #[cfg(feature = "frontend")]
     let frontend = config.frontend.clone();
+
+    let oauth2 = auth::Oauth2Client::from_config(config.clone()).await?;
 
     let app = Router::new()
         // to be put back when axum 0.8.0 gets stable, meaning utoipa will get updated
@@ -616,7 +607,8 @@ async fn main() -> color_eyre::Result<()> {
                     Method::PUT,
                 ]),
         )
-        .layer(Extension(config));
+        .layer(Extension(config))
+        .layer(Extension(oauth2));
 
     #[cfg(feature = "frontend")]
     let app = match frontend {

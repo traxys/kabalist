@@ -1,6 +1,6 @@
-use jwt_simple::algorithms::HS256Key;
 use std::net::IpAddr;
 
+use base64::engine::general_purpose::STANDARD_NO_PAD as Base64NoPad;
 use base64::Engine;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -23,9 +23,7 @@ impl Serialize for Base64 {
     where
         S: Serializer,
     {
-        ser.serialize_str(
-            &BASE64_ENGINE.encode(self.0.to_bytes()),
-        )
+        ser.serialize_str(&Base64NoPad.encode(self.0.as_slice()))
     }
 }
 
@@ -48,11 +46,7 @@ impl<'de> Deserialize<'de> for Base64 {
             where
                 E: serde::de::Error,
             {
-                BASE64_ENGINE
-                    .decode(v)
-                    .map_err(E::custom)
-                    .map(|b| HS256Key::from_bytes(&b))
-                    .map(Base64)
+                Base64NoPad.decode(v).map_err(E::custom).map(Base64)
             }
         }
 
@@ -63,7 +57,7 @@ impl<'de> Deserialize<'de> for Base64 {
 #[derive(Deserialize, Debug, Serialize)]
 pub(crate) struct Config {
     pub(crate) database_url: String,
-    pub(crate) jwt_secret: Base64,
+    pub(crate) cookie_secret: Base64,
     pub(crate) exp: usize,
     pub(crate) listen_addr: IpAddr,
     pub(crate) port: u16,
@@ -71,13 +65,18 @@ pub(crate) struct Config {
     pub(crate) templates: Option<String>,
     #[cfg(feature = "frontend")]
     pub(crate) frontend: Option<std::path::PathBuf>,
+    pub(crate) oauth_id: String,
+    pub(crate) oauth_issuer: url::Url,
+    pub(crate) oauth_redirect: String,
+    pub(crate) oauth_redirect_mobile: String,
+    pub(crate) oauth_secret: String,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             database_url: "postgres://postgres:password@localhost/postgres".into(),
-            jwt_secret: Base64(HS256Key::from_bytes(b"kabalist_secret")),
+            cookie_secret: Base64(Vec::from(b"kabalist_secret")),
             exp: 1000000,
             listen_addr: [127, 0, 0, 1].into(),
             port: 8080,
@@ -85,6 +84,11 @@ impl Default for Config {
             frontend: None,
             cors_allow_origin: "*".into(),
             templates: None,
+            oauth_id: "oauth2 client id".into(),
+            oauth_issuer: url::Url::parse("http://example.com/").unwrap(),
+            oauth_redirect: "oauth2 redirect url".into(),
+            oauth_redirect_mobile: "oauth2 redirect url/mobile".into(),
+            oauth_secret: "oauth2 secret".into(),
         }
     }
 }
