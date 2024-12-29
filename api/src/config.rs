@@ -4,8 +4,6 @@ use base64::engine::general_purpose::STANDARD_NO_PAD as Base64NoPad;
 use base64::Engine;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-const BASE64_ENGINE : base64::engine::GeneralPurpose = base64::engine::general_purpose::STANDARD;
-
 pub(crate) struct Base64(pub(crate) Vec<u8>);
 
 impl std::fmt::Debug for Base64 {
@@ -13,7 +11,7 @@ impl std::fmt::Debug for Base64 {
         write!(
             f,
             r#"b64"{}""#,
-            &BASE64_ENGINE.encode(self.0.as_slice())
+            &Base64NoPad.encode(self.0.as_slice())
         )
     }
 }
