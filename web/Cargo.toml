@@ -10,12 +10,12 @@ default = []
 standalone = []
 
 [dependencies]
-yew = "0.19"
-yew-router = { version = "0.16" }
+yew = "0.21"
+yew-router = { version = "0.18" }
 web-sys = "0.3"
-gloo = "0.7.0"
+gloo = "0.11.0"
 kabalist_client = { path = "../client" }
 wasm-bindgen-futures = "0.4.49"
 serde = { version = "1.0.217", features = ["derive"] }
-itertools = "0.10.5"
+itertools = "0.13.0"
 futures = "0.3.31"
