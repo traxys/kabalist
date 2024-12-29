@@ -61,9 +61,9 @@ where
 pub(crate) fn router() -> Router {
     Router::new()
         .route("/login", post(login))
-        .route("/register/:id", post(register))
-        .route("/recover/:id", get(recovery_info).post(recover_password))
-        .route("/:id/name", get(get_account_name))
+        .route("/register/{id}", post(register))
+        .route("/recover/{id}", get(recovery_info).post(recover_password))
+        .route("/{id}/name", get(get_account_name))
 }
 
 /// Generate a JWT in order to use the other routes

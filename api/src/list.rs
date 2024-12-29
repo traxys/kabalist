@@ -22,10 +22,10 @@ use crate::{check_list, is_owner, ok_response::*, ErrResponse, Error, OkResponse
 pub(crate) fn router() -> Router {
     Router::new()
         .route("/", post(create_list).get(list_lists))
-        .route("/:id", get(read_list).post(add_list).delete(delete_list))
-        .route("/:id/:item", patch(update_item).delete(delete_item))
+        .route("/{id}", get(read_list).post(add_list).delete(delete_list))
+        .route("/{id}/{item}", patch(update_item).delete(delete_item))
         .route(
-            "/:id/public",
+            "/{id}/public",
             put(set_public).delete(remove_public).get(get_public_list),
         )
 }

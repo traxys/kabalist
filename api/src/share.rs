@@ -14,10 +14,10 @@ use crate::{account::User, check_list, is_owner, ok_response::*, ErrResponse, Ok
 pub(crate) fn router() -> Router {
     Router::new()
         .route(
-            "/:id",
+            "/{id}",
             get(get_shares).put(share_list).delete(delete_shares),
         )
-        .route("/:id/:account", delete(unshare))
+        .route("/{id}/{account}", delete(unshare))
 }
 
 #[utoipa::path(
