@@ -6,9 +6,9 @@ doc/AccountApi.md
 doc/AddToListRequest.md
 doc/AddToListResponse.md
 doc/AddToPantryRequest.md
-doc/CrateApi.md
 doc/CreateListRequest.md
 doc/CreateListResponse.md
+doc/DefaultApi.md
 doc/EditPantryItemRequest.md
 doc/ErrResponse.md
 doc/Error.md
@@ -62,7 +62,7 @@ doc/UserError.md
 git_push.sh
 lib/api.dart
 lib/api/account_api.dart
-lib/api/crate_api.dart
+lib/api/default_api.dart
 lib/api/list_api.dart
 lib/api/pantry_api.dart
 lib/api/share_api.dart
@@ -131,9 +131,9 @@ test/account_api_test.dart
 test/add_to_list_request_test.dart
 test/add_to_list_response_test.dart
 test/add_to_pantry_request_test.dart
-test/crate_api_test.dart
 test/create_list_request_test.dart
 test/create_list_response_test.dart
+test/default_api_test.dart
 test/edit_pantry_item_request_test.dart
 test/err_response_test.dart
 test/error_test.dart

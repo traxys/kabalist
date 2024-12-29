@@ -68,8 +68,6 @@ Name | Type | Description  | Notes
 
 Generate a JWT in order to use the other routes
 
-Generate a JWT in order to use the other routes
-
 ### Example
 ```dart
 import 'package:kabalist_client/api.dart';

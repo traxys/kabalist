@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -12,11 +12,11 @@ import 'package:kabalist_client/api.dart';
 import 'package:test/test.dart';
 
 
-/// tests for CrateApi
+/// tests for DefaultApi
 void main() {
-  // final instance = CrateApi();
+  // final instance = DefaultApi();
 
-  group('tests for CrateApi', () {
+  group('tests for DefaultApi', () {
     //Future<OkGetHistoryResponse> historySearch(String list, { String search }) async
     test('test historySearch', () async {
       // TODO

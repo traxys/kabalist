@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -52,7 +52,7 @@ class Error {
 
   static Error? fromJson(dynamic value) => ErrorTypeTransformer().decode(value);
 
-  static List<Error>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<Error> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <Error>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -85,7 +85,7 @@ class ErrorTypeTransformer {
   /// and users are still using an old app with the old code.
   Error? decode(dynamic data, {bool allowNull = true}) {
     if (data != null) {
-      switch (data.toString()) {
+      switch (data) {
         case '0': return Error.n0;
         case '1': return Error.n1;
         case '2': return Error.n2;
