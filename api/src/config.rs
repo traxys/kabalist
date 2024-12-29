@@ -6,14 +6,14 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 const BASE64_ENGINE : base64::engine::GeneralPurpose = base64::engine::general_purpose::STANDARD;
 
-pub(crate) struct Base64(pub(crate) HS256Key);
+pub(crate) struct Base64(pub(crate) Vec<u8>);
 
 impl std::fmt::Debug for Base64 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             r#"b64"{}""#,
-            &BASE64_ENGINE.encode(self.0.to_bytes())
+            &BASE64_ENGINE.encode(self.0.as_slice())
         )
     }
 }
