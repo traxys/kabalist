@@ -39,7 +39,7 @@ impl Component for Register {
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &yew::Context<Self>, _old_props: &Self::Properties) -> bool {
         self.id = ctx.props().registration_id.clone();
         true
     }

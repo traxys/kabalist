@@ -78,14 +78,14 @@ impl Component for List {
                 true
             }
             ListMessage::Multiple(a, b) => {
-                self.update(_ctx, *a);
-                self.update(_ctx, *b);
+                yew::Component::update(self, _ctx, *a);
+                yew::Component::update(self, _ctx, *b);
                 true
             }
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &yew::Context<Self>, _old_props: &Self::Properties) -> bool {
         let c = self.client.clone();
         let id = ctx.props().uuid;
         ctx.link().send_future(async move {
@@ -247,21 +247,29 @@ impl Component for List {
         });
 
         let c = self.client.clone();
-        let on_refill = ctx.link().callback_future_once(move |_| async move {
-            match c.refill_pantry(id).await {
-                Ok(_) => match c.read(&id).await {
-                    Err(e) => ListMessage::Error(format!("Could not get list: {:?}", e)),
-                    Ok(v) => ListMessage::SetContent(v.items),
-                },
-                Err(e) => ListMessage::Error(format!("Could not add item: {:?}", e)),
+        let on_refill = ctx.link().callback_future({
+            let c = c.clone();
+            move |_| {
+                let c = c.clone();
+                async move {
+                    match c.refill_pantry(id).await {
+                        Ok(_) => match c.read(&id).await {
+                            Err(e) => ListMessage::Error(format!("Could not get list: {:?}", e)),
+                            Ok(v) => ListMessage::SetContent(v.items),
+                        },
+                        Err(e) => ListMessage::Error(format!("Could not add item: {:?}", e)),
+                    }
+                }
             }
         });
 
         let c = self.client.clone();
 
-        let add_pantry =
-            ctx.link()
-                .callback_future_once(move |(name, target): (String, String)| async move {
+        let add_pantry = ctx.link().callback_future({
+            let c = c.clone();
+            move |(name, target): (String, String)| {
+                let c = c.clone();
+                async move {
                     let target: i32 = match target.parse() {
                         Ok(t) => t,
                         Err(_) => {
@@ -275,7 +283,9 @@ impl Component for List {
                         },
                         Err(e) => ListMessage::Error(format!("Could not add item: {:?}", e)),
                     }
-                });
+                }
+            }
+        });
 
         html! {
             <div

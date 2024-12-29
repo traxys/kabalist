@@ -34,7 +34,7 @@ impl Component for EditItem {
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &yew::Context<Self>, _old_props: &Self::Properties) -> bool {
         self.name = ctx.props().name.clone();
         self.amount = ctx.props().amount.clone();
         true

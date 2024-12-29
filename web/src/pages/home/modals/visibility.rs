@@ -33,7 +33,7 @@ impl Component for ListVisibility {
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &yew::Context<Self>, _old_props: &Self::Properties) -> bool {
         self.client = kabalist_client::Client::new(endpoint(), ctx.props().token.clone());
         self.public = ctx.props().public;
         true
