@@ -41,8 +41,8 @@
       };
 
       openapi-generator-cli = pkgs.fetchurl {
-        url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/6.4.0/openapi-generator-cli-6.4.0.jar";
-        sha256 = "sha256-Na6tMA4MlGn72dMM9G9BU4l9yygpEgkcpOySEtzp0VE=";
+        url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.9.0/openapi-generator-cli-7.9.0.jar";
+        sha256 = "sha256-8Mt4OaLq2QQLIEUZsD8Uc7OcdyX9H0MTS7VQUVyz2+4=";
       };
       naersk' = pkgs.callPackage naersk {
         cargo = pkgs.rust-bin-wasm;
@@ -130,7 +130,7 @@
           nativeBuildInputs = [pkgs.bashInteractive];
 
           DATABASE_URL = "postgres://traxys/list?host=/var/run/postgresql";
-		  KABALIST_DATABASE_URL = DATABASE_URL;
+          KABALIST_DATABASE_URL = DATABASE_URL;
           LIST_URL = "http://localhost:8080";
 
           buildInputs = [
@@ -138,15 +138,17 @@
             (android-nixpkgs.sdk."${system}" (sdkPkgs:
               with sdkPkgs; [
                 cmdline-tools-latest
-                build-tools-29-0-2
+                build-tools-34-0-0
+                build-tools-33-0-1
                 platform-tools
-                platforms-android-30
-                platforms-android-31
+                platforms-android-34
                 emulator
+                system-images-android-34-default-x86-64
+                ndk-25-1-8937393
               ]))
 
             flutter
-            jdk8
+            jdk17
             dart
             (pkgs.writeShellApplication {
               name = "openapi-generator-cli";
