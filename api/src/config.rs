@@ -4,6 +4,8 @@ use std::net::IpAddr;
 use base64::Engine;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+const BASE64_ENGINE : base64::engine::GeneralPurpose = base64::engine::general_purpose::STANDARD;
+
 pub(crate) struct Base64(pub(crate) HS256Key);
 
 impl std::fmt::Debug for Base64 {
@@ -11,7 +13,7 @@ impl std::fmt::Debug for Base64 {
         write!(
             f,
             r#"b64"{}""#,
-            &base64::engine::general_purpose::STANDARD_NO_PAD.encode(self.0.to_bytes())
+            &BASE64_ENGINE.encode(self.0.to_bytes())
         )
     }
 }
@@ -22,7 +24,7 @@ impl Serialize for Base64 {
         S: Serializer,
     {
         ser.serialize_str(
-            &base64::engine::general_purpose::STANDARD_NO_PAD.encode(self.0.to_bytes()),
+            &BASE64_ENGINE.encode(self.0.to_bytes()),
         )
     }
 }
@@ -46,7 +48,7 @@ impl<'de> Deserialize<'de> for Base64 {
             where
                 E: serde::de::Error,
             {
-                base64::engine::general_purpose::STANDARD_NO_PAD
+                BASE64_ENGINE
                     .decode(v)
                     .map_err(E::custom)
                     .map(|b| HS256Key::from_bytes(&b))

@@ -4,7 +4,6 @@ use axum_extra::{
     headers::{authorization::Bearer, Authorization},
     TypedHeader,
 };
-
 use axum::{
     extract::{self, FromRequestParts},
     http::request::Parts,

@@ -174,19 +174,15 @@ trait OkResponse {
 macro_rules! alias {
     ($($okResp:ident => $ty:ident),* $(,)?) => {
         pub mod ok_response {
-            use kabalist_types::*;
             $(
-
-            #[derive(crate::Serialize, crate::Deserialize, crate::ToSchema, crate::ToResponse)]
+            #[derive(serde::Serialize, serde::Deserialize, utoipa::ToSchema, utoipa::ToResponse)]
             pub struct $okResp {
-                ok: $ty,
+                ok: kabalist_types::$ty,
             }
 
-            impl $okResp {
-            }
-            impl crate::OkResponse for $ty {
+            impl crate::OkResponse for kabalist_types::$ty {
                 type Wrapper = $okResp;
-                fn ok(v: $ty) -> crate::Rsp<$ty> {
+                fn ok(v: Self) -> crate::Rsp<Self> {
                     Ok(crate::Json($okResp { ok: v }))
                 }
             }
