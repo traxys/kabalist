@@ -2,6 +2,6 @@ jwt_secret = "B50D8FB3A6DC3073259062EFFD03A283416A81ED3183C44DEE179AFF76C00B58"
 exp = 10000000000
 listen_addr = "0.0.0.0"
 port = 8080
-database_url = "postgres://traxys:traxys@localhost/list"
+database_url = "postgres://<username>/list?host=/var/run/postgresql"
 frontend = "../web/dist"
 #template_dir = "public"

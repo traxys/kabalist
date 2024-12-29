@@ -129,9 +129,12 @@
         mkShell rec {
           nativeBuildInputs = [pkgs.bashInteractive];
 
-          DATABASE_URL = "postgres://traxys/list?host=/var/run/postgresql";
-          KABALIST_DATABASE_URL = DATABASE_URL;
           LIST_URL = "http://localhost:8080";
+
+          shellHook = ''
+            export DATABASE_URL="postgres://$(whoami)/list?host=/var/run/postgresql"
+            export KABALIST_DATABASE_URL="$DATABASE_URL"
+          '';
 
           buildInputs = [
             # Flutter
