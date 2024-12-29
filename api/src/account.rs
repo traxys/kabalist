@@ -1,12 +1,15 @@
 use std::{sync::Arc, time::Duration};
 
-use axum::{
-    async_trait,
-    extract::{self, FromRequestParts},
+use axum_extra::{
     headers::{authorization::Bearer, Authorization},
+    TypedHeader,
+};
+
+use axum::{
+    extract::{self, FromRequestParts},
     http::request::Parts,
     routing::{get, post},
-    Extension, Json, Router, TypedHeader,
+    Extension, Json, Router,
 };
 use jwt_simple::prelude::{Claims, MACLike, NoCustomClaims};
 use kabalist_types::{
@@ -17,14 +20,13 @@ use sqlx::PgPool;
 use tokio_stream::StreamExt;
 use uuid::Uuid;
 
-use crate::{config::Config, Error, OkResponse, Rsp};
+use crate::{config::Config, ok_response::*, ErrResponse, Error, OkResponse, Rsp};
 
 #[derive(Debug)]
 pub(crate) struct User {
     pub id: Uuid,
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for User
 where
     S: Send + Sync,
@@ -124,7 +126,7 @@ async fn register(
     let mut tx = db.begin().await?;
 
     let mut is_registered =
-        sqlx::query!("SELECT id FROM registrations WHERE id = $1", id).fetch(&mut tx);
+        sqlx::query!("SELECT id FROM registrations WHERE id = $1", id).fetch(&mut *tx);
     match is_registered.next().await {
         None => return Err(Error::RegistrationDoesNotExist),
         Some(Err(e)) => return Err(e.into()),
@@ -138,11 +140,11 @@ async fn register(
         req.username,
         req.password
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     sqlx::query!("DELETE FROM registrations WHERE id = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
 
     tx.commit().await?;
@@ -208,19 +210,19 @@ async fn recover_password(
         "SELECT password_reset.account FROM password_reset WHERE id = $1",
         id
     )
-    .fetch_one(&mut tx)
+    .fetch_one(&mut *tx)
     .await?
     .account;
 
     sqlx::query!("DELETE FROM password_reset WHERE id = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     sqlx::query!(
         "UPDATE accounts SET password = crypt($2, gen_salt('bf')) WHERE id = $1",
         account,
         request.password
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;

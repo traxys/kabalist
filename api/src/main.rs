@@ -18,13 +18,9 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 use tokio_stream::StreamExt;
 use tower_http::cors::CorsLayer;
 use utoipa::{
-    openapi::{
-        schema::Schema,
-        security::{self, SecurityScheme},
-    },
-    Modify, OpenApi, ToResponse, ToSchema,
+    openapi::security::{self, SecurityScheme},
+    Modify, OpenApi, PartialSchema, ToResponse, ToSchema,
 };
-use utoipa_swagger_ui::SwaggerUi;
 
 mod account;
 mod config;
@@ -50,18 +46,19 @@ macro_rules! define_error {
                 $variant = $code,
             )*
         }
-
-        impl<'s> ToSchema<'s> for Error {
-           fn schema() -> (&'s str, utoipa::openapi::RefOr<Schema>) {
-               (
-                    "Error",
-                    utoipa::openapi::ObjectBuilder::new()
-                        .schema_type(utoipa::openapi::SchemaType::Number)
-                        .enum_values(Some([$($code,)*]))
-                        .build()
-                        .into()
-                )
-           }
+        impl ToSchema for Error {
+            fn name() -> std::borrow::Cow<'static, str> {
+                "Error".into()
+            }
+        }
+        impl PartialSchema for Error {
+            fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+                utoipa::openapi::ObjectBuilder::new()
+                    .schema_type(utoipa::openapi::schema::SchemaType::Type(utoipa::openapi::Type::Number))
+                    .enum_values(Some([$($code,)*]))
+                    .build()
+                    .into()
+            }
         }
 
         impl Error {
@@ -168,42 +165,63 @@ impl From<jwt_simple::Error> for Error {
     }
 }
 
-#[derive(Serialize, Deserialize, ToSchema, ToResponse)]
-#[aliases(
-    OkLoginResponse = OkResponse<LoginResponse>,
-    OkCreateListResponse = OkResponse<CreateListResponse>,
-    OkGetListsResponse = OkResponse<GetListsResponse>,
-    OkSearchAccountResponse = OkResponse<SearchAccountResponse>,
-    OkReadListResponse = OkResponse<ReadListResponse>,
-    OkAddToListResponse = OkResponse<AddToListResponse>,
-    OkGetHistoryResponse = OkResponse<GetHistoryResponse>,
-    OkUpdateItemResponse = OkResponse<UpdateItemResponse>,
-    OkDeleteItemResponse = OkResponse<DeleteItemResponse>,
-    OkDeleteListResponse = OkResponse<DeleteListResponse>,
-    OkUnshareResponse = OkResponse<UnshareResponse>,
-    OkGetSharesResponse = OkResponse<GetSharesResponse>,
-    OkShareListResponse = OkResponse<ShareListResponse>,
-    OkDeleteShareResponse = OkResponse<DeleteShareResponse>,
-    OkRecoveryInfoResponse = OkResponse<RecoveryInfoResponse>,
-    OkRecoverPasswordResponse = OkResponse<RecoverPasswordResponse>,
-    OkRegisterResponse = OkResponse<RegisterResponse>,
-    OkGetAccountNameResponse = OkResponse<GetAccountNameResponse>,
-    OkSetPublicResponse = OkResponse<SetPublicResponse>,
-    OkRemovePublicResponse = OkResponse<RemovePublicResponse>,
-    OkGetPantryResponse = OkResponse<GetPantryResponse>,
-    OkAddToPantryResponse = OkResponse<AddToPantryResponse>,
-    OkRefillPantryResponse = OkResponse<RefillPantryResponse>,
-    OkEditPantryItemResponse = OkResponse<EditPantryItemResponse>,
-    OkDeletePantryItemResponse = OkResponse<DeletePantryItemResponse>,
-)]
-struct OkResponse<T> {
-    ok: T,
+trait OkResponse {
+    type Wrapper;
+
+    fn ok(ok: Self) -> Rsp<Self>;
 }
 
-impl<T> OkResponse<T> {
-    fn ok(v: T) -> Rsp<T> {
-        Ok(Json(Self { ok: v }))
-    }
+macro_rules! alias {
+    ($($okResp:ident => $ty:ident),* $(,)?) => {
+        pub mod ok_response {
+            use kabalist_types::*;
+            $(
+
+            #[derive(crate::Serialize, crate::Deserialize, crate::ToSchema, crate::ToResponse)]
+            pub struct $okResp {
+                ok: $ty,
+            }
+
+            impl $okResp {
+            }
+            impl crate::OkResponse for $ty {
+                type Wrapper = $okResp;
+                fn ok(v: $ty) -> crate::Rsp<$ty> {
+                    Ok(crate::Json($okResp { ok: v }))
+                }
+            }
+            )*
+        }
+    };
+}
+use ok_response::*;
+
+alias! {
+    OkLoginResponse => LoginResponse,
+    OkCreateListResponse => CreateListResponse,
+    OkGetListsResponse => GetListsResponse,
+    OkSearchAccountResponse => SearchAccountResponse,
+    OkReadListResponse => ReadListResponse,
+    OkAddToListResponse => AddToListResponse,
+    OkGetHistoryResponse => GetHistoryResponse,
+    OkUpdateItemResponse => UpdateItemResponse,
+    OkDeleteItemResponse => DeleteItemResponse,
+    OkDeleteListResponse => DeleteListResponse,
+    OkUnshareResponse => UnshareResponse,
+    OkGetSharesResponse => GetSharesResponse,
+    OkShareListResponse => ShareListResponse,
+    OkDeleteShareResponse => DeleteShareResponse,
+    OkRecoveryInfoResponse => RecoveryInfoResponse,
+    OkRecoverPasswordResponse => RecoverPasswordResponse,
+    OkRegisterResponse => RegisterResponse,
+    OkGetAccountNameResponse => GetAccountNameResponse,
+    OkSetPublicResponse => SetPublicResponse,
+    OkRemovePublicResponse => RemovePublicResponse,
+    OkGetPantryResponse => GetPantryResponse,
+    OkAddToPantryResponse => AddToPantryResponse,
+    OkRefillPantryResponse => RefillPantryResponse,
+    OkEditPantryItemResponse => EditPantryItemResponse,
+    OkDeletePantryItemResponse => DeletePantryItemResponse,
 }
 
 #[derive(Serialize, Deserialize, ToResponse, ToSchema)]
@@ -211,7 +229,7 @@ struct ErrResponse {
     err: UserError,
 }
 
-type Rsp<T> = Result<Json<OkResponse<T>>, Error>;
+type Rsp<T> = Result<Json<<T as OkResponse>::Wrapper>, Error>;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 struct UserError {
@@ -427,6 +445,8 @@ async fn main() -> color_eyre::Result<()> {
     tracing::info!("Starting with config: {:#?}", config);
     let addr = SocketAddr::from((config.listen_addr, config.port));
 
+    /// Allowed dead_code until the we reuse swagger-ui (aka axum 0.8.0)
+    #[allow(dead_code)]
     #[derive(OpenApi)]
     #[openapi(
         paths(
@@ -476,7 +496,31 @@ async fn main() -> color_eyre::Result<()> {
                 PantryItem,
                 AddToPantryRequest,
                 EditPantryItemRequest,
-                OkLoginResponse, // Imports all other OkResponses
+                OkLoginResponse,
+                OkCreateListResponse,
+                OkGetListsResponse,
+                OkSearchAccountResponse,
+                OkReadListResponse,
+                OkAddToListResponse,
+                OkGetHistoryResponse,
+                OkUpdateItemResponse,
+                OkDeleteItemResponse,
+                OkDeleteListResponse,
+                OkUnshareResponse,
+                OkGetSharesResponse,
+                OkShareListResponse,
+                OkDeleteShareResponse,
+                OkRecoveryInfoResponse,
+                OkRecoverPasswordResponse,
+                OkRegisterResponse,
+                OkGetAccountNameResponse,
+                OkSetPublicResponse,
+                OkRemovePublicResponse,
+                OkGetPantryResponse,
+                OkAddToPantryResponse,
+                OkRefillPantryResponse,
+                OkEditPantryItemResponse,
+                OkDeletePantryItemResponse,
                 OkCreateListResponse,
                 ErrResponse,
                 LoginResponse,
@@ -559,7 +603,8 @@ async fn main() -> color_eyre::Result<()> {
     let frontend = config.frontend.clone();
 
     let app = Router::new()
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
+        // to be put back when axum 0.8.0 gets stable, meaning utoipa will get updated
+        // .merge(utoipa_swagger_ui::SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .nest("/api", api)
         .layer(Extension(templates))
         .layer(Extension(db))
@@ -583,25 +628,18 @@ async fn main() -> color_eyre::Result<()> {
         Some(mut p) => {
             use axum::routing::get_service;
 
-            async fn handle_error(err: std::io::Error) -> impl IntoResponse {
-                tracing::error!("File serving error: {:?}", err);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong...")
-            }
-
-            app.fallback(
-                get_service(tower_http::services::ServeDir::new(&p).fallback(
+            app.fallback(get_service(
+                tower_http::services::ServeDir::new(&p).fallback(
                     tower_http::services::ServeFile::new({
                         p.push("index.html");
                         p
                     }),
-                ))
-                .handle_error(handle_error),
-            )
+                ),
+            ))
         }
     };
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    axum::serve::serve(tokio::net::TcpListener::bind(addr).await?, app)
         .await
-        .map_err(Into::into)
+        .map_err(color_eyre::Report::from)
 }

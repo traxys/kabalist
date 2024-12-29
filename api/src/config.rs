@@ -1,13 +1,18 @@
 use jwt_simple::algorithms::HS256Key;
 use std::net::IpAddr;
 
+use base64::Engine;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 pub(crate) struct Base64(pub(crate) HS256Key);
 
 impl std::fmt::Debug for Base64 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, r#"b64"{}""#, &base64::encode(self.0.to_bytes()))
+        write!(
+            f,
+            r#"b64"{}""#,
+            &base64::engine::general_purpose::STANDARD_NO_PAD.encode(self.0.to_bytes())
+        )
     }
 }
 
@@ -16,7 +21,9 @@ impl Serialize for Base64 {
     where
         S: Serializer,
     {
-        ser.serialize_str(&base64::encode(self.0.to_bytes()))
+        ser.serialize_str(
+            &base64::engine::general_purpose::STANDARD_NO_PAD.encode(self.0.to_bytes()),
+        )
     }
 }
 
@@ -28,7 +35,7 @@ impl<'de> Deserialize<'de> for Base64 {
         use serde::de::Visitor;
 
         struct DecodingVisitor;
-        impl<'de> Visitor<'de> for DecodingVisitor {
+        impl Visitor<'_> for DecodingVisitor {
             type Value = Base64;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -39,7 +46,8 @@ impl<'de> Deserialize<'de> for Base64 {
             where
                 E: serde::de::Error,
             {
-                base64::decode(v)
+                base64::engine::general_purpose::STANDARD_NO_PAD
+                    .decode(v)
                     .map_err(E::custom)
                     .map(|b| HS256Key::from_bytes(&b))
                     .map(Base64)
