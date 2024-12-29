@@ -102,7 +102,7 @@ pub(crate) async fn list_lists(
     post,
     path = "/api/list",
     responses(
-        (status = 200, description = "List ID", body = OkLoginResponse),
+        (status = 200, description = "List ID", body = OkCreateListResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
         (status = 500, description = "Internal Error", body = ErrResponse),
     ),
