@@ -8,10 +8,10 @@ edition = "2018"
 [dependencies]
 kabalist_client = { path = "../client" }
 color-eyre = "0.6"
-promptly = "0.3.0"
+promptly = "0.3.1"
 rpassword = "5.0.1"
-tokio = { version = "1.7.1", features = ["full"] }
-yansi = "0.5.0"
-clap = { version = "3.2.12", features = ["derive", "env"] }
-clap_complete = "3.2.3"
+tokio = { version = "1.42.0", features = ["full"] }
+yansi = "0.5.1"
+clap = { version = "3.2.25", features = ["derive", "env"] }
+clap_complete = "3.2.5"
 itertools = "0.10.5"

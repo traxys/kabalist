@@ -169,7 +169,7 @@ impl RecoveryAction {
 async fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
 
-    let args = Args::from_args();
+    let args = Args::parse();
     let ctx = args.context;
 
     args.action.run(Context::new(ctx).await?).await
