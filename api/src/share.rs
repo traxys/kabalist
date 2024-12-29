@@ -9,15 +9,15 @@ use kabalist_types::{
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{account::User, check_list, is_owner, OkResponse, Rsp};
+use crate::{User, check_list, is_owner, ok_response::*, ErrResponse, OkResponse, Rsp};
 
 pub(crate) fn router() -> Router {
     Router::new()
         .route(
-            "/:id",
+            "/{id}",
             get(get_shares).put(share_list).delete(delete_shares),
         )
-        .route("/:id/:account", delete(unshare))
+        .route("/{id}/{account}", delete(unshare))
 }
 
 #[utoipa::path(
@@ -129,7 +129,7 @@ async fn unshare(
         list,
         account
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     sqlx::query!(
@@ -137,7 +137,7 @@ async fn unshare(
         list,
         account
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;
@@ -170,7 +170,7 @@ async fn delete_shares(
     let mut tx = db.begin().await?;
 
     sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
 
     sqlx::query!(
@@ -178,7 +178,7 @@ async fn delete_shares(
         id,
         user.id,
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;

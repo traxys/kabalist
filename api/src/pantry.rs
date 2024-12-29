@@ -10,14 +10,14 @@ use kabalist_types::{
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{account::User, check_list, OkResponse, Rsp};
+use crate::{User, check_list, ok_response::*, ErrResponse, OkResponse, Rsp};
 
 pub(crate) fn router() -> Router {
     Router::new()
-        .route("/:id", get(get_pantry).post(add_to_pantry))
-        .route("/:id/refill", post(refill_pantry))
+        .route("/{id}", get(get_pantry).post(add_to_pantry))
+        .route("/{id}/refill", post(refill_pantry))
         .route(
-            "/:id/:item",
+            "/{id}/{item}",
             patch(set_pantry_item).delete(delete_pantry_item),
         )
 }
@@ -170,7 +170,7 @@ async fn delete_pantry_item(
         item,
         list
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     sqlx::query!(
@@ -178,7 +178,7 @@ async fn delete_pantry_item(
         item,
         list
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;

@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::{
+    endpoint,
     modal::Modal,
     text_input::{self, TextInput},
-    endpoint,
 };
 use kabalist_client::Uuid;
 use yew::prelude::*;
@@ -89,7 +89,7 @@ impl Component for ListSharing {
         }
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &yew::Context<Self>, _old_props: &Self::Properties) -> bool {
         self.client = kabalist_client::Client::new(endpoint(), ctx.props().token.clone());
         let c = self.client.clone();
         let id = ctx.props().id;
@@ -140,7 +140,10 @@ impl Component for ListSharing {
             ListSharingMessage::Commit => {
                 let c = self.client.clone();
                 let id = ctx.props().id;
-                let sync = ctx.link().callback_future_once(move |_| get_shares(c, id));
+                let sync = ctx.link().callback_future({
+                    let c = c.clone();
+                    move |_| get_shares(c.clone(), id)
+                });
                 for account in self.deleted.drain() {
                     let c = self.client.clone();
                     let s = sync.clone();

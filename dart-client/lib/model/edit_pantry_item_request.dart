@@ -1,7 +1,7 @@
 //
 // AUTO-GENERATED FILE, DO NOT MODIFY!
 //
-// @dart=2.12
+// @dart=2.18
 
 // ignore_for_file: unused_element, unused_import
 // ignore_for_file: always_put_required_named_parameters_first
@@ -17,26 +17,14 @@ class EditPantryItemRequest {
     this.target,
   });
 
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
   int? amount;
 
-  ///
-  /// Please note: This property should have been non-nullable! Since the specification file
-  /// does not include a default value (using the "default:" property), however, the generated
-  /// source code must fall back to having a nullable type.
-  /// Consider adding a "default:" property in the specification file to hide this note.
-  ///
   int? target;
 
   @override
   bool operator ==(Object other) => identical(this, other) || other is EditPantryItemRequest &&
-     other.amount == amount &&
-     other.target == target;
+    other.amount == amount &&
+    other.target == target;
 
   @override
   int get hashCode =>
@@ -88,7 +76,7 @@ class EditPantryItemRequest {
     return null;
   }
 
-  static List<EditPantryItemRequest>? listFromJson(dynamic json, {bool growable = false,}) {
+  static List<EditPantryItemRequest> listFromJson(dynamic json, {bool growable = false,}) {
     final result = <EditPantryItemRequest>[];
     if (json is List && json.isNotEmpty) {
       for (final row in json) {
@@ -119,12 +107,10 @@ class EditPantryItemRequest {
   static Map<String, List<EditPantryItemRequest>> mapListFromJson(dynamic json, {bool growable = false,}) {
     final map = <String, List<EditPantryItemRequest>>{};
     if (json is Map && json.isNotEmpty) {
-      json = json.cast<String, dynamic>(); // ignore: parameter_assignments
+      // ignore: parameter_assignments
+      json = json.cast<String, dynamic>();
       for (final entry in json.entries) {
-        final value = EditPantryItemRequest.listFromJson(entry.value, growable: growable,);
-        if (value != null) {
-          map[entry.key] = value;
-        }
+        map[entry.key] = EditPantryItemRequest.listFromJson(entry.value, growable: growable,);
       }
     }
     return map;

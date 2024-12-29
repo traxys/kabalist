@@ -10,25 +10,32 @@ default = ["frontend"]
 frontend = ["tower-http/fs"]
 
 [dependencies]
-base64 = "0.13.0"
-chrono = { version = "0.4.19", features = ["serde"] }
-serde = "1.0.126"
+base64 = "0.22.1"
+chrono = { version = "0.4.39", features = ["serde"] }
+serde = "1.0.217"
 kabalist_types = { path = "../types", features = ["openapi"] }
-uuid = { version = "1.1.2", features = ["serde"] }
-serde_repr = "0.1.8"
-axum = { version = "0.6", features = ["headers"] }
-tracing = "0.1.35"
-tracing-subscriber = "0.3.14"
-tokio = { version = "1.19.2", features = ["rt-multi-thread", "macros"] }
-figment = { version = "0.10.6", features = ["toml", "env"] }
-color-eyre = "0.6.1"
-tokio-stream = "0.1.9"
-tera = "1.16.0"
-tower-http = { version = "0.3.4", features = ["cors"] }
-utoipa = { version = "3.0.2", features = ["uuid"] }
-utoipa-swagger-ui = { version = "3.0.2", features = ["axum"] }
-jwt-simple = "0.11"
+uuid = { version = "1.11.0", features = ["serde"] }
+serde_repr = "0.1.19"
+axum = { version = "0.8.0-rc.1", features = [] }
+axum-extra = { version = "0.10.0-rc.1", features = [
+	"typed-header",
+	"cookie-private",
+	"cookie",
+] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+tokio = { version = "1.42.0", features = ["rt-multi-thread", "macros"] }
+figment = { version = "0.10.19", features = ["toml", "env"] }
+color-eyre = "0.6.3"
+tokio-stream = "0.1.17"
+tera = "1.20.0"
+tower-http = { version = "0.6.2", features = ["cors"] }
+utoipa = { version = "5.3.0", features = ["uuid"] }
+openidconnect = "3.5.0"
+url = { version = "2.5.4", features = ["serde"] }
+# to be update when it uses a stable axum 0.8.0 version (and when we also do)
+# utoipa-swagger-ui = { version = "8.1.0", features = ["axum"] }
 
 [dependencies.sqlx]
-version = "0.6.2"
-features = ["postgres", "migrate", "runtime-tokio-rustls", "macros", "uuid", "offline"]
+version = "0.8.2"
+features = ["postgres", "migrate", "runtime-tokio-rustls", "macros", "uuid"]
