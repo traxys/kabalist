@@ -17,15 +17,15 @@ use tera::Tera;
 use tokio_stream::StreamExt;
 use uuid::Uuid;
 
-use crate::{check_list, is_owner, Error, OkResponse, Rsp, User};
+use crate::{check_list, is_owner, ok_response::*, ErrResponse, Error, OkResponse, Rsp, User};
 
 pub(crate) fn router() -> Router {
     Router::new()
         .route("/", post(create_list).get(list_lists))
-        .route("/:id", get(read_list).post(add_list).delete(delete_list))
-        .route("/:id/:item", patch(update_item).delete(delete_item))
+        .route("/{id}", get(read_list).post(add_list).delete(delete_list))
+        .route("/{id}/{item}", patch(update_item).delete(delete_item))
         .route(
-            "/:id/public",
+            "/{id}/public",
             put(set_public).delete(remove_public).get(get_public_list),
         )
 }
@@ -102,7 +102,7 @@ pub(crate) async fn list_lists(
     post,
     path = "/api/list",
     responses(
-        (status = 200, description = "List ID", body = OkLoginResponse),
+        (status = 200, description = "List ID", body = OkCreateListResponse),
         (status = 400, description = "Invalid request", body = ErrResponse),
         (status = 500, description = "Internal Error", body = ErrResponse),
     ),
@@ -230,7 +230,7 @@ pub(crate) async fn add_list(
         item.name,
         item.amount
     )
-    .fetch_one(&mut tx)
+    .fetch_one(&mut *tx)
     .await?;
 
     sqlx::query!(
@@ -242,7 +242,7 @@ pub(crate) async fn add_list(
         user.id,
         item.name
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;
@@ -285,7 +285,7 @@ pub(crate) async fn update_item(
             list,
             item
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     }
 
@@ -296,7 +296,7 @@ pub(crate) async fn update_item(
             list,
             item
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     }
 
@@ -345,7 +345,7 @@ pub(crate) async fn delete_item(
         list,
         item
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     sqlx::query!(
@@ -353,7 +353,7 @@ pub(crate) async fn delete_item(
         list,
         item
     )
-    .execute(&mut tx)
+    .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;
@@ -386,16 +386,16 @@ pub(crate) async fn delete_list(
     let mut tx = db.begin().await?;
 
     sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     sqlx::query!("DELETE FROM lists_content WHERE list = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     sqlx::query!("DELETE FROM history WHERE list = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
     sqlx::query!("DELETE FROM lists WHERE id = $1", id)
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
 
     tx.commit().await?;

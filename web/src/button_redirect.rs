@@ -1,8 +1,8 @@
 use std::{borrow::Cow, marker::PhantomData};
 
 use web_sys::MouseEvent;
-use yew::{html, virtual_dom::AttrValue, Children, Component, Context, Html, Properties, Classes};
-use yew_router::{history::History, prelude::RouterScopeExt, Routable};
+use yew::{html, virtual_dom::AttrValue, Children, Classes, Component, Context, Html, Properties};
+use yew_router::{prelude::RouterScopeExt, Routable};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct RedirectButtonProps<R>
@@ -34,7 +34,9 @@ fn route_to_url<R: Routable>(route: R) -> Cow<'static, str> {
     let base = yew_router::utils::base_url();
     let url = route.to_path();
 
-    let path = match base {
+    
+
+    match base {
         Some(base) => {
             let path = format!("{}{}", base, url);
             if path.is_empty() {
@@ -44,9 +46,7 @@ fn route_to_url<R: Routable>(route: R) -> Cow<'static, str> {
             }
         }
         None => url.into(),
-    };
-
-    path
+    }
 }
 
 impl<R> Component for RedirectButton<R>
@@ -66,10 +66,14 @@ where
         match msg {
             Msg::OnClick => {
                 let RedirectButtonProps { to, .. } = ctx.props();
-                let history = ctx.link().history().expect("failed to read history");
-                history.push(to.clone());
+                let history = ctx.link().navigator().expect("failed to read history");
+                history.push(&to.clone());
                 let href: AttrValue = route_to_url(to.clone()).into();
-                web_sys::window().unwrap().location().set_href(&href).unwrap();
+                web_sys::window()
+                    .unwrap()
+                    .location()
+                    .set_href(&href)
+                    .unwrap();
                 false
             }
         }

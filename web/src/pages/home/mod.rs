@@ -10,7 +10,7 @@ mod sidebar;
 
 use list::List;
 use sidebar::Sidebar;
-use yew_router::{history::History, prelude::RouterScopeExt};
+use yew_router::prelude::RouterScopeExt;
 
 use crate::Route;
 
@@ -125,14 +125,14 @@ impl Component for Home {
         });
 
         let client = self.client.clone();
-        let history = link.history().unwrap();
+        let history = link.navigator().unwrap();
         let on_delete = Callback::from(move |id: Uuid| {
             let client = client.clone();
             let history = history.clone();
             link.send_future(async move {
                 match client.delete_list(&id).await {
                     Ok(_) => {
-                        history.push(Route::Home);
+                        history.push(&Route::Home);
                         lists(client).await
                     }
                     Err(e) => HomeMessage::Error(format!("Could not delete list: {:?}", e)),
