@@ -26,10 +26,10 @@ kb.AccountApi accountApiClient(String? token) {
   return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT, authentication: auth));
 }
 
-kb.CrateApi miscApiClient(String token) {
+kb.DefaultApi miscApiClient(String token) {
   final auth = kb.HttpBearerAuth();
   auth.accessToken = token;
-  return kb.CrateApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
+  return kb.DefaultApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
 kb.ShareApi shareApiClient(String token) {
@@ -161,59 +161,61 @@ class _LoginFormState extends State<LoginForm> {
 
     return Form(
         key: _formKey,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: <
-            Widget>[
-          ...errorTxt,
-          TextFormField(
-            decoration: const InputDecoration(hintText: "Username"),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return "Username can't be empty";
-              }
-              return null;
-            },
-            onSaved: (String? nm) => setState(() => username = nm),
-          ),
-          TextFormField(
-            decoration: InputDecoration(
-                hintText: "Password",
-                suffixIcon: IconButton(
-                    icon: Icon(
-                        showPassword ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () {
-                      setState(() {
-                        showPassword = !showPassword;
-                      });
-                    })),
-            obscureText: !showPassword,
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return "Password can't be empty";
-              }
-              return null;
-            },
-            onSaved: (String? pass) => setState(() => password = pass),
-          ),
-          ElevatedButton(
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-
-                  final instance = accountApiClient(null);
-                  final loginRequest =
-                      kb.LoginRequest(username: username!, password: password!);
-                  try {
-                    final response = await instance.login(loginRequest);
-                    widget.getToken(response!.ok.token);
-                  } on kb.ApiException catch (err) {
-                    setState(() {
-                      error = err.toString();
-                    });
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              ...errorTxt,
+              TextFormField(
+                decoration: const InputDecoration(hintText: "Username"),
+                validator: (String? value) {
+                  if (value == null || value.isEmpty) {
+                    return "Username can't be empty";
                   }
-                }
-              },
-              child: const Text('Login'))
-        ]));
+                  return null;
+                },
+                onSaved: (String? nm) => setState(() => username = nm),
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                    hintText: "Password",
+                    suffixIcon: IconButton(
+                        icon: Icon(showPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility),
+                        onPressed: () {
+                          setState(() {
+                            showPassword = !showPassword;
+                          });
+                        })),
+                obscureText: !showPassword,
+                validator: (String? value) {
+                  if (value == null || value.isEmpty) {
+                    return "Password can't be empty";
+                  }
+                  return null;
+                },
+                onSaved: (String? pass) => setState(() => password = pass),
+              ),
+              ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
+
+                      final instance = accountApiClient(null);
+                      final loginRequest = kb.LoginRequest(
+                          username: username!, password: password!);
+                      try {
+                        final response = await instance.login(loginRequest);
+                        widget.getToken(response!.ok.token);
+                      } on kb.ApiException catch (err) {
+                        setState(() {
+                          error = err.toString();
+                        });
+                      }
+                    }
+                  },
+                  child: const Text('Login'))
+            ]));
   }
 }
 
@@ -376,7 +378,8 @@ class _ListDrawerState extends State<ListDrawer> {
                             child: Text("Delete List"),
                           )
                         ];
-                        if (entry.value.info.status != kb.ListStatus.sharedRead) {
+                        if (entry.value.info.status !=
+                            kb.ListStatus.sharedRead) {
                           actions.add(SimpleDialogOption(
                             onPressed: () {
                               Navigator.pop(ctx, ListAction.Share);
@@ -1217,49 +1220,52 @@ class _PantryContentState extends State<PantryContent>
                     key: _formKey,
                     child: Container(
                         margin: EdgeInsets.all(10.0),
-                        child:
-                            Column(mainAxisSize: MainAxisSize.min, children: <
-                                Widget>[
-                          ...errorTxt,
-                          Text("Amount"),
-                          NumberPicker(
-                            value: editAmount ?? 0,
-                            maxValue: 1 << 31,
-                            minValue: 0,
-                            onChanged: (value) =>
-                                setState(() => editAmount = value),
-                          ),
-                          Text("Target"),
-                          NumberPicker(
-                            value: editTarget ?? 0,
-                            maxValue: 1 << 31,
-                            minValue: 0,
-                            onChanged: (value) =>
-                                setState(() => editTarget = value),
-                          ),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: <Widget>[
-                                ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        primary: Colors.red,
-                                        onPrimary: Colors.white),
-                                    onPressed: () async {
-                                      doDelete(item.id);
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: const Text('Delete')),
-                                ElevatedButton(
-                                    onPressed: () async {
-                                      if (_formKey.currentState!.validate()) {
-                                        _formKey.currentState!.save();
-                                        doEdit(editAmount, editTarget, item.id);
-                                        Navigator.of(context).pop();
-                                      }
-                                    },
-                                    child: const Text('Edit'))
-                              ])
-                        ])));
+                        child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              ...errorTxt,
+                              Text("Amount"),
+                              NumberPicker(
+                                value: editAmount ?? 0,
+                                maxValue: 1 << 31,
+                                minValue: 0,
+                                onChanged: (value) =>
+                                    setState(() => editAmount = value),
+                              ),
+                              Text("Target"),
+                              NumberPicker(
+                                value: editTarget ?? 0,
+                                maxValue: 1 << 31,
+                                minValue: 0,
+                                onChanged: (value) =>
+                                    setState(() => editTarget = value),
+                              ),
+                              Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: <Widget>[
+                                    ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white),
+                                        onPressed: () async {
+                                          doDelete(item.id);
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('Delete')),
+                                    ElevatedButton(
+                                        onPressed: () async {
+                                          if (_formKey.currentState!
+                                              .validate()) {
+                                            _formKey.currentState!.save();
+                                            doEdit(editAmount, editTarget,
+                                                item.id);
+                                            Navigator.of(context).pop();
+                                          }
+                                        },
+                                        child: const Text('Edit'))
+                                  ])
+                            ])));
               }));
         });
   }
@@ -1701,7 +1707,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     if (!readOnly && strickedItems.isNotEmpty) {
       items.add(ElevatedButton(
           style: ElevatedButton.styleFrom(
-              primary: Colors.red, onPrimary: Colors.white),
+              backgroundColor: Colors.red, foregroundColor: Colors.white),
           onPressed: strikeItems,
           child: const Text('Delete Striked Items')));
     }
