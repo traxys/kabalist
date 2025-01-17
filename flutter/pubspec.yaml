@@ -15,10 +15,10 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 2.1.0+6
+version: 2.0.1+5
 
 environment:
-  sdk: ">=2.12.0 <4.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -28,7 +28,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  http: ^1.2.2
+  http: ^0.13.3
   shared_preferences: ^2.0.6
   kabalist_client:
     path: ../dart-client
@@ -37,14 +37,20 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  rename_app:
-  flutter_launcher_icons: "^0.14.2"
+  flutter_rename_app:
+  flutter_launcher_icons: "^0.8.0"
 
 flutter_icons:
   android: "launcher_icon"
   image_path: "assets/launcher.png"
   adaptive_icon_background: "#e8e4c9"
 
+flutter_rename_app:
+  application_name: KabaList
+  dart_package_name: kabalist
+  application_id: com.traxys.kabalist
+  bundle_id: com.ios.kabalist
+  android_package_name: com.traxys.kabalist
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

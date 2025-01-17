@@ -26,10 +26,10 @@ kb.AccountApi accountApiClient(String? token) {
   return kb.AccountApi(kb.ApiClient(basePath: ENDPOINT, authentication: auth));
 }
 
-kb.DefaultApi miscApiClient(String token) {
+kb.CrateApi miscApiClient(String token) {
   final auth = kb.HttpBearerAuth();
   auth.accessToken = token;
-  return kb.DefaultApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
+  return kb.CrateApi(kb.ApiClient(authentication: auth, basePath: ENDPOINT));
 }
 
 kb.ShareApi shareApiClient(String token) {
@@ -1242,8 +1242,8 @@ class _PantryContentState extends State<PantryContent>
                               children: <Widget>[
                                 ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                        foregroundColor: Colors.white),
+                                        primary: Colors.red,
+                                        onPrimary: Colors.white),
                                     onPressed: () async {
                                       doDelete(item.id);
                                       Navigator.of(context).pop();
@@ -1701,7 +1701,7 @@ class _ListContentState extends State<ListContent> with WidgetsBindingObserver {
     if (!readOnly && strickedItems.isNotEmpty) {
       items.add(ElevatedButton(
           style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red, foregroundColor: Colors.white),
+              primary: Colors.red, onPrimary: Colors.white),
           onPressed: strikeItems,
           child: const Text('Delete Striked Items')));
     }
