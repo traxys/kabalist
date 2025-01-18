@@ -10,7 +10,7 @@ use kabalist_types::{
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{account::User, check_list, ok_response::*, ErrResponse, OkResponse, Rsp};
+use crate::{User, check_list, ok_response::*, ErrResponse, OkResponse, Rsp};
 
 pub(crate) fn router() -> Router {
     Router::new()
