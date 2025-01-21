@@ -1,9 +1,11 @@
+use std::sync::Arc;
+
 use axum::{
     extract,
     http::StatusCode,
     response::IntoResponse,
     routing::{get, patch, post, put},
-    Extension, Json, Router,
+    Json, Router,
 };
 use kabalist_types::{
     AddToListRequest, AddToListResponse, CreateListRequest, CreateListResponse, DeleteItemResponse,
@@ -11,13 +13,15 @@ use kabalist_types::{
     RemovePublicResponse, SetPublicResponse, UpdateItemRequest, UpdateItemResponse,
 };
 use maud::Markup;
-use sqlx::PgPool;
 use tokio_stream::StreamExt;
 use uuid::Uuid;
 
-use crate::{check_list, is_owner, ok_response::*, ErrResponse, Error, OkResponse, Rsp, User};
+use crate::{
+    check_list, is_owner, ok_response::*, ErrResponse, Error, KabalistState, OkResponse, Rsp,
+    State, User,
+};
 
-pub(crate) fn router() -> Router {
+pub(crate) fn router() -> Router<Arc<KabalistState>> {
     Router::new()
         .route("/", post(create_list).get(list_lists))
         .route("/{id}", get(read_list).post(add_list).delete(delete_list))
@@ -40,18 +44,15 @@ pub(crate) fn router() -> Router {
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
-pub(crate) async fn list_lists(
-    Extension(db): Extension<PgPool>,
-    user: User,
-) -> Rsp<GetListsResponse> {
+#[tracing::instrument(skip(state))]
+pub(crate) async fn list_lists(state: State, user: User) -> Rsp<GetListsResponse> {
     let results_owned = sqlx::query!(
         r#"
         SELECT name, id, pub, owner
         FROM lists WHERE owner = $1"#,
         user.id
     )
-    .fetch_all(&db)
+    .fetch_all(&state.0.pool)
     .await?;
     let results_shared = sqlx::query!(
         r#"SELECT name, id, readonly, pub, owner
@@ -60,7 +61,7 @@ pub(crate) async fn list_lists(
                    AND shared = $1 "#,
         user.id
     )
-    .fetch_all(&db)
+    .fetch_all(&state.0.pool)
     .await?;
 
     OkResponse::ok(GetListsResponse {
@@ -109,9 +110,9 @@ pub(crate) async fn list_lists(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 pub(crate) async fn create_list(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     Json(list): Json<CreateListRequest>,
 ) -> Rsp<CreateListResponse> {
@@ -120,7 +121,7 @@ pub(crate) async fn create_list(
         user.id,
         list.name
     )
-    .fetch_one(&db)
+    .fetch_one(&state.0.pool)
     .await?
     .count
     {
@@ -133,7 +134,7 @@ pub(crate) async fn create_list(
         user.id,
         list.name
     )
-    .fetch_one(&db)
+    .fetch_one(&state.0.pool)
     .await?;
 
     OkResponse::ok(CreateListResponse { id: list_id.id })
@@ -154,19 +155,19 @@ pub(crate) async fn create_list(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 pub(crate) async fn read_list(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path(id): extract::Path<Uuid>,
 ) -> Rsp<ReadListResponse> {
-    check_list(&db, user.id, id, false).await?;
+    check_list(&state.0.pool, user.id, id, false).await?;
 
     let items = sqlx::query!(
         "SELECT id, name, amount FROM lists_content WHERE list = $1",
         id
     )
-    .fetch_all(&db)
+    .fetch_all(&state.0.pool)
     .await?;
 
     let mut readonly_result = sqlx::query!(
@@ -174,7 +175,7 @@ pub(crate) async fn read_list(
         id,
         user.id,
     )
-    .fetch(&db);
+    .fetch(&state.0.pool);
 
     let readonly = match readonly_result.next().await {
         Some(Ok(v)) => v.readonly,
@@ -211,16 +212,16 @@ pub(crate) async fn read_list(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 pub(crate) async fn add_list(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path(id): extract::Path<Uuid>,
     Json(item): Json<AddToListRequest>,
 ) -> Rsp<AddToListResponse> {
-    check_list(&db, user.id, id, true).await?;
+    check_list(&state.0.pool, user.id, id, true).await?;
 
-    let mut tx = db.begin().await?;
+    let mut tx = state.0.pool.begin().await?;
 
     let item_id = sqlx::query!(
         "INSERT INTO lists_content (list, name, amount) VALUES ($1, $2, $3) RETURNING id",
@@ -265,16 +266,16 @@ pub(crate) async fn add_list(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 pub(crate) async fn update_item(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path((list, item)): extract::Path<(Uuid, i32)>,
     Json(update): Json<UpdateItemRequest>,
 ) -> Rsp<UpdateItemResponse> {
-    check_list(&db, user.id, list, true).await?;
+    check_list(&state.0.pool, user.id, list, true).await?;
 
-    let mut tx = db.begin().await?;
+    let mut tx = state.0.pool.begin().await?;
 
     if let Some(name) = &update.name {
         sqlx::query!(
@@ -320,13 +321,13 @@ pub(crate) async fn update_item(
     )
 )]
 pub(crate) async fn delete_item(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path((list, item)): extract::Path<(Uuid, i32)>,
 ) -> Rsp<DeleteItemResponse> {
-    check_list(&db, user.id, list, true).await?;
+    check_list(&state.0.pool, user.id, list, true).await?;
 
-    let mut tx = db.begin().await?;
+    let mut tx = state.0.pool.begin().await?;
 
     sqlx::query!(
         "UPDATE pantry_content
@@ -374,14 +375,14 @@ pub(crate) async fn delete_item(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 pub(crate) async fn delete_list(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path(id): extract::Path<Uuid>,
 ) -> Rsp<DeleteListResponse> {
-    is_owner(&db, user.id, id).await?;
-    let mut tx = db.begin().await?;
+    is_owner(&state.0.pool, user.id, id).await?;
+    let mut tx = state.0.pool.begin().await?;
 
     sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
         .execute(&mut *tx)
@@ -416,16 +417,16 @@ pub(crate) async fn delete_list(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn set_public(
-    Extension(db): Extension<PgPool>,
+    state: State,
     extract::Path(id): extract::Path<Uuid>,
     user: User,
 ) -> Rsp<SetPublicResponse> {
-    is_owner(&db, user.id, id).await?;
+    is_owner(&state.0.pool, user.id, id).await?;
 
     sqlx::query!("UPDATE lists SET pub = true WHERE id = $1", id)
-        .execute(&db)
+        .execute(&state.0.pool)
         .await?;
 
     OkResponse::ok(SetPublicResponse {})
@@ -446,16 +447,16 @@ async fn set_public(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn remove_public(
-    Extension(db): Extension<PgPool>,
+    state: State,
     extract::Path(id): extract::Path<Uuid>,
     user: User,
 ) -> Rsp<RemovePublicResponse> {
-    is_owner(&db, user.id, id).await?;
+    is_owner(&state.0.pool, user.id, id).await?;
 
     sqlx::query!("UPDATE lists SET pub = false WHERE id = $1", id)
-        .execute(&db)
+        .execute(&state.0.pool)
         .await?;
 
     OkResponse::ok(RemovePublicResponse {})
@@ -496,13 +497,13 @@ impl IntoResponse for PublicError {
         ("id" = Uuid, Path, description = "List ID"),
     ),
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn get_public_list(
-    Extension(db): Extension<PgPool>,
+    state: State,
     extract::Path(id): extract::Path<Uuid>,
 ) -> Result<Markup, PublicError> {
     let pb = sqlx::query!("SELECT pub FROM lists WHERE id = $1", id)
-        .fetch_one(&db)
+        .fetch_one(&state.0.pool)
         .await?;
 
     if !pb.r#pub.unwrap_or(false) {
@@ -510,7 +511,7 @@ async fn get_public_list(
     }
 
     let contents = sqlx::query!("SELECT name,amount FROM lists_content WHERE list = $1", id)
-        .fetch_all(&db)
+        .fetch_all(&state.0.pool)
         .await?;
 
     Ok(maud::html! {

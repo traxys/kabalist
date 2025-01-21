@@ -1,17 +1,21 @@
+use std::sync::Arc;
+
 use axum::{
     extract,
     routing::{delete, get},
-    Extension, Json, Router,
+    Json, Router,
 };
 use kabalist_types::{
     DeleteShareResponse, GetSharesResponse, ShareListRequest, ShareListResponse, UnshareResponse,
 };
-use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{account::User, check_list, is_owner, ok_response::*, ErrResponse, OkResponse, Rsp};
+use crate::{
+    account::User, check_list, is_owner, ok_response::*, ErrResponse, KabalistState, OkResponse,
+    Rsp, State,
+};
 
-pub(crate) fn router() -> Router {
+pub(crate) fn router() -> Router<Arc<KabalistState>> {
     Router::new()
         .route(
             "/{id}",
@@ -35,19 +39,19 @@ pub(crate) fn router() -> Router {
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn get_shares(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path(id): extract::Path<Uuid>,
 ) -> Rsp<GetSharesResponse> {
-    check_list(&db, user.id, id, true).await?;
+    check_list(&state.0.pool, user.id, id, true).await?;
 
     let shared = sqlx::query!(
         "SELECT shared, readonly FROM list_sharing WHERE list = $1",
         id
     )
-    .fetch_all(&db)
+    .fetch_all(&state.0.pool)
     .await?;
 
     OkResponse::ok(GetSharesResponse {
@@ -75,14 +79,14 @@ async fn get_shares(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn share_list(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path(id): extract::Path<Uuid>,
     Json(request): Json<ShareListRequest>,
 ) -> Rsp<ShareListResponse> {
-    check_list(&db, user.id, id, true).await?;
+    check_list(&state.0.pool, user.id, id, true).await?;
 
     sqlx::query!(
         r#"
@@ -92,7 +96,7 @@ async fn share_list(
         request.share_with,
         request.readonly
     )
-    .execute(&db)
+    .execute(&state.0.pool)
     .await?;
 
     OkResponse::ok(ShareListResponse {})
@@ -114,15 +118,15 @@ async fn share_list(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn unshare(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path((list, account)): extract::Path<(Uuid, Uuid)>,
 ) -> Rsp<UnshareResponse> {
-    is_owner(&db, user.id, list).await?;
+    is_owner(&state.0.pool, user.id, list).await?;
 
-    let mut tx = db.begin().await?;
+    let mut tx = state.0.pool.begin().await?;
 
     sqlx::query!(
         "DELETE FROM list_sharing WHERE list = $1 AND shared = $2",
@@ -161,13 +165,13 @@ async fn unshare(
     )
 )]
 async fn delete_shares(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path(id): extract::Path<Uuid>,
 ) -> Rsp<DeleteShareResponse> {
-    is_owner(&db, user.id, id).await?;
+    is_owner(&state.0.pool, user.id, id).await?;
 
-    let mut tx = db.begin().await?;
+    let mut tx = state.0.pool.begin().await?;
 
     sqlx::query!("DELETE FROM list_sharing WHERE list = $1", id)
         .execute(&mut *tx)

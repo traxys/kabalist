@@ -5,7 +5,7 @@ use axum::{
     http::{header, HeaderValue, Method, StatusCode},
     response::IntoResponse,
     routing::get,
-    Extension, Json, Router,
+    Json, Router,
 };
 use figment::{
     providers::{self, Format},
@@ -293,9 +293,9 @@ async fn check_list(db: &PgPool, user_id: Uuid, list_id: Uuid, write: bool) -> R
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn search_list(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path(name): extract::Path<String>,
 ) -> Rsp<GetListsResponse> {
@@ -304,7 +304,7 @@ async fn search_list(
         user.id,
         name
     )
-    .fetch_all(&db)
+    .fetch_all(&state.0.pool)
     .await?;
 
     let results_shared = sqlx::query!(
@@ -316,7 +316,7 @@ async fn search_list(
         user.id,
         name
     )
-    .fetch_all(&db)
+    .fetch_all(&state.0.pool)
     .await?;
 
     OkResponse::ok(GetListsResponse {
@@ -367,9 +367,9 @@ async fn search_list(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn search_account(
-    Extension(db): Extension<PgPool>,
+    state: State,
     _user: User,
     extract::Path(name): extract::Path<String>,
 ) -> Rsp<SearchAccountResponse> {
@@ -377,7 +377,7 @@ async fn search_account(
         "SELECT id FROM accounts WHERE name ILIKE $1::text::citext",
         name
     )
-    .fetch_one(&db)
+    .fetch_one(&state.0.pool)
     .await?;
 
     OkResponse::ok(SearchAccountResponse { id: result.id })
@@ -388,7 +388,6 @@ struct SearchQuery {
     search: Option<String>,
 }
 
-#[axum::debug_handler]
 #[utoipa::path(
     get,
     path = "/api/history/{list}",
@@ -405,9 +404,9 @@ struct SearchQuery {
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn history_search(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     extract::Path(list): extract::Path<Uuid>,
     search: Query<SearchQuery>,
@@ -419,7 +418,7 @@ async fn history_search(
             user.id,
             search.search.as_deref().unwrap_or_default(),
         )
-        .fetch_all(&db)
+        .fetch_all(&state.0.pool)
         .await?;
 
     OkResponse::ok(GetHistoryResponse {
@@ -427,17 +426,23 @@ async fn history_search(
     })
 }
 
+struct KabalistState {
+    pool: PgPool,
+    config: config::Config,
+}
+
+type State = axum::extract::State<Arc<KabalistState>>;
+
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
     tracing_subscriber::fmt::init();
 
-    let config: Arc<config::Config> = Arc::new(
+    let config: config::Config =
         Figment::from(providers::Serialized::defaults(config::Config::default()))
             .merge(providers::Toml::file("KabaList.toml"))
             .merge(providers::Env::prefixed("KABALIST_"))
-            .extract()?,
-    );
+            .extract()?;
 
     tracing::info!("Starting with config: {:#?}", config);
     let addr = SocketAddr::from((config.listen_addr, config.port));
@@ -581,26 +586,28 @@ async fn main() -> color_eyre::Result<()> {
     tracing::info!("Running SQLx migrations");
     sqlx::migrate!("sqlx/migrations").run(&db).await?;
 
-    let api = Router::new()
+    #[cfg(feature = "frontend")]
+    let frontend = config.frontend.clone();
+
+    let allow_origin = config.cors_allow_origin.parse::<HeaderValue>()?;
+
+    let api = Router::<Arc<KabalistState>>::new()
         .route("/search/list/{name}", get(search_list))
         .route("/search/account/{name}", get(search_account))
         .route("/history/{id}", get(history_search))
         .nest("/list", list::router())
         .nest("/share", share::router())
         .nest("/account", account::router())
-        .nest("/pantry", pantry::router());
-
-    #[cfg(feature = "frontend")]
-    let frontend = config.frontend.clone();
+        .nest("/pantry", pantry::router())
+        .with_state(Arc::new(KabalistState { config, pool: db }));
 
     let app = Router::new()
         // to be put back when axum 0.8.0 gets stable, meaning utoipa will get updated
         // .merge(utoipa_swagger_ui::SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .nest("/api", api)
-        .layer(Extension(db))
         .layer(
             CorsLayer::new()
-                .allow_origin(config.cors_allow_origin.parse::<HeaderValue>()?)
+                .allow_origin(allow_origin)
                 .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
                 .allow_methods([
                     Method::GET,
@@ -609,8 +616,7 @@ async fn main() -> color_eyre::Result<()> {
                     Method::DELETE,
                     Method::PUT,
                 ]),
-        )
-        .layer(Extension(config));
+        );
 
     #[cfg(feature = "frontend")]
     let app = match frontend {

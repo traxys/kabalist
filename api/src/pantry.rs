@@ -1,18 +1,21 @@
+use std::sync::Arc;
+
 use axum::{
     extract::Path,
     routing::{get, patch, post},
-    Extension, Json, Router,
+    Json, Router,
 };
 use kabalist_types::{
     AddToPantryRequest, AddToPantryResponse, DeletePantryItemResponse, EditPantryItemRequest,
     EditPantryItemResponse, GetPantryResponse, PantryItem, RefillPantryResponse,
 };
-use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{account::User, check_list, ok_response::*, ErrResponse, OkResponse, Rsp};
+use crate::{
+    account::User, check_list, ok_response::*, ErrResponse, KabalistState, OkResponse, Rsp, State,
+};
 
-pub(crate) fn router() -> Router {
+pub(crate) fn router() -> Router<Arc<KabalistState>> {
     Router::new()
         .route("/{id}", get(get_pantry).post(add_to_pantry))
         .route("/{id}/refill", post(refill_pantry))
@@ -37,15 +40,11 @@ pub(crate) fn router() -> Router {
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
-async fn get_pantry(
-    Extension(db): Extension<PgPool>,
-    user: User,
-    Path(list): Path<Uuid>,
-) -> Rsp<GetPantryResponse> {
-    check_list(&db, user.id, list, false).await?;
+#[tracing::instrument(skip(state))]
+async fn get_pantry(state: State, user: User, Path(list): Path<Uuid>) -> Rsp<GetPantryResponse> {
+    check_list(&state.0.pool, user.id, list, false).await?;
     let items = sqlx::query!("SELECT * FROM pantry_content WHERE list = $1", list)
-        .fetch_all(&db)
+        .fetch_all(&state.0.pool)
         .await?
         .into_iter()
         .map(|row| PantryItem {
@@ -74,14 +73,14 @@ async fn get_pantry(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn add_to_pantry(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     Path(list): Path<Uuid>,
     Json(request): Json<AddToPantryRequest>,
 ) -> Rsp<AddToPantryResponse> {
-    check_list(&db, user.id, list, true).await?;
+    check_list(&state.0.pool, user.id, list, true).await?;
 
     sqlx::query!(
         "INSERT INTO pantry_content (list, name, target) VALUES ($1, $2, $3)",
@@ -89,7 +88,7 @@ async fn add_to_pantry(
         request.name,
         request.target
     )
-    .execute(&db)
+    .execute(&state.0.pool)
     .await?;
 
     OkResponse::ok(AddToPantryResponse {})
@@ -112,14 +111,14 @@ async fn add_to_pantry(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn set_pantry_item(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     Path((list, item)): Path<(Uuid, i32)>,
     Json(request): Json<EditPantryItemRequest>,
 ) -> Rsp<EditPantryItemResponse> {
-    check_list(&db, user.id, list, true).await?;
+    check_list(&state.0.pool, user.id, list, true).await?;
 
     sqlx::query!(
         "
@@ -133,7 +132,7 @@ async fn set_pantry_item(
         list,
         item
     )
-    .execute(&db)
+    .execute(&state.0.pool)
     .await?;
 
     OkResponse::ok(EditPantryItemResponse {})
@@ -155,15 +154,15 @@ async fn set_pantry_item(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn delete_pantry_item(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     Path((list, item)): Path<(Uuid, i32)>,
 ) -> Rsp<DeletePantryItemResponse> {
-    check_list(&db, user.id, list, true).await?;
+    check_list(&state.0.pool, user.id, list, true).await?;
 
-    let mut tx = db.begin().await?;
+    let mut tx = state.0.pool.begin().await?;
 
     sqlx::query!(
         "DELETE FROM lists_content WHERE from_pantry = $1 AND list = $2",
@@ -201,13 +200,13 @@ async fn delete_pantry_item(
         ("token" = [])
     )
 )]
-#[tracing::instrument(skip(db))]
+#[tracing::instrument(skip(state))]
 async fn refill_pantry(
-    Extension(db): Extension<PgPool>,
+    state: State,
     user: User,
     Path(list): Path<Uuid>,
 ) -> Rsp<RefillPantryResponse> {
-    check_list(&db, user.id, list, true).await?;
+    check_list(&state.0.pool, user.id, list, true).await?;
 
     sqlx::query!(
         r#"INSERT INTO lists_content (list,name,amount,from_pantry)
@@ -216,7 +215,7 @@ async fn refill_pantry(
                 WHERE amount < target AND list = $1"#,
         list
     )
-    .execute(&db)
+    .execute(&state.0.pool)
     .await?;
 
     OkResponse::ok(RefillPantryResponse {})
