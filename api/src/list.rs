@@ -1,9 +1,7 @@
-use std::iter::FromIterator;
-
 use axum::{
     extract,
     http::StatusCode,
-    response::{Html, IntoResponse},
+    response::IntoResponse,
     routing::{get, patch, post, put},
     Extension, Json, Router,
 };
@@ -12,8 +10,8 @@ use kabalist_types::{
     DeleteListResponse, GetListsResponse, Item, ListInfo, ListStatus, ReadListResponse,
     RemovePublicResponse, SetPublicResponse, UpdateItemRequest, UpdateItemResponse,
 };
+use maud::Markup;
 use sqlx::PgPool;
-use tera::Tera;
 use tokio_stream::StreamExt;
 use uuid::Uuid;
 
@@ -475,13 +473,6 @@ impl From<sqlx::Error> for PublicError {
     }
 }
 
-impl From<tera::Error> for PublicError {
-    fn from(e: tera::Error) -> Self {
-        tracing::error!("Tera error: {:?}", e);
-        Self::InternalError
-    }
-}
-
 impl IntoResponse for PublicError {
     fn into_response(self) -> axum::response::Response {
         match self {
@@ -505,12 +496,11 @@ impl IntoResponse for PublicError {
         ("id" = Uuid, Path, description = "List ID"),
     ),
 )]
-#[tracing::instrument(skip(db, tera))]
+#[tracing::instrument(skip(db))]
 async fn get_public_list(
     Extension(db): Extension<PgPool>,
-    Extension(tera): Extension<Tera>,
     extract::Path(id): extract::Path<Uuid>,
-) -> Result<Html<String>, PublicError> {
+) -> Result<Markup, PublicError> {
     let pb = sqlx::query!("SELECT pub FROM lists WHERE id = $1", id)
         .fetch_one(&db)
         .await?;
@@ -523,13 +513,26 @@ async fn get_public_list(
         .fetch_all(&db)
         .await?;
 
-    let mut context = tera::Context::new();
-    context.insert(
-        "items",
-        &Vec::from_iter(contents.into_iter().map(|row| (row.name, row.amount))),
-    );
-
-    tera.render("public_list.html.tera", &context)
-        .map_err(Into::into)
-        .map(Html)
+    Ok(maud::html! {
+        (maud::DOCTYPE)
+        html {
+            head {
+                meta charset="utf-8";
+                meta name="viewport" content="width=device-width, initial-scale=1";
+                link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css"
+                     integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We"
+                     rel="stylesheet" crossorigin="anonymous";
+            }
+            body {
+                ul .list-group.container.py-3 {
+                    @for item in contents {
+                        li .list-group-item.d-flex.gap-3.py-3 {
+                            (item.name)
+                            @if let Some(amount) = item.amount { (format!(" ({amount})")) }
+                        }
+                    }
+                }
+            }
+        }
+    })
 }

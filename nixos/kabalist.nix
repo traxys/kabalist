@@ -81,7 +81,6 @@ with lib; {
           {
             KABALIST_PORT = toString cfg.port;
             KABALIST_DATABASE_URL = "postgres://${cfg.user}/kabalist?host=/var/run/postgresql";
-            KABALIST_TEMPLATES = "${cfg.package}/share";
             KABALIST_EXP = toString cfg.expiry;
           }
           // lib.optionalAttrs cfg.enableFrontend {

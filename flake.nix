@@ -99,10 +99,6 @@
       serverPkg = naersk'.buildPackage {
         cargoBuildOptions = opts: opts ++ ["--package=kabalist_api"];
         root = ./.;
-        postInstall = ''
-          mkdir -p $out/share
-          cp -r api/public $out/share
-        '';
       };
     in {
       nixosModule = import ./nixos/kabalist.nix {

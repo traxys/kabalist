@@ -567,12 +567,6 @@ async fn main() -> color_eyre::Result<()> {
     tracing::info!("Opening database");
     let db = PgPoolOptions::new().connect(&config.database_url).await?;
 
-    tracing::info!("Opening templates");
-    let templates = match &config.templates {
-        None => tera::Tera::new("public/*.tera")?,
-        Some(p) => tera::Tera::new(&format!("{p}/public/*.tera"))?,
-    };
-
     tracing::info!("Inserting extensions");
     sqlx::query!("CREATE EXTENSION IF NOT EXISTS pgcrypto;")
         .execute(&db)
@@ -603,7 +597,6 @@ async fn main() -> color_eyre::Result<()> {
         // to be put back when axum 0.8.0 gets stable, meaning utoipa will get updated
         // .merge(utoipa_swagger_ui::SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .nest("/api", api)
-        .layer(Extension(templates))
         .layer(Extension(db))
         .layer(
             CorsLayer::new()
