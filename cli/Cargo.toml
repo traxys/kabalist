@@ -10,8 +10,8 @@ kabalist_client = { path = "../client" }
 color-eyre = "0.6"
 promptly = "0.3.1"
 rpassword = "7.3.1"
-tokio = { version = "1.42.0", features = ["full"] }
+tokio = { version = "1.43.0", features = ["full"] }
 yansi = "1.0.1"
-clap = { version = "4.5.23", features = ["derive", "env"] }
-clap_complete = "4.5.40"
-itertools = "0.13.0"
+clap = { version = "4.5.27", features = ["derive", "env"] }
+clap_complete = "4.5.42"
+itertools = "0.14.0"

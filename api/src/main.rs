@@ -385,9 +385,10 @@ async fn search_account(
 
 #[derive(Deserialize, ToSchema, Debug)]
 struct SearchQuery {
-    search: String,
+    search: Option<String>,
 }
 
+#[axum::debug_handler]
 #[utoipa::path(
     get,
     path = "/api/history/{list}",
@@ -409,14 +410,14 @@ async fn history_search(
     Extension(db): Extension<PgPool>,
     user: User,
     extract::Path(list): extract::Path<Uuid>,
-    search: Option<Query<SearchQuery>>,
+    search: Query<SearchQuery>,
 ) -> Rsp<GetHistoryResponse> {
     let results =
         sqlx::query!(
             "SELECT name::text FROM history WHERE list = $1 AND creator = $2 AND name ILIKE '%' || $3 || '%'",
             list,
             user.id,
-            search.as_ref().map(|Query(q)| -> &str { &q.search }).unwrap_or(""),
+            search.search.as_deref().unwrap_or_default(),
         )
         .fetch_all(&db)
         .await?;
