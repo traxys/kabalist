@@ -30,8 +30,7 @@ jwt-simple = { version = "0.12", default-features = false, features = [
 	"pure-rust",
 ] }
 maud = { git = "https://github.com/lambda-fairy/maud", features = ["axum"] }
-# to be update when it uses a stable axum 0.8.0 version (and when we also do)
-# utoipa-swagger-ui = { version = "8.1.0", features = ["axum"] }
+utoipa-swagger-ui = { version = "9.0.0", features = ["axum"] }
 
 [dependencies.sqlx]
 version = "0.8.3"

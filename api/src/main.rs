@@ -602,8 +602,7 @@ async fn main() -> color_eyre::Result<()> {
         .with_state(Arc::new(KabalistState { config, pool: db }));
 
     let app = Router::new()
-        // to be put back when axum 0.8.0 gets stable, meaning utoipa will get updated
-        // .merge(utoipa_swagger_ui::SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
+        .merge(utoipa_swagger_ui::SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .nest("/api", api)
         .layer(
             CorsLayer::new()
