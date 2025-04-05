@@ -95,7 +95,7 @@
             '';
           };
 
-        cargoHash = "sha256-5gY735pkSMuGIZOpA/RGHyBnw8xAPSQxpUOpcRMsBsE=";
+        cargoHash = "sha256-WsWr2ZfgH3IxQeRAm3FhZG7SP0kVVws/GvSqMp64bjs=";
         swagger-ui = pkgs.fetchurl {
           url = "https://github.com/swagger-api/swagger-ui/archive/refs/tags/v5.17.14.zip";
           hash = "sha256-SBJE0IEgl7Efuu73n3HZQrFxYX+cn5UU5jrL4T5xzNw=";
