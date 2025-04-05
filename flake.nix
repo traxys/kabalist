@@ -96,9 +96,28 @@
         };
 
       webPkg = pkgs.callPackage web {};
-      serverPkg = naersk'.buildPackage {
-        cargoBuildOptions = opts: opts ++ ["--package=kabalist_api"];
-        root = ./.;
+      serverPkg = let swagger-ui = pkgs.fetchurl {
+          url = "https://github.com/swagger-api/swagger-ui/archive/refs/tags/v5.17.14.zip";
+          hash = "sha256-SBJE0IEgl7Efuu73n3HZQrFxYX+cn5UU5jrL4T5xzNw=";
+        };
+      in pkgs.rustPlatform.buildRustPackage {
+        pname = "kabalist-api";
+        version = "0.1.0";
+
+        src = ./.;
+
+        cargoExtraArgs = "-p kabalist_api";
+
+        preCheck = ''
+          find target -name $(basename ${swagger-ui}) -delete
+        '';
+
+        cargoHash = "sha256-5gY735pkSMuGIZOpA/RGHyBnw8xAPSQxpUOpcRMsBsE=";
+        useFetchCargoVendor = true;
+
+        env = {
+           SWAGGER_UI_DOWNLOAD_URL = "file://${swagger-ui}";
+        };
       };
     in {
       nixosModule = import ./nixos/kabalist.nix {
