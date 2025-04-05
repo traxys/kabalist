@@ -6,186 +6,199 @@
   inputs.naersk.url = "github:nix-community/naersk";
   inputs.rust-overlay.url = "github:oxalica/rust-overlay";
 
-  outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-    android-nixpkgs,
-    rust-overlay,
-    naersk,
-  }:
-    flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = import nixpkgs {
-        inherit system;
-        config = {
-          android_sdk.accept_license = true;
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      android-nixpkgs,
+      rust-overlay,
+      naersk,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          config = {
+            android_sdk.accept_license = true;
+          };
+          overlays = [
+            (import rust-overlay)
+            (final: prev: {
+              rust-bin-wasm = prev.rust-bin.stable.latest.default.override {
+                targets = [ "wasm32-unknown-unknown" ];
+              };
+            })
+            (final: prev: {
+              rustPlatformWithWasm = prev.callPackage (
+                {
+                  makeRustPlatform,
+                  rust-bin-wasm,
+                }:
+                makeRustPlatform {
+                  rustc = rust-bin-wasm;
+                  cargo = rust-bin-wasm;
+                }
+              ) { };
+            })
+          ];
         };
-        overlays = [
-          (import rust-overlay)
-          (final: prev: {
-            rust-bin-wasm = prev.rust-bin.stable.latest.default.override {
-              targets = ["wasm32-unknown-unknown"];
+
+        openapi-generator-cli = pkgs.fetchurl {
+          url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.9.0/openapi-generator-cli-7.9.0.jar";
+          sha256 = "sha256-8Mt4OaLq2QQLIEUZsD8Uc7OcdyX9H0MTS7VQUVyz2+4=";
+        };
+        naersk' = pkgs.callPackage naersk {
+          cargo = pkgs.rust-bin-wasm;
+          rustc = pkgs.rust-bin-wasm;
+        };
+
+        web =
+          {
+            pkgs,
+            rustPlatformWithWasm,
+            trunk,
+            stdenv,
+            cargo,
+            wasm-bindgen-cli,
+            ...
+          }:
+          stdenv.mkDerivation {
+            pname = "kabalist-web";
+            version = "master";
+
+            cargoDeps = rustPlatformWithWasm.importCargoLock {
+              lockFile = ./Cargo.lock;
             };
-          })
-          (final: prev: {
-            rustPlatformWithWasm = prev.callPackage ({
-              makeRustPlatform,
-              rust-bin-wasm,
-            }:
-              makeRustPlatform {
-                rustc = rust-bin-wasm;
-                cargo = rust-bin-wasm;
-              }) {};
-          })
-        ];
-      };
 
-      openapi-generator-cli = pkgs.fetchurl {
-        url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.9.0/openapi-generator-cli-7.9.0.jar";
-        sha256 = "sha256-8Mt4OaLq2QQLIEUZsD8Uc7OcdyX9H0MTS7VQUVyz2+4=";
-      };
-      naersk' = pkgs.callPackage naersk {
-        cargo = pkgs.rust-bin-wasm;
-        rustc = pkgs.rust-bin-wasm;
-      };
+            nativeBuildInputs = [
+              trunk
+              wasm-bindgen-cli
+              rustPlatformWithWasm.cargoSetupHook
+              rustPlatformWithWasm.cargoBuildHook
+            ];
 
-      web = {
-        pkgs,
-        rustPlatformWithWasm,
-        trunk,
-        stdenv,
-        cargo,
-        wasm-bindgen-cli,
-        ...
-      }:
-        stdenv.mkDerivation {
-          pname = "kabalist-web";
-          version = "master";
+            src = ./.;
+            XDG_CACHE_HOME = "/build/cache";
+            TRUNK_TOOLS_WASM_BINDGEN = "${wasm-bindgen-cli.version}";
 
-          cargoDeps = rustPlatformWithWasm.importCargoLock {
-            lockFile = ./Cargo.lock;
+            buildPhase = ''
+              runHook preBuild
+
+              cd web
+              trunk build --release
+
+              runHook postBuild
+            '';
+
+            installPhase = ''
+              runHook preInstall
+
+              cp -R dist $out
+
+              runHook postInstall
+            '';
           };
 
-          nativeBuildInputs = [
-            trunk
-            wasm-bindgen-cli
-            rustPlatformWithWasm.cargoSetupHook
-            rustPlatformWithWasm.cargoBuildHook
-          ];
+        webPkg = pkgs.callPackage web { };
+        serverPkg =
+          let
+            swagger-ui = pkgs.fetchurl {
+              url = "https://github.com/swagger-api/swagger-ui/archive/refs/tags/v5.17.14.zip";
+              hash = "sha256-SBJE0IEgl7Efuu73n3HZQrFxYX+cn5UU5jrL4T5xzNw=";
+            };
+          in
+          pkgs.rustPlatform.buildRustPackage {
+            pname = "kabalist-api";
+            version = "0.1.0";
 
-          src = ./.;
-          XDG_CACHE_HOME = "/build/cache";
-          TRUNK_TOOLS_WASM_BINDGEN = "${wasm-bindgen-cli.version}";
+            src = ./.;
 
-          buildPhase = ''
-            runHook preBuild
+            cargoExtraArgs = "-p kabalist_api";
 
-            cd web
-            trunk build --release
+            preCheck = ''
+              find target -name $(basename ${swagger-ui}) -delete
+            '';
 
-            runHook postBuild
-          '';
+            cargoHash = "sha256-5gY735pkSMuGIZOpA/RGHyBnw8xAPSQxpUOpcRMsBsE=";
+            useFetchCargoVendor = true;
 
-          installPhase = ''
-            runHook preInstall
-
-            cp -R dist $out
-
-            runHook postInstall
-          '';
+            env = {
+              SWAGGER_UI_DOWNLOAD_URL = "file://${swagger-ui}";
+            };
+          };
+      in
+      {
+        nixosModule = import ./nixos/kabalist.nix {
+          kabalist-web = webPkg;
+          kabalist-server = serverPkg;
         };
+        packages = {
+          cli = naersk'.buildPackage {
+            cargoBuildOptions = opts: opts ++ [ "--package=kabalist_cli" ];
+            root = ./.;
 
-      webPkg = pkgs.callPackage web {};
-      serverPkg = let swagger-ui = pkgs.fetchurl {
-          url = "https://github.com/swagger-api/swagger-ui/archive/refs/tags/v5.17.14.zip";
-          hash = "sha256-SBJE0IEgl7Efuu73n3HZQrFxYX+cn5UU5jrL4T5xzNw=";
+            postInstall = ''
+              mv $out/bin/kabalist_cli $out/bin/kabalist
+            '';
+          };
+          admin = naersk'.buildPackage {
+            cargoBuildOptions = opts: opts ++ [ "--package=kb_admin" ];
+            root = ./.;
+          };
+          server = serverPkg;
+          web = webPkg;
         };
-      in pkgs.rustPlatform.buildRustPackage {
-        pname = "kabalist-api";
-        version = "0.1.0";
+        devShell =
+          with pkgs;
+          mkShell rec {
+            nativeBuildInputs = [ pkgs.bashInteractive ];
 
-        src = ./.;
+            LIST_URL = "http://localhost:8080";
 
-        cargoExtraArgs = "-p kabalist_api";
+            shellHook = ''
+              export DATABASE_URL="postgres://$(whoami)/list?host=/var/run/postgresql"
+              export KABALIST_DATABASE_URL="$DATABASE_URL"
+            '';
 
-        preCheck = ''
-          find target -name $(basename ${swagger-ui}) -delete
-        '';
+            buildInputs = [
+              # Flutter
+              (android-nixpkgs.sdk."${system}" (
+                sdkPkgs: with sdkPkgs; [
+                  cmdline-tools-latest
+                  build-tools-34-0-0
+                  build-tools-33-0-1
+                  platform-tools
+                  platforms-android-34
+                  emulator
+                  system-images-android-34-default-x86-64
+                  ndk-25-1-8937393
+                ]
+              ))
 
-        cargoHash = "sha256-5gY735pkSMuGIZOpA/RGHyBnw8xAPSQxpUOpcRMsBsE=";
-        useFetchCargoVendor = true;
+              flutter
+              jdk17
+              dart
+              sqlx-cli
+              (pkgs.writeShellApplication {
+                name = "openapi-generator-cli";
+                text = ''
+                  ${pkgs.jdk11}/bin/java -jar ${openapi-generator-cli} "$@"
+                '';
+              })
 
-        env = {
-           SWAGGER_UI_DOWNLOAD_URL = "file://${swagger-ui}";
-        };
-      };
-    in {
-      nixosModule = import ./nixos/kabalist.nix {
-        kabalist-web = webPkg;
-        kabalist-server = serverPkg;
-      };
-      packages = {
-        cli = naersk'.buildPackage {
-          cargoBuildOptions = opts: opts ++ ["--package=kabalist_cli"];
-          root = ./.;
+              # Rust
+              rust-bin-wasm
 
-          postInstall = ''
-            mv $out/bin/kabalist_cli $out/bin/kabalist
-          '';
-        };
-        admin = naersk'.buildPackage {
-          cargoBuildOptions = opts: opts ++ ["--package=kb_admin"];
-          root = ./.;
-        };
-        server = serverPkg;
-        web = webPkg;
-      };
-      devShell = with pkgs;
-        mkShell rec {
-          nativeBuildInputs = [pkgs.bashInteractive];
+              # Web
+              trunk
+              wasm-bindgen-cli
 
-          LIST_URL = "http://localhost:8080";
-
-          shellHook = ''
-            export DATABASE_URL="postgres://$(whoami)/list?host=/var/run/postgresql"
-            export KABALIST_DATABASE_URL="$DATABASE_URL"
-          '';
-
-          buildInputs = [
-            # Flutter
-            (android-nixpkgs.sdk."${system}" (sdkPkgs:
-              with sdkPkgs; [
-                cmdline-tools-latest
-                build-tools-34-0-0
-                build-tools-33-0-1
-                platform-tools
-                platforms-android-34
-                emulator
-                system-images-android-34-default-x86-64
-                ndk-25-1-8937393
-              ]))
-
-            flutter
-            jdk17
-            dart
-            sqlx-cli
-            (pkgs.writeShellApplication {
-              name = "openapi-generator-cli";
-              text = ''
-                ${pkgs.jdk11}/bin/java -jar ${openapi-generator-cli} "$@"
-              '';
-            })
-
-            # Rust
-            rust-bin-wasm
-
-            # Web
-            trunk
-            wasm-bindgen-cli
-
-            # Docker
-            docker-compose
-          ];
-        };
-    });
+              # Docker
+              docker-compose
+            ];
+          };
+      }
+    );
 }
