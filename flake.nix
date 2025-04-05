@@ -3,7 +3,6 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
   inputs.android-nixpkgs.url = "github:tadfisher/android-nixpkgs";
-  inputs.naersk.url = "github:nix-community/naersk";
   inputs.rust-overlay.url = "github:oxalica/rust-overlay";
 
   outputs =
@@ -13,7 +12,6 @@
       flake-utils,
       android-nixpkgs,
       rust-overlay,
-      naersk,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -48,10 +46,6 @@
         openapi-generator-cli = pkgs.fetchurl {
           url = "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.9.0/openapi-generator-cli-7.9.0.jar";
           sha256 = "sha256-8Mt4OaLq2QQLIEUZsD8Uc7OcdyX9H0MTS7VQUVyz2+4=";
-        };
-        naersk' = pkgs.callPackage naersk {
-          cargo = pkgs.rust-bin-wasm;
-          rustc = pkgs.rust-bin-wasm;
         };
 
         web =
@@ -101,33 +95,32 @@
             '';
           };
 
+        cargoHash = "sha256-5gY735pkSMuGIZOpA/RGHyBnw8xAPSQxpUOpcRMsBsE=";
+        swagger-ui = pkgs.fetchurl {
+          url = "https://github.com/swagger-api/swagger-ui/archive/refs/tags/v5.17.14.zip";
+          hash = "sha256-SBJE0IEgl7Efuu73n3HZQrFxYX+cn5UU5jrL4T5xzNw=";
+        };
+
         webPkg = pkgs.callPackage web { };
-        serverPkg =
-          let
-            swagger-ui = pkgs.fetchurl {
-              url = "https://github.com/swagger-api/swagger-ui/archive/refs/tags/v5.17.14.zip";
-              hash = "sha256-SBJE0IEgl7Efuu73n3HZQrFxYX+cn5UU5jrL4T5xzNw=";
-            };
-          in
-          pkgs.rustPlatform.buildRustPackage {
-            pname = "kabalist-api";
-            version = "0.1.0";
+        serverPkg = pkgs.rustPlatform.buildRustPackage {
+          pname = "kabalist-api";
+          version = "0.1.0";
 
-            src = ./.;
+          src = ./.;
 
-            cargoExtraArgs = "-p kabalist_api";
+          cargoExtraArgs = "-p kabalist_api";
 
-            preCheck = ''
-              find target -name $(basename ${swagger-ui}) -delete
-            '';
+          preCheck = ''
+            find target -name $(basename ${swagger-ui}) -delete
+          '';
 
-            cargoHash = "sha256-5gY735pkSMuGIZOpA/RGHyBnw8xAPSQxpUOpcRMsBsE=";
-            useFetchCargoVendor = true;
+          inherit cargoHash;
+          useFetchCargoVendor = true;
 
-            env = {
-              SWAGGER_UI_DOWNLOAD_URL = "file://${swagger-ui}";
-            };
+          env = {
+            SWAGGER_UI_DOWNLOAD_URL = "file://${swagger-ui}";
           };
+        };
       in
       {
         nixosModule = import ./nixos/kabalist.nix {
@@ -135,17 +128,47 @@
           kabalist-server = serverPkg;
         };
         packages = {
-          cli = naersk'.buildPackage {
-            cargoBuildOptions = opts: opts ++ [ "--package=kabalist_cli" ];
-            root = ./.;
+          cli = pkgs.rustPlatform.buildRustPackage {
+            pname = "kabalist-cli";
+            version = "0.1.0";
+
+            cargoExtraArgs = "-p kabalist_cli";
+
+            src = ./.;
+
+            inherit cargoHash;
+            useFetchCargoVendor = true;
 
             postInstall = ''
               mv $out/bin/kabalist_cli $out/bin/kabalist
             '';
+
+            preCheck = ''
+              find target -name $(basename ${swagger-ui}) -delete
+            '';
+
+            env = {
+              SWAGGER_UI_DOWNLOAD_URL = "file://${swagger-ui}";
+            };
           };
-          admin = naersk'.buildPackage {
-            cargoBuildOptions = opts: opts ++ [ "--package=kb_admin" ];
-            root = ./.;
+          admin = pkgs.rustPlatform.buildRustPackage {
+            pname = "kabalist-admin";
+            version = "0.1.0";
+
+            cargoExtraArgs = "-p kb_admin";
+
+            src = ./.;
+
+            inherit cargoHash;
+            useFetchCargoVendor = true;
+
+            env = {
+              SWAGGER_UI_DOWNLOAD_URL = "file://${swagger-ui}";
+            };
+
+            preCheck = ''
+              find target -name $(basename ${swagger-ui}) -delete
+            '';
           };
           server = serverPkg;
           web = webPkg;
