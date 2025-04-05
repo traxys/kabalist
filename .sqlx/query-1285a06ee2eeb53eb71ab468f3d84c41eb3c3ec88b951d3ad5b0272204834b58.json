@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT accounts.name::text\n               FROM password_reset,accounts\n               WHERE password_reset.id = $1\n                AND password_reset.account = accounts.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1285a06ee2eeb53eb71ab468f3d84c41eb3c3ec88b951d3ad5b0272204834b58"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO lists_content (list,name,amount,from_pantry)\n            SELECT list,name,(target - amount) as amount,item as from_pantry\n                FROM pantry_content\n                WHERE amount < target AND list = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9b2b858d7a9b885772a344e350a49b302dbc748dfccec802e33ccc3b037cb47d"
+}

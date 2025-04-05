@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM lists_content WHERE from_pantry = $1 AND list = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "405111d9507c468550b0875beb1a277b6be6ee1148ffd6cf3818c33cc43c408a"
+}

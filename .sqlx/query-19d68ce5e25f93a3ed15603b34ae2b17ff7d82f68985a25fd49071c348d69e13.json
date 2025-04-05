@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT shared, readonly FROM list_sharing WHERE list = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "shared",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "readonly",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "19d68ce5e25f93a3ed15603b34ae2b17ff7d82f68985a25fd49071c348d69e13"
+}

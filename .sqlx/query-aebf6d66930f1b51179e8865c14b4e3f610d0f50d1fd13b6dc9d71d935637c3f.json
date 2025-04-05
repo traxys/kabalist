@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE pantry_content\n        SET amount = amount +\n            (SELECT\n                COALESCE(convert_to_integer(lists_content.amount), 0) as added\n            FROM lists_content\n            WHERE lists_content.list = $1 AND lists_content.id = $2)\n        WHERE\n            pantry_content.item =\n                (SELECT lists_content.from_pantry\n                 FROM lists_content\n                 WHERE lists_content.list = $1 AND lists_content.id = $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aebf6d66930f1b51179e8865c14b4e3f610d0f50d1fd13b6dc9d71d935637c3f"
+}

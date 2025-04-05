@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM history WHERE list = $1 AND creator != $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "465991e893dfb7e1f48aff0470765dcf5ad4f3aced62e5d830c559efa2126ff1"
+}

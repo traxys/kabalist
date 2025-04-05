@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT name, id, readonly, pub, owner\n               FROM lists, list_sharing\n               WHERE (lists.id = list_sharing.list)\n                   AND shared = $1 ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "readonly",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "pub",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "owner",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "c276163d0c04d50fde031927b102cde97df4784605696b004d15b75cf28be2c8"
+}

@@ -149,6 +149,7 @@
             flutter
             jdk17
             dart
+            sqlx-cli
             (pkgs.writeShellApplication {
               name = "openapi-generator-cli";
               text = ''

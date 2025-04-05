@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO accounts (id, name, password)\n               VALUES (uuid_generate_v4(), $1::text::citext, crypt($2, gen_salt('bf')))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b22c8c901799af21ecfb32f3a14ee950cb4bdf75bf27929e37b59752c00b1e51"
+}

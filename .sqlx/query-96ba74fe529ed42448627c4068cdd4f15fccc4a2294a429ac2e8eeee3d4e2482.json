@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE pantry_content\n            SET amount = COALESCE($1, amount),\n                target = COALESCE($2, target)\n            WHERE\n                list = $3 AND item = $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "96ba74fe529ed42448627c4068cdd4f15fccc4a2294a429ac2e8eeee3d4e2482"
+}
